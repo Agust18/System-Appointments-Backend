@@ -1,0 +1,43 @@
+<?php 
+
+namespace App\Services\User;
+
+use App\Converter\User\UserToUserResponseConverter;
+use App\Dto\Request\User\UserLoginRequest;
+use App\Dto\Response\User\UserLoginResponse;
+use App\Exception\User\UserWrongPasswordException;
+use App\Models\User\UserModel;
+
+
+final class UserLoginService {
+    
+    private UserModel $userModel;
+    private UserFinderByEmailService $userFinderByEmailService;
+    private UserToUserResponseConverter $converter;
+
+    public function __construct() {
+        $this->userModel = new UserModel();
+        $this->userFinderByEmailService = new UserFinderByEmailService();
+        $this->converter = new UserToUserResponseConverter(); 
+    }
+
+    public function login(UserLoginRequest $request): UserLoginResponse
+    {
+        $user = $this->userFinderByEmailService->find($request->getEmail());
+
+        if (!$user->verifyPassword($request->getPassword())) {
+            throw new UserWrongPasswordException();
+        }
+
+        $user->generateToken();
+
+        $this->userModel->update($user);
+
+          return new UserLoginResponse(
+            $user->getToken(),
+            $this->converter->convert($user) 
+        );
+
+        // return new UserLoginResponse($user->getToken());
+    }
+}
