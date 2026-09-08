@@ -30,9 +30,10 @@ class AppointmentPostController extends ResourceController
         return new AppointmentRequest(
             (int) $parameters->medicalId,
             (int) $parameters->patientId,
+            $parameters->serviceId,
             $parameters->fecha,
             $parameters->hora,
-            $parameters->nota,
+            $parameters->nota ?? null,
             $parameters->status
         );
     }

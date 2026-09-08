@@ -23,7 +23,7 @@ final class MedicalsGetController extends ResourceController
         return $this->response->setJSON($responses);
     }
 
-    
+
 
     private function getRequest(): MedicalFilterRequest
     {
@@ -31,16 +31,23 @@ final class MedicalsGetController extends ResourceController
         $size = $this->request->getGet('size');
         $specialtyId = $this->request->getGet('specialtyId');
         $isActive = $this->request->getGet('isActive');
-        $search = $this->request->getGet('search'); 
+        $search = $this->request->getGet('search');
 
+        $parsedIsActive = ($isActive !== null && $isActive !== '')
+            ? filter_var($isActive, FILTER_VALIDATE_BOOLEAN)
+            : null;
         return new MedicalFilterRequest(
             new PaginationRequest(
                 $page ? (int) $page : 1,
                 $size ? (int) $size : 10,
             ),
-            $specialtyId ? (int) $specialtyId : null,
-            $isActive !== null ? filter_var($isActive, FILTER_VALIDATE_BOOLEAN) : null,
-            $search ?? null  
+            ($specialtyId !== null && $specialtyId !== '') ? (int) $specialtyId : null,
+            $parsedIsActive,
+            $search ?: null
         );
+        //     $specialtyId ? (int) $specialtyId : null,
+        //     $isActive !== null ? filter_var($isActive, FILTER_VALIDATE_BOOLEAN) : null,
+        //     $search ?? null  
+        // );
     }
 }

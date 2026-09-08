@@ -7,9 +7,11 @@ use App\Dto\Request\User\UserLoginRequest;
 use App\Dto\Response\User\UserLoginResponse;
 use App\Exception\User\UserWrongPasswordException;
 use App\Models\User\UserModel;
-
+use Exception;
 
 final class UserLoginService {
+
+   
     
     private UserModel $userModel;
     private UserFinderByEmailService $userFinderByEmailService;
@@ -25,9 +27,15 @@ final class UserLoginService {
     {
         $user = $this->userFinderByEmailService->find($request->getEmail());
 
+        if (!$user->getIsActive()) {
+            throw new Exception("usuario no está activo, comunicar con el administrador.");
+        }
+
         if (!$user->verifyPassword($request->getPassword())) {
             throw new UserWrongPasswordException();
         }
+
+        
 
         $user->generateToken();
 

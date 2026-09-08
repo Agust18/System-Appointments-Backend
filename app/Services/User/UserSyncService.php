@@ -47,24 +47,11 @@ final class UserSyncService
             $medical = $this->medicalModel->findByUserId($userId);
             
             if ($medical) {
-                // ✅ Ya existe → reactivar
+                // ya existe → reactivar
                 $medical->modifyIsActive(true);
                 $this->medicalModel->update($medical);
             }
-            // } else {
-            //     // ✅ No existe → crear nuevo médico
-            //     $medical = new Medical(
-            //         null,      // id
-            //         $userId,   // user_id
-            //         null,      // tuition (pendiente)
-            //         null,      // specialtyId (pendiente)
-            //         null,      // phone
-            //         true,      // is_active
-            //         null,      // created_at
-            //         null       // updated_at
-            //     );
-            //     $this->medicalModel->insert($medical);
-            // }
+            
         }
     }
 }

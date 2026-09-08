@@ -4,8 +4,8 @@ namespace App\Dto\Request\Specialty;
 final readonly class SpecialtyRequest
 {
     public function __construct(
-        public string $name,
-        public ?string $description = null
+        private string $name,
+        private ?string $description = null
     ) {}
 
     public function getName(): string

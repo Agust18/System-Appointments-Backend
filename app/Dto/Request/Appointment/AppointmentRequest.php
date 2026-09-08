@@ -4,13 +4,13 @@ namespace App\Dto\Request\Appointment;
 final readonly class AppointmentRequest
 {
     public function __construct(
-        public int $medicalId,
-        public int $patientId,
-        public ?int $serviceId,
-        public string $fecha,
-        public string $hora,
-        public ?string $nota,
-        public string $status = 'pending'
+        private int $medicalId,
+        private int $patientId,
+        private ?int $serviceId,
+        private string $fecha,
+        private string $hora,
+        private ?string $nota,
+        private string $status = 'pending'
     ) {
     }
 

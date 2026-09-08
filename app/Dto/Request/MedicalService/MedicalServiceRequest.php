@@ -4,10 +4,10 @@ namespace App\Dto\Request\MedicalService;
 final readonly class MedicalServiceRequest
 {
     public function __construct(
-        public int $serviceId,
-        public ?float $customPrice = null,
-        public ?int $customDurationMinutes = null,
-        public bool $isActive = true
+        private int $serviceId,
+        private ?float $customPrice = null,
+        private ?int $customDurationMinutes = null,
+        private bool $isActive = true
     ) {
     }
 

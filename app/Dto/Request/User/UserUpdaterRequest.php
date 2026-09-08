@@ -8,7 +8,7 @@ final readonly class UserUpdaterRequest {
         private ?string $password = null,
         private ?int $dni = null,
         private ?bool $isActive = null,
-         public ?int $roleId = null  
+        private ?int $roleId = null  
 
 
     )

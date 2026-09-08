@@ -5,19 +5,14 @@ use App\Converter\MedicalSchedule\MedicalScheduleToMedicalScheduleResponseConver
 use App\Dto\Request\MedicalSchedule\MedicalScheduleRequest;
 use App\Dto\Response\MedicalSchedule\MedicalScheduleResponse;
 use App\Entity\MedicalSchedule\MedicalSchedule;
-use App\Exception\MedicalSchedule\InvalidScheduleTimeException;
-use App\Exception\MedicalSchedule\ScheduleOverlapException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
-use App\Services\Medical\MedicalFinderService;
-use App\Services\User\UserFinderService;
 use App\Services\MedicalSchedule\Validations\MedicalScheduleCreateValidatorService;
 
 final class MedicalScheduleCreatorService
 {
     private MedicalScheduleModel $scheduleModel;
     private MedicalScheduleToMedicalScheduleResponseConverter $converter;
-    private MedicalFinderService $medicalFinderService;
-    private UserFinderService $userFinderService;
+
 
     private MedicalScheduleCreateValidatorService $validator;
 
@@ -25,8 +20,6 @@ final class MedicalScheduleCreatorService
     {
         $this->scheduleModel = new MedicalScheduleModel();
         $this->converter = new MedicalScheduleToMedicalScheduleResponseConverter();
-        $this->medicalFinderService = new MedicalFinderService();
-        $this->userFinderService = new UserFinderService();
         $this->validator = new MedicalScheduleCreateValidatorService();
     }
 

@@ -7,7 +7,7 @@ final readonly class RoleFilterRequest
 {
     public function __construct(
         private PaginationRequest $pagination,
-         private ?string $search = null
+        private ?string $search = null
     ) {}
 
     public function getPagination(): PaginationRequest

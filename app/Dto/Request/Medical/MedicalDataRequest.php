@@ -4,10 +4,10 @@ namespace App\Dto\Request\Medical;
 final readonly class MedicalDataRequest
 {
     public function __construct(
-        public string $tuition,
-        public int $specialtyId,
-        public ?string $phone = null,
-        public bool $isActive = true
+       private string $tuition,
+       private int $specialtyId,
+       private ?string $phone = null,
+       private bool $isActive = true
     ) {
     }
 

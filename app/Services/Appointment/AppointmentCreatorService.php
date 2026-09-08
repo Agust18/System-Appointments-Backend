@@ -22,10 +22,10 @@ final class AppointmentCreatorService
 
     public function create(AppointmentRequest $request): AppointmentResponse
     {
-        // 1. Validaciones de negocio sin concurrencia (roles, paciente, día, rango horario, servicio activo)
+        // Validaciones de negocio sin concurrencia (roles, paciente, día, rango horario, servicio activo)
         $this->validator->validate($request);
 
-        // 2. Reserva atómica: GET_LOCK + recálculo de bloque + hasOverlap + insert + transacción
+        // Reserva atómica: GET_LOCK + recálculo de bloque + hasOverlap + insert + transacción
         $newAppointment = $this->bookingService->book($request);
 
         return $this->converter->convert($newAppointment);

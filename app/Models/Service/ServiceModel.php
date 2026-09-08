@@ -72,6 +72,19 @@ final class ServiceModel
         return $this->converter->convert($data);
     }
 
+     public function findByName(string $name): ?Service
+    {
+        $query = "SELECT * FROM services WHERE name = ? AND is_active = 1";
+        $result = $this->db->query($query, [$name]);
+        $data = $result->getRow();
+
+        if (!$data) {
+            return null;
+        }
+
+        return $this->converter->convert($data);
+    }
+
     public function findAllActive(): array
     {
         $query = "SELECT * FROM services WHERE is_active = 1 ORDER BY name ASC";

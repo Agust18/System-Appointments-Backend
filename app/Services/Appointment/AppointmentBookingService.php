@@ -37,10 +37,10 @@ final class AppointmentBookingService
         }
 
         try {
-            // 2. Iniciar transacción dentro del lock
+            // Iniciar transacción dentro del lock
             $this->db->transBegin();
 
-            // 3. Recalcular duración y bloque total con servicio/override vigentes
+            // Recalcular duración y bloque total con servicio/override vigentes
             $service = $this->serviceModel->find($request->getServiceId());
             if (!$service || !$service->isActive()) {
                 throw new Exception('El servicio seleccionado no está disponible.');
@@ -78,7 +78,7 @@ final class AppointmentBookingService
                 throw new Exception('El horario seleccionado ya no se encuentra disponible. Por favor, elija otro horario.');
             }
 
-            // 6. Instanciar e insertar entidad completa
+            // Instanciar e insertar entidad completa
             $appointment = new Appointment(
                 null,
                 $request->getMedicalId(),
@@ -95,7 +95,7 @@ final class AppointmentBookingService
 
             $createdAppointment = $this->appointmentModel->insert($appointment);
 
-            // 7. Commit
+            // Commit
             $this->db->transCommit();
 
             return $createdAppointment;

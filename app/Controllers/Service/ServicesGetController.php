@@ -29,7 +29,7 @@ final class ServicesGetController extends ResourceController
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $search = $this->request->getGet('search');
-        $isActive = $this->request->getGet('is_active');
+        $isActive = $this->request->getGet('isActive');
 
         return new ServiceFilterRequest(
             new PaginationRequest(

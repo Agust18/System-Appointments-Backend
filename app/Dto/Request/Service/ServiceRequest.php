@@ -4,15 +4,16 @@ namespace App\Dto\Request\Service;
 final readonly class ServiceRequest
 {
     public function __construct(
-        public string $name,
-        public ?string $description,
-        public int $durationMinutes,
-        public int $bufferMinutes = 0,
-        public float $price = 0.0,
-        public int $slotStepMinutes = 15,
-        public bool $isActive = true
+        private string $name,
+        private ?string $description,
+        private int $durationMinutes,
+        private int $bufferMinutes = 0,
+        private float $price = 0.0,
+        private int $slotStepMinutes = 15,
+        private bool $isActive = true
     ) {
     }
+
 
     public function getName(): string
     {

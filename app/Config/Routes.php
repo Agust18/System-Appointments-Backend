@@ -35,13 +35,13 @@ $routes->put('medicals/(:num)', 'Medical\MedicalPutController::do/$1', ['filter'
 
 $routes->delete('medicals/(:num)', 'Medical\MedicalDeleteController::do/$1',  ['filter' => ['auth', 'adminOnly']]);
 
-$routes->get('medicals', 'Medical\MedicalsGetController::search');
+$routes->get('medicals', 'Medical\MedicalsGetController::search' , ['filter' => 'auth']);
 
 $routes->get('medicals/user/(:num)', 'Medical\MedicalGetController::findByUser/$1', ['filter' => 'auth']);
 
 
 //Patients
-$routes->post('patients/register', 'Patient\PatientPublicPostController::create');
+$routes->post('patients/register', 'Patient\PatientPublicPostController::create ');
 
 $routes->post('patients', 'Patient\PatientPostController::create', ['filter' => 'auth']);
 
@@ -78,9 +78,9 @@ $routes->get('appointments/medical/(:num)', 'Appointment\AppointmentGetControlle
 
 $routes->get('appointments/patient/(:num)', 'Appointment\AppointmentGetController::findByPatient/$1', ['filter' => 'auth']);
 
-$routes->put('appointments/(:num)', 'Appointment\AppointmentPutController::do/$1', ['filter' => ['auth', 'appointmentOwnerOnly']]);
+$routes->put('appointments/(:num)', 'Appointment\AppointmentPutController::do/$1', ['filter' => ['auth', 'appointmentPermission']]);
 
-$routes->delete('appointments/(:num)', 'Appointment\AppointmentDeleteController::do/$1', ['filter' => ['auth', 'appointmentOwnerOnly']]);
+$routes->delete('appointments/(:num)', 'Appointment\AppointmentDeleteController::do/$1', ['filter' => ['auth', 'appointmentPermission']]);
 
 $routes->get('appointments', 'Appointment\AppointmentsGetController::search', ['filter' => 'auth']);
 

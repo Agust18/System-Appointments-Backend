@@ -103,7 +103,7 @@ final class AppointmentUpdateBookingService
     {
         $result = $this->db->query("SELECT GET_LOCK(?, ?) as is_locked", [$lockName, $timeoutSeconds]);
         $row = $result->getRow();
-        return $row && (int)$row->is_locked === 1;
+        return $row && (int) $row->is_locked === 1;
     }
 
     private function releaseLock(string $lockName): void

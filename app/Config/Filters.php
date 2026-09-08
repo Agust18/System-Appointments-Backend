@@ -36,9 +36,11 @@ class Filters extends BaseFilters
         'performance' => PerformanceMetrics::class,
         'auth' => \App\Filters\Auth::class,
         'adminOnly' => \App\Filters\AdminOnly::class,
-        'appointmentOwnerOnly' => \App\Filters\AppointmentOwnerOnly::class,
+        'appointmentPermission' => \App\Filters\AppointmentPermission::class,
         'receptionUserCreate' => \App\Filters\ReceptionUserCreate::class,
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
+        
+        
 
 
     ];

@@ -34,6 +34,7 @@ final class AppointmentCreateValidatorService
 
     public function validate(AppointmentRequest $request): void
     {
+
         $userRoleId = session()->get('roleId');
         if ($userRoleId === Role::MEDICAL) {
             throw new \Exception('Los médicos no pueden crear turnos');
@@ -57,23 +58,35 @@ final class AppointmentCreateValidatorService
         $user = $this->userFinderService->find($medical->getUserId());
         $doctorName = $user ? $user->getUsername() : 'Médico';
 
-        // 2. Validar paciente existente y rol
+        // Validar paciente existente y rol
         $patient = $this->patientFinderService->find($request->getPatientId());
         if (!$patient) {
             throw new \Exception('El paciente no existe');
         }
 
+
+
         $patientUser = $this->userFinderService->find($patient->getUserId());
+        
+        if ($userRoleId === Role::PATIENT) {
+            $currentUserId = session()->get('userId');
+
+            if ($patient->getUserId() !== $currentUserId) {
+                throw new \Exception(
+                    'No podés crear un turno para otro paciente'
+                );
+            }
+        }
         if ($patientUser->getRoleId() !== Role::PATIENT) {
             throw new \Exception('El usuario seleccionado no tiene rol paciente');
         }
 
-        // 3. Validar que el paciente no sea el mismo que el médico
+        // Validar que el paciente no sea el mismo que el médico
         if ($patientUser->getId() === $user->getId()) {
             throw new \Exception('El paciente no puede ser el mismo que el médico');
         }
 
-        // 4. Validar fecha no pasada
+        // Validar fecha no pasada
         $today = new DateTime();
         $appointmentDate = new DateTime($request->getFecha());
         $appointmentDate->setTime(0, 0);

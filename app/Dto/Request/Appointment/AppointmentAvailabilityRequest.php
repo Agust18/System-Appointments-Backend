@@ -4,9 +4,9 @@ namespace App\Dto\Request\Appointment;
 final readonly class AppointmentAvailabilityRequest
 {
     public function __construct(
-        public int $medicalId,
-        public int $serviceId,
-        public string $fecha
+        private int $medicalId,
+        private int $serviceId,
+        private string $fecha
     ) {
     }
 

@@ -24,7 +24,7 @@ final class PatientCreateValidatorService
 
     public function validate(PatientRequest $request): void
     {
-         $user = $this->userFinderService->find($request->getUserId());
+        $user = $this->userFinderService->find($request->getUserId());
         
         if (!$user) {
             throw new UserNotFoundException($request->getUserId());

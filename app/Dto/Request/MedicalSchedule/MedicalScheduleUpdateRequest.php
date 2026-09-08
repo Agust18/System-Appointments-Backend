@@ -4,11 +4,11 @@ namespace App\Dto\Request\MedicalSchedule;
 final readonly class MedicalScheduleUpdateRequest
 {
     public function __construct(
-        public ?int $medicalId = null,
-        public ?int $dayOfWeek = null,
-        public ?string $startTime = null,
-        public ?string $endTime = null,
-        public ?bool $isActive = null
+        private ?int $medicalId = null,
+        private ?int $dayOfWeek = null,
+        private ?string $startTime = null,
+        private ?string $endTime = null,
+        private ?bool $isActive = null
     ) {
     }
 

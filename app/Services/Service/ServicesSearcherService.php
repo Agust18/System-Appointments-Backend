@@ -18,17 +18,21 @@ final class ServicesSearcherService
     }
 
     /**
-     * @return ServiceResponse[]
+     * @return array{data: ServiceResponse[], total: int}
      */
     public function searchResponses(ServiceFilterRequest $request): array
     {
         $entities = $this->serviceModel->search($request);
+        $total = $this->serviceModel->count($request);
 
         $responses = [];
         foreach ($entities as $entity) {
             $responses[] = $this->converter->convert($entity);
         }
 
-        return $responses;
+        return [
+            'data' => $responses,
+            'total' => $total,
+        ];
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Filters;
 
 use App\Constants\Role;
@@ -15,16 +14,15 @@ class AppointmentCreatePermission implements FilterInterface
         $roleId = session()->get('roleId');
         $response = \Config\Services::response();
 
-        //Admin, Recepcionista y Paciente pueden crear turnos
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION, Role::PATIENT], true)) {
-            return $request;
-        }
+        // Admin, Recepcionista y Paciente pueden crear turnos
+        $allowedRoles = [
+            Role::ADMIN,
+            Role::RECEPTION,
+            Role::PATIENT,
+        ];
 
-        //Médico NO puede crear turnos
-        if ($roleId === Role::MEDICAL) {
-            return $response->setStatusCode(403)->setJSON([
-                "message" => "Los médicos no pueden crear turnos. Solo pueden visualizarlos y cambiar su estado."
-            ]);
+        if (in_array($roleId, $allowedRoles, true)) {
+            return $request;
         }
 
         return $response->setStatusCode(403)->setJSON([
@@ -32,7 +30,10 @@ class AppointmentCreatePermission implements FilterInterface
         ]);
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): void
-    {
+    public function after(
+        RequestInterface $request,
+        ResponseInterface $response,
+        $arguments = null
+    ): void {
     }
 }

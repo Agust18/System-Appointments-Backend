@@ -28,6 +28,7 @@ class ServicePostController extends ResourceController
         $parameters = $this->request->getJSON();
 
         return new ServiceRequest(
+
             $parameters->name,
             $parameters->description ?? null,
             $parameters->durationMinutes,

@@ -37,6 +37,10 @@ final class UsersGetController extends ResourceController
         $roleId = $this->request->getGet('roleId');
         $isActive = $this->request->getGet('isActive');
 
+        $parsedIsActive = ($isActive !== null && $isActive !== '') 
+        ? filter_var($isActive, FILTER_VALIDATE_BOOLEAN) 
+        : null;
+
         return new UserFilterRequest(
             new PaginationRequest(
                 $page ? (int) $page : 1,
@@ -44,8 +48,10 @@ final class UsersGetController extends ResourceController
             ),
             $email ?? null,
             $search ?? null,
-            $roleId ?? null,
-            $isActive ?? null
+            ($roleId !== null && $roleId !== '') ? (int) $roleId : null,
+            $parsedIsActive
+            // $roleId ?? null,
+            // $isActive ?? null
 
         );
     }

@@ -6,8 +6,8 @@ use DateTime;
 final readonly class PatientRequest
 {
     public function __construct(
-        public int $userId,
-        public string $birthDate,
+        private int $userId,
+        private string $birthDate,
        
     ) {}
 

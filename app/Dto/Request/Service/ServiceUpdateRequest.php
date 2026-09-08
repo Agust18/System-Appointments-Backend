@@ -4,13 +4,13 @@ namespace App\Dto\Request\Service;
 final readonly class ServiceUpdateRequest
 {
     public function __construct(
-        public ?string $name = null,
-        public ?string $description = null,
-        public ?int $durationMinutes = null,
-        public ?int $bufferMinutes = null,
-        public ?float $price = null,
-        public ?int $slotStepMinutes = null,
-        public ?bool $isActive = null
+        private ?string $name = null,
+        private ?string $description = null,
+        private ?int $durationMinutes = null,
+        private ?int $bufferMinutes = null,
+        private ?float $price = null,
+        private ?int $slotStepMinutes = null,
+        private ?bool $isActive = null
     ) {
     }
 
