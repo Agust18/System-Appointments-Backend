@@ -7,10 +7,6 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 
-$routes->options('login', function() {
-    return response()->setStatusCode(200);
-});
-
 //login
 $routes->post('login', 'User\UserLoginController::login');
 
