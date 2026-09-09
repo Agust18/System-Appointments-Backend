@@ -25,6 +25,7 @@ class Cors extends BaseConfig
      *  }
      */
     public array $default = [
+        
         /**
          * Origins for the `Access-Control-Allow-Origin` header.
          *
@@ -34,7 +35,12 @@ class Cors extends BaseConfig
          *   - ['http://localhost:8080']
          *   - ['https://www.example.com']
          */
-        'allowedOrigins' => [],
+        'allowedOrigins' => [
+             'https://deploy-preview-5--tusturnos.netlify.app', // Tu frontend actual
+            'https://tusturnos.netlify.app',                  // Tu frontend en producción
+            'http://localhost:5173',                          // Desarrollo local
+            'http://127.0.0.1:5173',                          // Desarrollo local alternativo
+        ],
 
         /**
          * Origin regex patterns for the `Access-Control-Allow-Origin` header.
@@ -47,7 +53,10 @@ class Cors extends BaseConfig
          * E.g.:
          *   - ['https://\w+\.example\.com']
          */
-        'allowedOriginsPatterns' => [],
+        'allowedOriginsPatterns' => [
+               // Permitir cualquier subdominio de netlify.app (para deploy previews)
+            'https://.*--tusturnos\.netlify\.app',
+        ],
 
         /**
          * Weather to send the `Access-Control-Allow-Credentials` header.
@@ -57,7 +66,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
          */
-        'supportsCredentials' => false,
+        'supportsCredentials' => True,
 
         /**
          * Set headers to allow.
@@ -68,7 +77,15 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => [
+              'Content-Type',
+            'Authorization',
+            'X-Requested-With',
+            'Accept',
+            'Origin',
+            'Access-Control-Allow-Origin',
+        ],
+        
 
         /**
          * Set headers to expose.
@@ -93,7 +110,14 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => [
+             'GET',
+            'POST',
+            'PUT',
+            'DELETE',
+            'OPTIONS',
+            'PATCH',
+        ],
 
         /**
          * Set how many seconds the results of a preflight request can be cached.
