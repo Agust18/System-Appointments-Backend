@@ -62,6 +62,5 @@ fi
 
 echo "🌐 Apache iniciando en puerto 80 (mapeado a 8086)..."
 
-
 # ── 5. Ejecutar el comando original (apache2-foreground) ────────────────────
 exec "$@"
