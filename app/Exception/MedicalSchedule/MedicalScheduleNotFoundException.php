@@ -1,6 +1,6 @@
 <?php
 
-namespace App\exception\MedicalSchedule;
+namespace App\Exception\MedicalSchedule;
 
 use Exception;
 

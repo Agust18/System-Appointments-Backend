@@ -1,6 +1,6 @@
 <?php
 
-namespace App\exception\Patient;
+namespace App\Exception\Patient;
 use Exception;
 
 class PatientNotFoundExceptionByUserException extends Exception

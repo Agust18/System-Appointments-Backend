@@ -2,7 +2,7 @@
 namespace App\Models\MedicalSchedule;
 
 use App\Converter\MedicalSchedule\PrimitiveToMedicalScheduleConverter;
-use App\converter\MedicalSchedule\Projection\PrimitiveToMedicalScheduleProjectionConverter;
+use App\Converter\MedicalSchedule\Projection\PrimitiveToMedicalScheduleProjectionConverter;
 use App\Dto\Request\MedicalSchedule\MedicalScheduleFilterRequest;
 use App\Entity\MedicalSchedule\MedicalSchedule;
 use App\Entity\MedicalSchedule\Projection\MedicalScheduleProjection;

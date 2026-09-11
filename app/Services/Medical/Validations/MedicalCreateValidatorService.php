@@ -6,7 +6,7 @@ use App\Constants\Role;
 use App\Dto\Request\Medical\MedicalRequest;
 use App\Exception\Medical\MedicalTuitionAlreadyExistsException;
 use App\Exception\Medical\MedicalUserAlreadyExistsException;
-use App\Exception\User\UserNotMedicalException;
+use App\Exception\Medical\UserNotMedicalException;
 use App\Models\Medical\MedicalModel;
 use App\Services\Specialty\SpecialtyFinderService;
 use App\Services\User\UserFinderService;
