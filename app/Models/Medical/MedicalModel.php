@@ -213,36 +213,36 @@ final class MedicalModel
     }
 
     public function countProjection(MedicalFilterRequest $request): int
-{
-    $parameters = [];
+    {
+        $parameters = [];
 
-    $query = "SELECT COUNT(*) as total 
+        $query = "SELECT COUNT(*) as total 
               FROM medicals M 
               INNER JOIN users U ON U.id = M.user_id
               INNER JOIN specialties S ON S.id = M.specialty_id
               WHERE 1 = 1 ";
 
-    if ($request->hasSpecialtyId()) {
-        $query .= " AND M.specialty_id = ? ";
-        $parameters[] = $request->getSpecialtyId();
-    }
+        if ($request->hasSpecialtyId()) {
+            $query .= " AND M.specialty_id = ? ";
+            $parameters[] = $request->getSpecialtyId();
+        }
 
-    if ($request->hasIsActive()) {
-        $query .= " AND M.is_active = ? ";
-        $parameters[] = $request->getIsActive() ? 1 : 0;
-    }
+        if ($request->hasIsActive()) {
+            $query .= " AND M.is_active = ? ";
+            $parameters[] = $request->getIsActive() ? 1 : 0;
+        }
 
-    if ($request->hasSearch()) {
-        $query .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
-        $like = "%{$request->getSearch()}%";
-        $parameters[] = $like;
-        $parameters[] = $like;
-        $parameters[] = $like;
-    }
+        if ($request->hasSearch()) {
+            $query .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
+            $like = "%{$request->getSearch()}%";
+            $parameters[] = $like;
+            $parameters[] = $like;
+            $parameters[] = $like;
+        }
 
-    $result = $this->db->query($query, $parameters);
-    return (int) ($result->getRow()->total ?? 0);
-}
+        $result = $this->db->query($query, $parameters);
+        return (int) ($result->getRow()->total ?? 0);
+    }
 
 
     public function delete(int $id): void
@@ -281,7 +281,13 @@ final class MedicalModel
     {
         $query = "SELECT * FROM medicals WHERE specialty_id = ?";
         $result = $this->db->query($query, [$specialtyId]);
-        return $result->getResult();
+        $primitives = $result->getResult(); $result->getResult();
+        $entities = [];
+        foreach ($primitives as $primitive) {
+            $entities[] = $this->converter->convert($primitive);
+        }
+
+        return $entities;
     }
 
     public function countBySpecialtyId(int $specialtyId): int
@@ -291,7 +297,7 @@ final class MedicalModel
         return (int) $result->getRow()->total;
     }
 
-   
+
 
 
 }

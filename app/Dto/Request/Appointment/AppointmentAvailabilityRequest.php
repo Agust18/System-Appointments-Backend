@@ -1,6 +1,8 @@
 <?php
 namespace App\Dto\Request\Appointment;
 
+use DateTime;
+
 final readonly class AppointmentAvailabilityRequest
 {
     public function __construct(

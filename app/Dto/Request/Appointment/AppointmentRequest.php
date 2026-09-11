@@ -1,16 +1,18 @@
 <?php
 namespace App\Dto\Request\Appointment;
 
+use DateTime;
+
 final readonly class AppointmentRequest
 {
     public function __construct(
         private int $medicalId,
         private int $patientId,
-        private ?int $serviceId,
+        private int $serviceId,
         private string $fecha,
         private string $hora,
         private ?string $nota,
-        private string $status = 'pending'
+        private string $status,
     ) {
     }
 
@@ -22,7 +24,7 @@ final readonly class AppointmentRequest
     {
         return $this->patientId;
     }
-    public function getServiceId(): ?int
+    public function getServiceId(): int
     {
         return $this->serviceId;
     }

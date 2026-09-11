@@ -11,13 +11,13 @@ final class Appointment
         private ?int $id,
         private int $medicalId,
         private int $patientId,
-        private ?int $serviceId,
+        private int $serviceId,
         private DateTime $fecha,
         private DateTime $hora,
         private ?DateTime $horaFin,
         private ?string $nota,
         private string $status,
-        private ?DateTime $createdAt,
+        private DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {
     }
@@ -77,7 +77,7 @@ final class Appointment
         return $this->patientId;
     }
 
-    public function getServiceId(): ?int
+    public function getServiceId(): int
     {
         return $this->serviceId;
     }
@@ -107,7 +107,7 @@ final class Appointment
         return $this->status;
     }
 
-    public function getCreatedAt(): ?DateTime
+    public function getCreatedAt(): DateTime
     {
         return $this->createdAt;
     }
@@ -130,7 +130,7 @@ final class Appointment
             $request->getNota(),
             $request->getStatus(),
             new DateTime(),
-            new DateTime()
+            null
         );
     }
 }

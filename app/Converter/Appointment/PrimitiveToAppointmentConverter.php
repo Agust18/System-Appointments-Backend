@@ -16,11 +16,11 @@ final class PrimitiveToAppointmentConverter
             $primitive->service_id,
             new DateTime($primitive->fecha),
             new DateTime($primitive->hora),
-            $primitive->hora_fin,
-            $primitive->nota ?? null,
+            new DateTime($primitive->hora_fin),
+            $primitive->nota,
             $primitive->status,
-            $primitive->created_at,
-            $primitive->updated_at
+            new DateTime($primitive->created_at),
+            new DateTime($primitive->updated_at)
         );
     }
 }

@@ -28,12 +28,12 @@ class AppointmentPostController extends ResourceController
         $parameters = $this->request->getJSON();
     
         return new AppointmentRequest(
-            (int) $parameters->medicalId,
-            (int) $parameters->patientId,
+            $parameters->medicalId,
+            $parameters->patientId,
             $parameters->serviceId,
             $parameters->fecha,
             $parameters->hora,
-            $parameters->nota ?? null,
+            $parameters->nota,
             $parameters->status
         );
     }

@@ -23,7 +23,7 @@ final class UserUpdateValidatorService
         if ($request->getEmail() && $request->getEmail() !== $user->getEmail()) {
             $existingEmail = $this->userModel->findByEmail($request->getEmail());
             if ($existingEmail && $existingEmail->getId() !== $user->getId()) {
-                throw new \Exception('El email ya está registrado por otro usuario');
+                throw new \Exception('El email ya está registrado');
             }
         }
 
@@ -31,7 +31,7 @@ final class UserUpdateValidatorService
         if ($request->getDni() && $request->getDni() !== $user->getDni()) {
             $existingDni = $this->userModel->findByDni($request->getDni());
             if ($existingDni && $existingDni->getId() !== $user->getId()) {
-                throw new \Exception('El DNI ya está registrado por otro usuario');
+                throw new \Exception('El DNI ya está registrado');
             }
         }
 
@@ -39,13 +39,13 @@ final class UserUpdateValidatorService
         if ($request->getRoleId() && $request->getRoleId() !== $user->getRoleId()) {
             $role = $this->roleFinderService->find($request->getRoleId());
             if (!$role) {
-                throw new \Exception('El rol seleccionado no existe');
+                throw new \Exception('El Rol seleccionado no existe');
             }
         }
 
         //  Validar contraseña 
-        if ($request->getPassword() && strlen($request->getPassword()) < 6) {
-            throw new \Exception('La contraseña debe tener al menos 6 caracteres');
+        if ($request->getPassword() && strlen($request->getPassword()) < 8) {
+            throw new \Exception('La contraseña debe tener al menos 8 caracteres');
         }
     }
 }

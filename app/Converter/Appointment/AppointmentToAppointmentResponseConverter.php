@@ -4,6 +4,7 @@ namespace App\Converter\Appointment;
 use App\Dto\Response\Appointment\AppointmentResponse;
 use App\Entity\Appointment\Appointment;
 
+
 final class AppointmentToAppointmentResponseConverter
 {
     public function convert(Appointment $appointment): AppointmentResponse
@@ -12,12 +13,12 @@ final class AppointmentToAppointmentResponseConverter
             $appointment->getId(),
             $appointment->getMedicalId(),
             $appointment->getPatientId(),
-            $appointment->getFecha()->format('Y-m-d'),
+            $appointment->getFecha(),
             $appointment->getHora()->format('H:i:s'),
             $appointment->getNota(),
             $appointment->getStatus(),
-            $appointment->getCreatedAt()?->format('Y-m-d H:i:s'),
-            $appointment->getUpdatedAt()?->format('Y-m-d H:i:s')
+            $appointment->getCreatedAt(),
+            $appointment->getUpdatedAt()
         );
     }
 }
