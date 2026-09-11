@@ -72,7 +72,7 @@ final class UserModel
             $user->getIsActive(),
             $user->getRoleId(),
             $user->getToken(),
-            $user->getTokenExpirationDate()->format("Y-m-d H:i:s"),
+            $user->getTokenExpirationDate()?->format("Y-m-d H:i:s"),
             $user->getId()
         ]);
         return $user;

@@ -47,6 +47,8 @@ final class User
 
     public function generateToken(): void
     {
+        //recomendacion  bin2hex(random_bytes(32));  
+        // $this->token = bin2hex(random_bytes(32));   // 64 caracteres aleatorios
         $this->token = md5($this->email . rand(1000, 9999) . date("YmdHis"));
         $this->tokenExpirationDate = new DateTime("+24 hours");
     }
@@ -106,11 +108,11 @@ final class User
                 password_hash($request->getPassword(), PASSWORD_BCRYPT),
                 $request->getDni(),
                 $request->getIsActive(),
-                null, // token
-                null, // tokenExpirationDate
-                $request->getRoleId(), // roleId
-                null, // createdAt
-                null  // updatedAt
+                null, 
+                null, 
+                $request->getRoleId(), 
+                null, 
+                null  
             );
     }
 }
