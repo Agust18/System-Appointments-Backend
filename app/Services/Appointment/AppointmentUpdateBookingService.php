@@ -3,6 +3,7 @@ namespace App\Services\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentAlreadyExistsException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
@@ -80,7 +81,7 @@ final class AppointmentUpdateBookingService
             );
 
             if ($hasOverlap) {
-                throw new Exception('El horario seleccionado ya no se encuentra disponible. Por favor, elija otro horario.');
+                throw new AppointmentAlreadyExistsException;
             }
 
             $appointment->modify($request);

@@ -24,7 +24,6 @@ final class PatientQuickCreatorService
     public function create(PatientQuickRequest $request): PatientResponse
     {
         $this->db->transStart();
-
         try {
             $newUser = $this->userCreatorService->create($request->getUserRequest());
 
@@ -49,9 +48,7 @@ final class PatientQuickCreatorService
     {
         return new PatientRequest(
             userId: $userId,
-            birthDate: $data->getBirthDate()
-          
-           
+            birthDate: $data->getBirthDate()     
         );
     }
 }

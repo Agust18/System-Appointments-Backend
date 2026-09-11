@@ -23,7 +23,6 @@ final class SpecialtyDeleterService
         throw new SpecialtyNotFoundException($id);
     }
 
-  
     $count = $this->medicalModel->countBySpecialtyId($id);
     if ($count > 0) {
         throw new \Exception("No se puede eliminar la especialidad porque está asignada a {$count} médico(s)");

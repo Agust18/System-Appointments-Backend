@@ -10,17 +10,18 @@ final class PrimitiveToAppointmentConverter
     public function convert(object $primitive): Appointment
     {
         return new Appointment(
-            $primitive->id ? (int)$primitive->id : null,
-            $primitive->medical_id,
-            $primitive->patient_id,
-            $primitive->service_id,
+            $primitive->id ? (int) $primitive->id : null,
+            (int) $primitive->medical_id,
+            (int) $primitive->patient_id,
+            (int) $primitive->service_id,
             new DateTime($primitive->fecha),
             new DateTime($primitive->hora),
-            new DateTime($primitive->hora_fin),
+            $primitive->hora_fin !== null ? new DateTime($primitive->hora_fin) : null,
             $primitive->nota,
             $primitive->status,
             new DateTime($primitive->created_at),
-            new DateTime($primitive->updated_at)
+            $primitive->updated_at !== null ? new DateTime($primitive->updated_at) : null, 
         );
+        
     }
 }

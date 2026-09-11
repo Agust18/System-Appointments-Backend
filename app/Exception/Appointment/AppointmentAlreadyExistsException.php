@@ -7,6 +7,9 @@ class AppointmentAlreadyExistsException extends Exception
 {
     public function __construct()
     {
-        parent::__construct("Ya existe un turno para ese médico en esa fecha y hora", 409);
+        parent::__construct(
+            'El horario seleccionado ya no se encuentra disponible. Por favor, elija otro horario.',
+            409
+        );
     }
 }

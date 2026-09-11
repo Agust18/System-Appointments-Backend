@@ -27,9 +27,7 @@ final class UserLoginController extends ResourceController {
     private function getRequest(): UserLoginRequest
     {
         $clientRequest = $this->request->getJSON();
-
-      
-
+        
         return new UserLoginRequest(
             $clientRequest->email,
             $clientRequest->password

@@ -104,30 +104,25 @@ final class MedicalScheduleModel
 
         return $this->converterProjection->convert($primitive);
     }
-
-
-
-    public function findOverlapping(int $medicalId, int $dayOfWeek, string $startTime, string $endTime): ?MedicalSchedule
-    {
+    public function findOverlapping(
+        int $medicalId,
+        int $dayOfWeek,
+        string $startTime,
+        string $endTime
+    ): ?MedicalSchedule {
         $query = "SELECT * FROM medical_schedules 
               WHERE medical_id = ? 
-              AND day_of_week = ? 
-              AND is_active = 1
-              AND (
-                  (start_time < ? AND end_time > ?) OR
-                  (start_time < ? AND end_time > ?) OR
-                  (start_time >= ? AND end_time <= ?)
-              )";
+                AND day_of_week = ? 
+                AND is_active = 1
+                AND start_time < ?    -- el existente empieza antes de que termine el nuevo
+                AND end_time > ?      -- el existente termina después de que empiece el nuevo
+              LIMIT 1";
 
         $result = $this->db->query($query, [
-            $medicalId,           // medical_id
-            $dayOfWeek,           // day_of_week
+            $medicalId,
+            $dayOfWeek,
             $endTime,
-            $startTime, // Caso 1: nuevo horario dentro de uno existente
             $startTime,
-            $startTime, // Caso 2: existente dentro del nuevo
-            $startTime,
-            $endTime    // Caso 3: superposición parcial
         ]);
 
         $primitive = $result->getRow();
@@ -135,9 +130,9 @@ final class MedicalScheduleModel
         if (!$primitive) {
             return null;
         }
+
         return $this->converter->convert($primitive);
     }
-
     public function findByMedicalId(int $medicalId): array
     {
         $query = "SELECT * FROM medical_schedules WHERE medical_id = ? ORDER BY day_of_week ASC";
@@ -347,24 +342,4 @@ final class MedicalScheduleModel
     }
 
 
-    public function findExisting(int $medicalId, int $dayOfWeek, string $startTime, string $endTime): ?MedicalSchedule
-    {
-        $query = "SELECT * FROM medical_schedules 
-              WHERE medical_id = ? 
-              AND day_of_week = ? 
-              AND start_time = ? 
-              AND end_time = ?";
-
-        $result = $this->db->query($query, [
-            $medicalId,
-            $dayOfWeek,
-            $startTime,
-            $endTime
-        ]);
-        $primitive = $result->getRow();
-        if (!$primitive) {
-            return null;
-        }
-        return $this->converter->convert($primitive);
-    }
 }

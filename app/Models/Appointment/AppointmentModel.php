@@ -178,19 +178,7 @@ final class AppointmentModel
         $this->db->query($query, [$id]);
     }
 
-    public function findByMedicalAndDateTime(int $medicalId, string $fecha, string $hora): ?Appointment
-    {
-        $query = "SELECT * FROM appointments WHERE medical_id = ? AND fecha = ? AND hora = ?";
-        $result = $this->db->query($query, [$medicalId, $fecha, $hora]);
-        $primitive = $result->getRow();
-
-        if (!$primitive) {
-            return null;
-        }
-
-        return $this->converter->convert($primitive);
-    }
-
+   
     public function findByPatientUserId(int $userId): array
     {
         $query = "SELECT a.* FROM appointments a 

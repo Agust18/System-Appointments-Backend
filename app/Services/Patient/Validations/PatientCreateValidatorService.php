@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\Patient\Validations;
 
+use App\Constants\Role;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Exception\Patient\InvalidBirthDateException;
 use App\Exception\Patient\PatientAlreadyExistsException;
@@ -25,13 +26,9 @@ final class PatientCreateValidatorService
     public function validate(PatientRequest $request): void
     {
         $user = $this->userFinderService->find($request->getUserId());
-        
-        if (!$user) {
-            throw new UserNotFoundException($request->getUserId());
-        }
-        $user = $this->userFinderService->find($request->getUserId());
+      
 
-        if ($user->getRoleId() !== 3) {
+        if ($user->getRoleId() !== Role::PATIENT) {
             throw new UserNotPatientException($request->getUserId());
         }
 

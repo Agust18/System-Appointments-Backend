@@ -21,14 +21,14 @@ final class Patient
         $this->birthDate = new DateTime($request->getBirthDate());
         $this->updatedAt = new DateTime();
 
-        
+
     }
 
     public function modify(PatientUpdateRequest $request): void
     {
-       if ($request->getBirthDate() !== null) {
+        if ($request->getBirthDate() !== null) {
             $this->birthDate = new DateTime($request->getBirthDate());
-        }      
+        }
         $this->updatedAt = new DateTime();
     }
 
@@ -46,7 +46,7 @@ final class Patient
     {
         return $this->birthDate;
     }
-    
+
     public function getCreatedAt(): ?DateTime
     {
         return $this->createdAt;
@@ -57,14 +57,15 @@ final class Patient
         return $this->updatedAt;
     }
 
+    
     public static function fromRequest(PatientRequest $request): Patient
     {
         return new Patient(
-            null,                                    
-            $request->getUserId(),                   
-            new DateTime($request->getBirthDate()),          
-            new DateTime(),                          
-            new DateTime()                           
+            null,
+            $request->getUserId(),
+            new DateTime($request->getBirthDate()),
+            new DateTime(),
+            new DateTime()
         );
     }
 }

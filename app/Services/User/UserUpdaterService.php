@@ -27,27 +27,23 @@ final class UserUpdaterService
 
     public function update(UserUpdaterRequest $request, int $id): UserResponse
     {
-
         $user = $this->userFinderService->find($id);
-
+        
         $this->validator->validate($user, $request);
-
+        
         $oldIsActive = $user->getIsActive();
+        
         $oldRoleId = $user->getRoleId();
-
+        
         $user->modify($request);
-
+        
         $user = $this->userModel->update($user);
-
+        
         $this->syncService->syncAll($user->getId(), $oldIsActive, $oldRoleId, $request);
-
+        
         $response = $this->converter->convert($user);
-
+        
         return $response;
-        // $this->converter->convert($updatedUser);
-
-        // $response = $this->converter->convert($user);
-
-        // return $response;
+        
     }
 }

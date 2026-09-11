@@ -28,8 +28,6 @@ final class UsersGetController extends ResourceController
 
     private function getRequest(): UserFilterRequest
     {
-
-
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $email = $this->request->getGet('email');

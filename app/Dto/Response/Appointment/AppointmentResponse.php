@@ -11,9 +11,9 @@ final readonly class AppointmentResponse
         public int $patientId,
         public DateTime $fecha,
         public string $hora,
-        public string $nota,
+        public ?string $nota,
         public string $status,
         public DateTime $createdAt,
-        public DateTime $updatedAt
+        public ?DateTime $updatedAt
     ) {}
 }

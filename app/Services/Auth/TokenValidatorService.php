@@ -16,7 +16,6 @@ final class TokenValidatorService
 
     public function validate(string $token): bool
     {
-       
         if (empty($token)) {
             error_log("Token vacío");
             return false;
