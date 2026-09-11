@@ -1,6 +1,6 @@
 <?php
 
-namespace App\exception\Appointment;
+namespace App\Exception\Appointment;
 
 use Exception;
 

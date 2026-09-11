@@ -1,5 +1,5 @@
 <?php
-namespace App\converter\MedicalSchedule\Projection;
+namespace App\Converter\MedicalSchedule\Projection;
 
 use App\Entity\MedicalSchedule\Projection\MedicalScheduleProjection;
 use DateTime;

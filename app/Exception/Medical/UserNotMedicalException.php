@@ -1,5 +1,5 @@
 <?php
-namespace App\Exception\User;
+namespace App\Exception\Medical;
 
 use Exception;
 
