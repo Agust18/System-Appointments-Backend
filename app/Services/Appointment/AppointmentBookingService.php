@@ -37,10 +37,9 @@ final class AppointmentBookingService
         }
 
         try {
-            // Iniciar transacción dentro del lock
             $this->db->transBegin();
 
-            // Recalcular duración y bloque total con servicio/override vigentes
+            // recalcula duración y bloque total con servicio/override vigentes
             $service = $this->serviceModel->find($request->getServiceId());
             if (!$service || !$service->isActive()) {
                 throw new Exception('El servicio seleccionado no está disponible.');
@@ -60,13 +59,13 @@ final class AppointmentBookingService
 
             $totalBlockMinutes = $effectiveDuration + $service->getBufferMinutes();
 
-            // 4. Calcular horas de inicio y fin del turno
+            //calcular horas de inicio y fin del turno
             $horaInicioFormatted = substr($request->getHora(), 0, 5) . ':00';
             $horaInicioDt = new DateTime("{$request->getFecha()} {$horaInicioFormatted}");
             $horaFinDt = (clone $horaInicioDt)->modify("+{$totalBlockMinutes} minutes");
             $horaFinFormatted = $horaFinDt->format('H:i:s');
 
-            // 5. Verificación final de solapamiento (intersección contra turnos activos)
+            //verificación final de solapamiento (intersección contra turnos activos)
             $hasOverlap = $this->appointmentModel->hasOverlap(
                 $request->getMedicalId(),
                 $request->getFecha(),
@@ -92,20 +91,16 @@ final class AppointmentBookingService
                 new DateTime(),
                 new DateTime()
             );
-
             $createdAppointment = $this->appointmentModel->insert($appointment);
-
-            // Commit
             $this->db->transCommit();
-
             return $createdAppointment;
 
         } catch (Exception $e) {
-            // Rollback incondicional si la transacción quedó abierta
+            //rollback incondicional si la transacción quedó abierta
             $this->db->transRollback();
             throw $e;
         } finally {
-            // 8. Liberar lock siempre, garantizado en el bloque finally
+            //liberar lock siempre, garantizado en el bloque finally
             $this->releaseLock($lockName);
         }
     }

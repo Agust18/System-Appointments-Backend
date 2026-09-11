@@ -1,20 +1,21 @@
 <?php
 namespace App\Dto\Request\Appointment;
 
+use DateTime;
+
 final readonly class AppointmentUpdateRequest
 {
     public function __construct(
-        private ?int $medicalId = null,
-        private ?int $patientId = null,
-        private ?int $serviceId = null,
-        private ?string $fecha = null,
-        private ?string $hora = null,
-        private ?string $nota = null,
-        private ?string $status = null
-    ) {
-    }
+        private ?int $medicalId,
+        private ?int $patientId,
+        private ?int $serviceId,
+        private ?string $fecha,
+        private ?string $hora,
+        private ?string $nota,
+        private ?string $status
+    ) {}
 
-    public function getMedicalId(): ?int
+    public function getMedicalId(): int
     {
         return $this->medicalId;
     }
@@ -26,7 +27,7 @@ final readonly class AppointmentUpdateRequest
     {
         return $this->serviceId;
     }
-    public function getFecha(): ?string
+    public function getFecha(): ?String
     {
         return $this->fecha;
     }

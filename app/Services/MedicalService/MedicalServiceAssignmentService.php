@@ -27,14 +27,10 @@ final class MedicalServiceAssignmentService
 
     public function assign(MedicalServiceRequest $request, int $medicalId): MedicalServiceResponse
     {
-        $medical = $this->medicalFinderService->find($medicalId);
-        if (!$medical) {
-            throw new Exception('El profesional especificado no existe.');
-        }
+        $this->medicalFinderService->find($medicalId);
+        $service = $this->serviceFinderService->find($request->getServiceId());
 
-        // findResponse() ya lanza excepción si el servicio no existe.
-        $service = $this->serviceFinderService->findResponse($request->getServiceId());
-        if (!$service->isActive) {
+        if (!$service->isActive()) {
             throw new Exception('El servicio seleccionado se encuentra inactivo.');
         }
 

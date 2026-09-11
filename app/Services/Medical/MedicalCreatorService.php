@@ -6,8 +6,6 @@ use App\Dto\Request\Medical\MedicalRequest;
 use App\Dto\Response\Medical\MedicalResponse;
 use App\Entity\Medical\Medical;
 use App\Models\Medical\MedicalModel;
-use App\Services\User\UserFinderService;
-use App\Services\Specialty\SpecialtyFinderService;
 use App\Services\Medical\Validations\MedicalCreateValidatorService;
 
 
@@ -15,16 +13,12 @@ final class MedicalCreatorService
 {
     private MedicalModel $medicalModel;
     private MedicalToMedicalResponseConverter $converter;
-    private UserFinderService $userFinderService;
-    private SpecialtyFinderService $specialtyFinderService;
     private MedicalCreateValidatorService $validator;
 
     public function __construct()
     {
         $this->medicalModel = new MedicalModel();
         $this->converter = new MedicalToMedicalResponseConverter();
-        $this->userFinderService = new UserFinderService();
-        $this->specialtyFinderService = new SpecialtyFinderService();
         $this->validator = new MedicalCreateValidatorService();
     }
 

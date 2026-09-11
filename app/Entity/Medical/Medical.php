@@ -16,9 +16,10 @@ final class Medical
         private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
-    ) {}
+    ) {
+    }
 
-   
+
 
     public function modify(MedicalUpdateRequest $request): void
     {
@@ -59,9 +60,9 @@ final class Medical
     }
 
     public function modifyIsActive(bool $isActive): void
-{
-    $this->isActive = $isActive;
-}
+    {
+        $this->isActive = $isActive;
+    }
 
     public function getCreatedAt(): ?DateTime
     {

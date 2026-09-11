@@ -36,19 +36,19 @@ final class AppointmentAvailabilityService
 
         $this->validateFecha($fecha);
 
-        // 1. Validar y obtener el servicio
+        //valida y obtener el servicio
         $service = $this->serviceModel->find($serviceId);
         if (!$service || !$service->isActive()) {
             throw new Exception('El servicio seleccionado no existe o no se encuentra activo.');
         }
 
-        // 2. Validar y obtener la asignación del médico
+        //valida y obtener la asignación del médico
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
         if (!$medicalService) {
             throw new Exception('El profesional seleccionado no ofrece el servicio indicado.');
         }
 
-        // 3. Calcular duración efectiva del servicio y bloque total (con buffer)
+        //calcula duración efectiva del servicio y bloque total (con buffer)
         $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)
             ? $medicalService->getCustomDurationMinutes()
             : $service->getDurationMinutes();
@@ -57,7 +57,7 @@ final class AppointmentAvailabilityService
         $totalBlockMinutes = $effectiveDuration + $bufferMinutes;
         $slotStepMinutes = $service->getSlotStepMinutes() > 0 ? $service->getSlotStepMinutes() : 15;
 
-        // 4. Obtener rangos activos de atención para el día de la semana
+        //obtiene rangos activos de atención para el día de la semana
         $dayOfWeek = (int) date('N', strtotime($fecha));
         $activeRanges = $this->medicalScheduleModel->findActiveRangesByMedicalAndDay($medicalId, $dayOfWeek);
 
@@ -65,12 +65,12 @@ final class AppointmentAvailabilityService
             return [];
         }
 
-        // 5. Traer turnos agendados del día (vía Model, no SQL directo acá)
+        //trae turnos agendados del día (vía Model, no SQL directo acá)
         $existingAppointments = $this->appointmentModel->findActiveHoursByMedicalAndFecha($medicalId, $fecha);
 
         $availableSlots = [];
 
-        // 6. Recorrer cada rango de atención
+        //recorre cada rango de atención
         foreach ($activeRanges as $range) {
             $rangeStartMinutes = $this->timeToMinutes(substr($range->getStartTime(), 0, 5));
             $rangeEndMinutes = $this->timeToMinutes(substr($range->getEndTime(), 0, 5));
@@ -86,7 +86,7 @@ final class AppointmentAvailabilityService
                 $candidateStartStr = $this->minutesToTime($candidateStart) . ':00';
                 $candidateEndStr = $this->minutesToTime($candidateEnd) . ':00';
 
-                // Chequear solapamiento: candidate_start < turno.hora_fin AND candidate_end > turno.hora
+                //chequea solapamiento: candidate_start < turno.hora_fin AND candidate_end > turno.hora
                 $overlaps = false;
                 foreach ($existingAppointments as $appt) {
                     $apptHora = substr($appt->hora, 0, 8);
@@ -101,8 +101,8 @@ final class AppointmentAvailabilityService
                 if (!$overlaps) {
                     $availableSlots[] = [
                         'start_time'     => substr($candidateStartStr, 0, 5),
-                        'end_time'       => $this->minutesToTime($visibleEnd),       // Duración real sin buffer
-                        'block_end_time' => substr($candidateEndStr, 0, 5)          // Fin con buffer (bloqueo total)
+                        'end_time'       => $this->minutesToTime($visibleEnd),       //duración real sin buffer
+                        'block_end_time' => substr($candidateEndStr, 0, 5)          //fin con buffer (bloqueo total)
                     ];
                 }
             }

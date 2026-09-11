@@ -70,7 +70,7 @@ final class AppointmentModel
         $result = $this->db->query($query, $params);
         $row = $result->getRow();
 
-        return $row && (int)$row->total > 0;
+        return $row && (int) $row->total > 0;
     }
 
     public function update(Appointment $appointment): Appointment
@@ -178,26 +178,20 @@ final class AppointmentModel
         $this->db->query($query, [$id]);
     }
 
-    public function findByMedicalAndDateTime(int $medicalId, string $fecha, string $hora): ?Appointment
-    {
-        $query = "SELECT * FROM appointments WHERE medical_id = ? AND fecha = ? AND hora = ?";
-        $result = $this->db->query($query, [$medicalId, $fecha, $hora]);
-        $primitive = $result->getRow();
-
-        if (!$primitive) {
-            return null;
-        }
-
-        return $this->converter->convert($primitive);
-    }
-
+   
     public function findByPatientUserId(int $userId): array
     {
         $query = "SELECT a.* FROM appointments a 
               INNER JOIN patients p ON p.id = a.patient_id 
               WHERE p.user_id = ?";
         $result = $this->db->query($query, [$userId]);
-        return $result->getResult();
+        $primitives = $result->getResult();
+        $appointments = [];
+        foreach ($primitives as $primitive) {
+            $appointments[] = $this->converter->convert($primitive);
+        }
+        return $appointments;
+
     }
 
     public function findByMedicalUserId(int $userId): array
@@ -206,7 +200,12 @@ final class AppointmentModel
               INNER JOIN medicals m ON m.id = a.medical_id 
               WHERE m.user_id = ?";
         $result = $this->db->query($query, [$userId]);
-        return $result->getResult();
+        $primitives = $result->getResult();
+        $appointments = [];
+        foreach ($primitives as $primitive) {
+            $appointments[] = $this->converter->convert($primitive);
+        }
+        return $appointments;
     }
 
     /**
