@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Controllers\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Services\Appointment\AppointmentUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -24,16 +26,21 @@ class AppointmentPutController extends ResourceController
 
     private function getRequest(): AppointmentUpdateRequest
     {
-        $parameters = $this->request->getJSON();
+
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, AppointmentUpdateRequest::rules(), AppointmentUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new AppointmentUpdateRequest(
-            $parameters->medicalId ?? null,
-            $parameters->patientId ?? null,
-            $parameters->serviceId ?? null,
-            $parameters->fecha ?? null,
-            $parameters->hora ?? null,
-            $parameters->nota ?? null,
-            $parameters->status ?? null
+            medicalId: isset($parameters->medicalId) ? (int) $parameters->medicalId : null,
+            patientId: isset($parameters->patientId) ? (int) $parameters->patientId : null,
+            serviceId: isset($parameters->serviceId) ? (int) $parameters->serviceId : null,
+            fecha: isset($parameters->fecha) ? (string) $parameters->fecha : null,
+            hora: isset($parameters->hora) ? (string) $parameters->hora : null,
+            nota: $parameters->nota ?? null,
+            status: $parameters->status ?? null
         );
     }
 }

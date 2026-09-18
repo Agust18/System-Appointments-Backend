@@ -22,11 +22,16 @@ final class UserCreatorService
         $this->validator = new UserCreateValidatorService();
     }
 
-    public function create(UserRequest $request): UserResponse
+    public function create(UserRequest $request, bool $isVerified = false): UserResponse
     {
         $this->validator->validate($request);
 
         $user = User::convertFromRequest($request);
+
+        if ($isVerified) {
+            $user->markAsVerified();
+        }
+
 
         $newUser = $this->userModel->insert($user);
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Dto\Request\Appointment;
 
 use DateTime;
@@ -9,8 +10,7 @@ final readonly class AppointmentAvailabilityRequest
         private int $medicalId,
         private int $serviceId,
         private string $fecha
-    ) {
-    }
+    ) {}
 
     public function getMedicalId(): int
     {

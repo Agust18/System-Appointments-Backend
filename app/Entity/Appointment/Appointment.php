@@ -29,27 +29,19 @@ final class Appointment
      */
     public function modify(AppointmentUpdateRequest $request): void
     {
-        if ($request->getMedicalId() !== null) {
-            $this->medicalId = $request->getMedicalId();
-        }
-        if ($request->getPatientId() !== null) {
-            $this->patientId = $request->getPatientId();
-        }
-        if ($request->getServiceId() !== null) {
-            $this->serviceId = $request->getServiceId();
-        }
+        $this->medicalId = $request->getMedicalId() ?? $this->medicalId;
+        $this->patientId = $request->getPatientId() ?? $this->patientId;
+        $this->serviceId = $request->getServiceId() ?? $this->serviceId;
+        $this->nota = $request->getNota() ?? $this->nota;
+        $this->status = $request->getStatus() ?? $this->status;
+
         if ($request->getFecha() !== null) {
             $this->fecha = new DateTime($request->getFecha());
         }
         if ($request->getHora() !== null) {
             $this->hora = new DateTime($request->getHora());
         }
-        if ($request->getNota() !== null) {
-            $this->nota = $request->getNota();
-        }
-        if ($request->getStatus() !== null) {
-            $this->status = $request->getStatus();
-        }
+
         $this->updatedAt = new DateTime();
     }
 

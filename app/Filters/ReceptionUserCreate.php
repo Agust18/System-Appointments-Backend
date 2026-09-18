@@ -37,7 +37,10 @@ class ReceptionUserCreate implements FilterInterface
         }
 
         // Obtener el rol solicitado
-        $requestedRole = $body->roleId ?? $body->role_id ?? null;
+        $requestedRole = $body->roleId ??
+            $body->role_id ??
+            $body->user->roleId ??
+            null;
 
         if ($requestedRole === null) {
             return $response->setStatusCode(400)->setJSON([
@@ -64,6 +67,5 @@ class ReceptionUserCreate implements FilterInterface
         RequestInterface $request,
         ResponseInterface $response,
         $arguments = null
-    ): void {
-    }
+    ): void {}
 }

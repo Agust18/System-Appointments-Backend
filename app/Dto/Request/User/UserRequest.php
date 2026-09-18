@@ -11,26 +11,26 @@ final readonly class UserRequest{
        
     ){}
 
-    public function GetUsername():string
+    public function getUsername():string
     {
         return $this->username;
     }
     
-    public function GetEmail():string
+    public function getEmail():string
     {
         return $this->email;
 
     }
-    public function GetPassword():string
+    public function getPassword():string
     {
         return $this->password;
     }
-    public function GetDni():int
+    public function getDni():int
     {
         return $this->dni;
     }
 
-    public function GetRoleId():?int
+    public function getRoleId():?int
     {
         return $this->roleId;
     }
@@ -38,6 +38,9 @@ final readonly class UserRequest{
     {
         return $this->isActive;
     }
+
+    
+    
     
     
 

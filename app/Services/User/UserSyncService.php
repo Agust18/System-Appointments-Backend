@@ -9,11 +9,11 @@ use App\Constants\Role;
 final class UserSyncService
 {
     private MedicalModel $medicalModel;
-    private PatientModel $patientModel;
+   
     public function __construct()
     {
         $this->medicalModel = new MedicalModel();
-        $this->patientModel = new PatientModel();
+      
     }  
 
     public function syncAll(int $userId, bool $oldIsActive, int $oldRoleId, UserUpdaterRequest $request): void
@@ -48,7 +48,6 @@ final class UserSyncService
             $medical = $this->medicalModel->findByUserId($userId);
             
             if ($medical) {
-                // ya existe → reactivar
                 $medical->modifyIsActive(true);
                 $this->medicalModel->update($medical);
             }

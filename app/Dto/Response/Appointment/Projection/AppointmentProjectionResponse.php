@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dto\Response\Appointment\Projection; 
+namespace App\Dto\Response\Appointment\Projection;
 
 final readonly class AppointmentProjectionResponse
 {
@@ -9,20 +9,19 @@ final readonly class AppointmentProjectionResponse
         public int $id,
         public int $medicalId,
         public int $patientId,
-        
+        public int $serviceId,
+
         // Projections (para mostrar)
         public string $medicoNombre,
-        public string $especialidad,
         public string $pacienteNombre,
-        public ?string $pacienteTelefono,
-        public ?string $pacienteDni,
-        
+        public ?string $servicioNombre,
+
+
         // Datos del turno
         public string $fecha,
         public string $hora,
         public ?string $nota,
-        public string $status,
-        public ?string $createdAt,
-        public ?string $updatedAt
+        public string $status
+
     ) {}
 }

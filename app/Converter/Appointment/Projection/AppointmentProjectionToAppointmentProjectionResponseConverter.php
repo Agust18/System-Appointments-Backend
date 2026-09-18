@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Converter\Appointment\Projection;
 
 use App\Dto\Response\Appointment\Projection\AppointmentProjectionResponse;
@@ -13,21 +14,19 @@ final class AppointmentProjectionToAppointmentProjectionResponseConverter
             id: $appointment->getId(),
             medicalId: $appointment->getMedicalId(),
             patientId: $appointment->getPatientId(),
-            
+            serviceId: $appointment->getServiceId(),
+
+
             // Projections (nombres)
             medicoNombre: $appointment->getMedicoNombre(),
-            especialidad: $appointment->getEspecialidad(),
             pacienteNombre: $appointment->getPacienteNombre(),
-            pacienteTelefono: $appointment->getPacienteTelefono(),
-            pacienteDni: $appointment->getPacienteDni(),
-            
-            // Datos del turno
+            servicioNombre: $appointment->getServicioNombre(),
+
             fecha: $appointment->getFecha()->format('Y-m-d'),
             hora: $appointment->getHora()->format('H:i:s'),
             nota: $appointment->getNota(),
             status: $appointment->getStatus(),
-            createdAt: $appointment->getCreatedAt()?->format('Y-m-d H:i:s'),
-            updatedAt: $appointment->getUpdatedAt()?->format('Y-m-d H:i:s')
+
         );
     }
 }

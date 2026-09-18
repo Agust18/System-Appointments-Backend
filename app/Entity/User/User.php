@@ -15,10 +15,11 @@ final class User
         private string $password,
         private ?int $dni,
         private bool $isActive,
+        private bool $isVerified,
         private ?string $token,
         private ?DateTime $tokenExpirationDate,
         private ?int $roleId,
-        private ?DateTime $createdAt,   
+        private ?DateTime $createdAt,
         private ?DateTime $updatedAt
 
     ) {
@@ -85,6 +86,16 @@ final class User
         return $this->isActive;
     }
 
+    public function getIsVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function markAsVerified(): void
+    {
+        $this->isVerified = true;
+    }
+
     public function getRoleId(): ?int
     {
         return $this->roleId;
@@ -102,17 +113,18 @@ final class User
     public static function convertFromRequest(UserRequest $request): User
     {
         return new User(
-                null,
-                $request->getUserName(),
-                $request->getEmail(),
-                password_hash($request->getPassword(), PASSWORD_BCRYPT),
-                $request->getDni(),
-                $request->getIsActive(),
-                null, 
-                null, 
-                $request->getRoleId(), 
-                null, 
-                null  
-            );
+            null,
+            $request->getUserName(),
+            $request->getEmail(),
+            password_hash($request->getPassword(), PASSWORD_BCRYPT),
+            $request->getDni(),
+            $request->getIsActive(),
+            false,
+            null,
+            null,
+            $request->getRoleId(),
+            null,
+            null
+        );
     }
 }

@@ -17,7 +17,7 @@ class UserPostController extends ResourceController{
 
     public function create():ResponseInterface{
         $userRequest = $this->getRequest();
-        $userResponse = $this->userCreatorService->create($userRequest);
+        $userResponse = $this->userCreatorService->create($userRequest,true);
 
         
         return $this->response->setJSON($userResponse);
