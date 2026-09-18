@@ -28,28 +28,28 @@ final class UserDeleterValidatorService
         if ($user->getRoleId() === 1) {
             $adminCount = $this->userModel->countByRoleId(1);
             if ($adminCount <= 1) {
-                throw new \Exception('No se puede eliminar al último administrador del sistema');
+                throw new \Exception('No se puede eliminar al último administrador del sistema', 409);
             }
         }
 
         if ($this->patientModel->findByUserId($id)) {
-            throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de paciente asociado');
+            throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de paciente asociado', 409);
         }
 
         if ($this->medicalModel->findByUserId($id)) {
-            throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de médico asociado');
+            throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de médico asociado', 409);
         }
 
         $appointmentsAsPatient = $this->appointmentModel->findByPatientUserId($id);
         if (!empty($appointmentsAsPatient)) {
             $count = count($appointmentsAsPatient);
-            throw new \Exception("No se puede eliminar el usuario porque tiene {$count} turnos como paciente");
+            throw new \Exception("No se puede eliminar el usuario porque tiene {$count} turnos como paciente", 409);
         }
 
         $appointmentsAsMedical = $this->appointmentModel->findByMedicalUserId($id);
         if (!empty($appointmentsAsMedical)) {
             $count = count($appointmentsAsMedical);
-            throw new \Exception("No se puede eliminar el usuario porque tiene {$count} turnos como médico");
+            throw new \Exception("No se puede eliminar el usuario porque tiene {$count} turnos como médico", 409);
         }
     }
 }

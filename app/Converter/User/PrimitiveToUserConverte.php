@@ -13,12 +13,13 @@ final class PrimitiveToUserConverte
             $primitive->email,
             $primitive->password,
             $primitive->dni,
-            $primitive->is_active,
+            (bool) $primitive->is_active,
+            (bool) $primitive->is_verified,
             $primitive->token,
-            new DateTime($primitive->token_expiration_date),
+            $primitive->token_expiration_date ? new DateTime($primitive->token_expiration_date) : null,
             $primitive->role_id,
-            new DateTime($primitive->created_at),
-            new DateTime($primitive->updated_at)
+            $primitive->created_at ? new DateTime($primitive->created_at) : null,
+            $primitive->updated_at ? new DateTime($primitive->updated_at) : null,
 
 
         );

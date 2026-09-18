@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Medical;
 
 use App\Converter\Medical\PrimitiveToMedicalConverter;
@@ -281,8 +282,9 @@ final class MedicalModel
     {
         $query = "SELECT * FROM medicals WHERE specialty_id = ?";
         $result = $this->db->query($query, [$specialtyId]);
-        $primitives = $result->getResult(); $result->getResult();
+        $primitives = $result->getResult();
         $entities = [];
+
         foreach ($primitives as $primitive) {
             $entities[] = $this->converter->convert($primitive);
         }
@@ -296,8 +298,4 @@ final class MedicalModel
         $result = $this->db->query($query, [$specialtyId]);
         return (int) $result->getRow()->total;
     }
-
-
-
-
 }

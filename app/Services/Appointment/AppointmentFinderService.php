@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Appointment;
 
 use App\Converter\Appointment\AppointmentToAppointmentResponseConverter;
@@ -21,37 +22,17 @@ final class AppointmentFinderService
     public function find(int $id): Appointment
     {
         $appointment = $this->appointmentModel->find($id);
-        
+
         if (!$appointment) {
             throw new AppointmentNotFoundException($id);
         }
         return $appointment;
-      
     }
 
-     public function findResponse(int $id): AppointmentResponse
+    public function findResponse(int $id): AppointmentResponse
     {
         $appointment = $this->find($id);
-        return $this->converter->convert($appointment);
-    }
-
-    public function findByMedicalId(int $medicalId): array
-    {
-        $appointments = $this->appointmentModel->findByMedicalId($medicalId);
-        $responses = [];
-        foreach ($appointments as $appointment) {
-            $responses[] = $this->converter->convert($appointment);
-        }
-        return $responses;
-    }
-
-    public function findByPatientId(int $patientId): array
-    {
-        $appointments = $this->appointmentModel->findByPatientId($patientId);
-        $responses = [];
-        foreach ($appointments as $appointment) {
-            $responses[] = $this->converter->convert($appointment);
-        }
-        return $responses;
+        $response = $this->converter->convert($appointment);
+        return $response;
     }
 }

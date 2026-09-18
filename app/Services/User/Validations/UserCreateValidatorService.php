@@ -21,7 +21,6 @@ final class UserCreateValidatorService
     {
         $this->userModel = new UserModel();
         $this->roleFinderService = new RoleFinderService();
-
     }
 
     public function validate(UserRequest $request): void
@@ -34,10 +33,6 @@ final class UserCreateValidatorService
         $existeDni = $this->userModel->findByDni($request->getDni());
         if ($existeDni) {
             throw new DniAlreadyRegisteredException();
-        }
-
-        if (strlen($request->getPassword()) < 6) {
-            throw new InvalidPasswordException();
         }
 
         if ($request->getRoleId()) {

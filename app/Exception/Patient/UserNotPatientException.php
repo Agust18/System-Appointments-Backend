@@ -5,8 +5,8 @@ use Exception;
 
 class UserNotPatientException extends Exception
 {
-    public function __construct(int $userId)
+    public function __construct()
     {
-        parent::__construct("El usuario con ID {$userId} no tiene el rol de paciente", 403);
+        parent::__construct("El usuario no tiene el rol de paciente", 403);
     }
 }

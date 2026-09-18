@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\Appointment;
 
 use App\Converter\Appointment\PrimitiveToAppointmentConverter;
@@ -108,43 +109,6 @@ final class AppointmentModel
         return $this->converter->convert($data);
     }
 
-    public function findProjection(int $id): ?AppointmentProjection
-    {
-        $query = "SELECT 
-                a.id,
-                a.fecha,
-                a.hora,
-                a.nota,
-                a.status,
-                a.created_at,
-                a.updated_at,
-                -- Datos del médico
-                a.medical_id,
-                u_med.username as medico_nombre,
-                m.matricula as medico_matricula,
-                esp.nombre as especialidad,
-                -- Datos del paciente
-                a.patient_id,
-                u_pac.username as paciente_nombre,
-                p.dni as paciente_dni,
-                p.phone as paciente_telefono
-              FROM appointments a
-              INNER JOIN medicals m ON m.id = a.medical_id
-              INNER JOIN users u_med ON u_med.id = m.user_id
-              INNER JOIN especialidades esp ON esp.id = m.specialty_id
-              INNER JOIN patients p ON p.id = a.patient_id
-              INNER JOIN users u_pac ON u_pac.id = p.user_id
-              WHERE a.id = ?";
-
-        $result = $this->db->query($query, [$id]);
-        $data = $result->getRow();
-
-        if (!$data) {
-            return null;
-        }
-
-        return $this->projectionConverter->convert($data);
-    }
 
     public function findByMedicalId(int $medicalId): array
     {
@@ -178,7 +142,7 @@ final class AppointmentModel
         $this->db->query($query, [$id]);
     }
 
-   
+
     public function findByPatientUserId(int $userId): array
     {
         $query = "SELECT a.* FROM appointments a 
@@ -191,7 +155,6 @@ final class AppointmentModel
             $appointments[] = $this->converter->convert($primitive);
         }
         return $appointments;
-
     }
 
     public function findByMedicalUserId(int $userId): array
@@ -228,55 +191,28 @@ final class AppointmentModel
         return $result->getResult();
     }
 
-    public function search(AppointmentFilterRequest $request): array
-    {
-        [$whereQuery, $parameters] = $this->buildWhereClause($request);
 
-        $selectQuery = "SELECT A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status, A.created_at, A.updated_at ";
-        $fromQuery = "FROM appointments A 
-                  INNER JOIN medicals M ON M.id = A.medical_id
-                  INNER JOIN users U_med ON U_med.id = M.user_id
-                  INNER JOIN patients P ON P.id = A.patient_id
-                  INNER JOIN users U_pac ON U_pac.id = P.user_id ";
-
-        $orderQuery = "ORDER BY A.fecha DESC, A.hora DESC ";
-        $paginationQuery = "LIMIT ?, ? ";
-
-        $parameters[] = $request->getPagination()->getOffset();
-        $parameters[] = $request->getPagination()->getLimit();
-
-        $fullQuery = $selectQuery . $fromQuery . $whereQuery . $orderQuery . $paginationQuery;
-
-        $result = $this->db->query($fullQuery, $parameters);
-        $primitives = $result->getResult();
-
-        $entities = [];
-        foreach ($primitives as $primitive) {
-            $entities[] = $this->converter->convert($primitive);
-        }
-
-        return $entities;
-    }
 
     public function searchProjection(AppointmentFilterRequest $request): array
     {
         [$whereQuery, $parameters] = $this->buildWhereClause($request);
 
         $selectQuery = "SELECT 
-                A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status, 
-                A.created_at, A.updated_at,
-                U_med.username as medico_nombre,
-                S.name as especialidad,
-                U_pac.username as paciente_nombre,
-                P.birth_date as paciente_nacimiento ";
+    A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status,
+    A.service_id,
+    SRV.name as servicio_nombre,
+    U_med.username as medico_nombre,
+    U_pac.username as paciente_nombre
+";
+
 
         $fromQuery = "FROM appointments A 
-              INNER JOIN medicals M ON M.id = A.medical_id
-              INNER JOIN users U_med ON U_med.id = M.user_id
-              INNER JOIN specialties S ON S.id = M.specialty_id
-              INNER JOIN patients P ON P.id = A.patient_id
-              INNER JOIN users U_pac ON U_pac.id = P.user_id ";
-
+      INNER JOIN medicals M ON M.id = A.medical_id
+      INNER JOIN users U_med ON U_med.id = M.user_id
+      INNER JOIN patients P ON P.id = A.patient_id
+      INNER JOIN users U_pac ON U_pac.id = P.user_id
+      INNER JOIN services SRV ON SRV.id = A.service_id
+      ";
         $orderQuery = "ORDER BY A.fecha DESC, A.hora DESC ";
         $paginationQuery = "LIMIT ?, ? ";
 
@@ -347,5 +283,37 @@ final class AppointmentModel
         }
 
         return [$whereQuery, $parameters];
+    }
+
+    //stats
+    public function statsByStatus(AppointmentFilterRequest $request): array
+    {
+        [$whereQuery, $parameters] = $this->buildWhereClause($request);
+
+        $query = "SELECT A.status, COUNT(*) as total 
+              FROM appointments A 
+              INNER JOIN medicals M ON M.id = A.medical_id
+              INNER JOIN users U_med ON U_med.id = M.user_id
+              INNER JOIN patients P ON P.id = A.patient_id
+              INNER JOIN users U_pac ON U_pac.id = P.user_id
+              {$whereQuery}
+              GROUP BY A.status";
+
+        $result = $this->db->query($query, $parameters);
+
+        // Arranca con todos los estados en 0 para que el frontend
+        // siempre reciba las mismas keys
+        $stats = [
+            'pending'   => 0,
+            'confirmed' => 0,
+            'cancelled' => 0,
+            'completed' => 0,
+        ];
+
+        foreach ($result->getResult() as $row) {
+            $stats[$row->status] = (int) $row->total;
+        }
+
+        return $stats;
     }
 }

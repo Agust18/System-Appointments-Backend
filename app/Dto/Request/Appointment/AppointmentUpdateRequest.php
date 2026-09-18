@@ -1,7 +1,6 @@
 <?php
-namespace App\Dto\Request\Appointment;
 
-use DateTime;
+namespace App\Dto\Request\Appointment;
 
 final readonly class AppointmentUpdateRequest
 {
@@ -12,35 +11,89 @@ final readonly class AppointmentUpdateRequest
         private ?string $fecha,
         private ?string $hora,
         private ?string $nota,
-        private ?string $status
-    ) {}
+        private ?string $status,
+    ) {
+    }
 
-    public function getMedicalId(): int
+    public function getMedicalId(): ?int
     {
         return $this->medicalId;
     }
+
     public function getPatientId(): ?int
     {
         return $this->patientId;
     }
+
     public function getServiceId(): ?int
     {
         return $this->serviceId;
     }
-    public function getFecha(): ?String
+
+    public function getFecha(): ?string
     {
         return $this->fecha;
     }
+
     public function getHora(): ?string
     {
         return $this->hora;
     }
+
     public function getNota(): ?string
     {
         return $this->nota;
     }
+
     public function getStatus(): ?string
     {
         return $this->status;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function rules(): array
+    {
+        return [
+            'medicalId' => 'permit_empty|is_natural_no_zero',
+            'patientId' => 'permit_empty|is_natural_no_zero',
+            'serviceId' => 'permit_empty|is_natural_no_zero',
+            'fecha' => 'permit_empty|valid_date[Y-m-d]',
+            'hora' => 'permit_empty|regex_match[/^\d{2}:\d{2}(:\d{2})?$/]',
+            'nota' => 'permit_empty|string|max_length[500]',
+            'status' => 'permit_empty|in_list[pending,confirmed,cancelled,completed]',
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public static function messages(): array
+    {
+        return [
+            'medicalId' => [
+                'is_natural_no_zero' => 'Selecciona un profesional válido.',
+            ],
+            'patientId' => [
+                'is_natural_no_zero' => 'Selecciona un paciente válido.',
+            ],
+            'serviceId' => [
+                'is_natural_no_zero' => 'Selecciona un servicio válido.',
+            ],
+            'fecha' => [
+                'valid_date' => 'La fecha debe tener el formato Y-m-d (por ejemplo, 2025-01-31).',
+            ],
+            'hora' => [
+                'regex_match' => 'La hora debe tener el formato HH:MM o HH:MM:SS.',
+            ],
+            'nota' => [
+                'string' => 'La nota debe ser texto.',
+                'max_length' => 'La nota no puede superar los 500 caracteres.',
+            ],
+            'status' => [
+                'in_list' => 'El estado debe ser: pendiente, confirmado, cancelado o completado.',
+            ],
+        ];
     }
 }

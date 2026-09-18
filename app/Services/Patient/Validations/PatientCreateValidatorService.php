@@ -5,8 +5,7 @@ use App\Constants\Role;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Exception\Patient\InvalidBirthDateException;
 use App\Exception\Patient\PatientAlreadyExistsException;
-use App\exception\User\UserNotFoundException;
-use App\Exception\User\UserNotPatientException;
+use App\Exception\Patient\UserNotPatientException;
 use App\Models\Patient\PatientModel;
 use App\Services\User\UserFinderService;
 use DateTime;
@@ -27,9 +26,8 @@ final class PatientCreateValidatorService
     {
         $user = $this->userFinderService->find($request->getUserId());
       
-
         if ($user->getRoleId() !== Role::PATIENT) {
-            throw new UserNotPatientException($request->getUserId());
+            throw new UserNotPatientException();
         }
 
         $existingPatient = $this->patientModel->findByUserId($request->getUserId());

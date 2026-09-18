@@ -5,7 +5,7 @@ namespace App\Services\User;
 
 use App\Converter\User\UserToUserResponseConverter;
 use App\Entity\User\User;
-use App\exception\User\UserNotFoundException;
+use App\Exception\User\UserNotFoundException;
 use App\Models\User\UserModel;
 use App\Dto\Response\User\UserResponse;
 

@@ -31,10 +31,6 @@ final class AppointmentUpdaterService
     {
         $appointment = $this->appointmentFinderService->find($id);
 
-        if (!$appointment) {
-            throw new AppointmentNotFoundException($id);
-        }
-
         //validaciones de negocio (roles, fecha pasada, etc.) — sin lock
         $this->validator->validate($request, $appointment, $id);
 

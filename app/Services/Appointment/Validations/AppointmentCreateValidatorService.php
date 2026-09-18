@@ -3,13 +3,15 @@ namespace App\Services\Appointment\Validations;
 
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentRequest;
+use App\Exception\Appointment\AppointmentNotPast;
 use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Patient\UserNotPatientException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
 use App\Services\Medical\MedicalFinderService;
 use App\Services\Patient\PatientFinderService;
+use App\Services\Service\ServiceFinderService;
 use App\Services\User\UserFinderService;
 use DateTime;
 
@@ -19,7 +21,7 @@ final class AppointmentCreateValidatorService
     private MedicalFinderService $medicalFinderService;
     private UserFinderService $userFinderService;
     private PatientFinderService $patientFinderService;
-    private ServiceModel $serviceModel;
+    private ServiceFinderService $finder;
     private MedicalServiceModel $medicalServiceModel;
 
     public function __construct()
@@ -28,7 +30,7 @@ final class AppointmentCreateValidatorService
         $this->medicalFinderService = new MedicalFinderService();
         $this->userFinderService = new UserFinderService();
         $this->patientFinderService = new PatientFinderService();
-        $this->serviceModel = new ServiceModel();
+        $this->finder = new ServiceFinderService();
         $this->medicalServiceModel = new MedicalServiceModel();
     }
 
@@ -37,7 +39,7 @@ final class AppointmentCreateValidatorService
 
         $userRoleId = session()->get('roleId');
         if ($userRoleId === Role::MEDICAL) {
-            throw new \Exception('Los médicos no pueden crear turnos');
+            throw new \Exception('Los Profesionales no pueden crear turnos');
         }
         if ($userRoleId === Role::PATIENT) {
             if ($request->getStatus() !== 'pending') {
@@ -50,24 +52,16 @@ final class AppointmentCreateValidatorService
             }
         }
 
-        // 1. Validar que el médico exista
-        $medical = $this->medicalFinderService->find($request->getMedicalId());
-        if (!$medical) {
-            throw new \Exception('El médico no existe');
-        }
-        $user = $this->userFinderService->find($medical->getUserId());
-        $doctorName = $user ? $user->getUsername() : 'Médico';
-
-        // Validar paciente existente y rol
-        $patient = $this->patientFinderService->find($request->getPatientId());
-        if (!$patient) {
-            throw new \Exception('El paciente no existe');
-        }
-
-
-
-        $patientUser = $this->userFinderService->find($patient->getUserId());
+        $medical = $this->medicalFinderService->find($request->getMedicalId());    
         
+        $user = $this->userFinderService->find($medical->getUserId());
+        
+        $doctorName = $user ? $user->getUsername() : 'Profesional';
+
+        $patient = $this->patientFinderService->find($request->getPatientId());
+       
+        $patientUser = $this->userFinderService->find($patient->getUserId());
+
         if ($userRoleId === Role::PATIENT) {
             $currentUserId = session()->get('userId');
 
@@ -78,7 +72,7 @@ final class AppointmentCreateValidatorService
             }
         }
         if ($patientUser->getRoleId() !== Role::PATIENT) {
-            throw new \Exception('El usuario seleccionado no tiene rol paciente');
+            throw new UserNotPatientException();
         }
 
         // Validar que el paciente no sea el mismo que el médico
@@ -87,19 +81,18 @@ final class AppointmentCreateValidatorService
         }
 
         // Validar fecha no pasada
-        $today = new DateTime();
-        $appointmentDate = new DateTime($request->getFecha());
-        $appointmentDate->setTime(0, 0);
-        $today->setTime(0, 0);
-
-        if ($appointmentDate < $today) {
-            throw new \Exception('No se pueden crear turnos en fechas pasadas');
+        $now = new DateTime();
+        $appointmentDateTime = new DateTime(
+            $request->getFecha() . ' ' . substr($request->getHora(), 0, 5) . ':00'
+        );
+        if ($appointmentDateTime < $now) {
+            throw new AppointmentNotPast;
         }
 
-        // 5. Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
+        // Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
         $bloqueTotalMinutes = $this->calculateTotalBlockMinutes($request->getMedicalId(), $request->getServiceId());
 
-        // 6. Validar que el médico atienda ese día (múltiples rangos posibles)
+        //Validar que el médico atienda ese día (múltiples rangos posibles)
         $dayOfWeek = (int) date('N', strtotime($request->getFecha()));
         $activeRanges = $this->medicalScheduleModel->findActiveRangesByMedicalAndDay(
             $request->getMedicalId(),
@@ -110,7 +103,7 @@ final class AppointmentCreateValidatorService
             throw new DoctorNotAvailableDayException($doctorName, $dayOfWeek);
         }
 
-        // 7. Validar que el bloque completo [hora_inicio, hora_fin] quepa en al menos un rango del día
+        //Validar que el bloque completo [hora_inicio, hora_fin] quepa en al menos un rango del día
         $horaInicioStr = substr($request->getHora(), 0, 5); // 'HH:MM'
         $horaInicioDt = new DateTime("{$request->getFecha()} {$horaInicioStr}:00");
         $horaFinDt = (clone $horaInicioDt)->modify("+{$bloqueTotalMinutes} minutes");
@@ -140,15 +133,11 @@ final class AppointmentCreateValidatorService
 
     private function calculateTotalBlockMinutes(int $medicalId, ?int $serviceId): int
     {
-        if ($serviceId === null || $serviceId <= 0) {
-            throw new \Exception('Debe seleccionar un servicio para agendar el turno');
-        }
+        $service = $this->finder->find($serviceId);
 
-        $service = $this->serviceModel->find($serviceId);
-        if (!$service || !$service->isActive()) {
-            throw new \Exception('El servicio seleccionado no existe o no se encuentra activo');
+        if (!$service->isActive()) {
+            throw new \Exception('El servicio seleccionado no se encuentra activo');
         }
-
         // Validar que el médico ofrezca este servicio de forma activa
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
         if (!$medicalService) {
