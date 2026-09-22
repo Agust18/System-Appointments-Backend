@@ -43,9 +43,6 @@ final class UserUpdateValidatorService
             }
         }
 
-        //  Validar contraseña 
-        if ($request->getPassword() && strlen($request->getPassword()) < 8) {
-            throw new \Exception('La contraseña debe tener al menos 8 caracteres');
-        }
+       
     }
 }

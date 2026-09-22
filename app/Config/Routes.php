@@ -10,9 +10,6 @@ $routes->get('/', 'Home::index');
 //login
 $routes->post('login', 'User\UserLoginController::login');
 
-$routes->get('verify-email', 'Auth\VerifyEmailGetController::verify');
-$routes->post('resend-verification', 'Auth\ResendVerificationPostController::resend');
-
 $routes->post('patients/register', 'Patient\PatientPublicPostController::create');
 
 //quick
@@ -136,3 +133,14 @@ $routes->get('medicals/(:num)/services', 'MedicalService\MedicalServiceGetContro
 $routes->post('medicals/(:num)/services', 'MedicalService\MedicalServicePostController::assignService/$1', ['filter' => ['auth', 'adminOrReception']]);
 
 $routes->delete('medicals/(:num)/services/(:num)', 'MedicalService\MedicalServiceDeleteController::do/$1/$2', ['filter' => ['auth', 'adminOrReception']]);
+
+
+//verificacion de email 
+
+$routes->get('verify-email', 'Auth\VerifyEmailGetController::verify');
+$routes->post('resend-verification', 'Auth\ResendVerificationPostController::resend');
+
+//passwords 
+$routes->post('forgot-password','Auth\ForgotPasswordPostController::requestReset');
+$routes->post('reset-password','Auth\ResetPasswordPostController::reset');
+

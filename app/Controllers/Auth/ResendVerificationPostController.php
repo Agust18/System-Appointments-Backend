@@ -2,34 +2,40 @@
 
 namespace App\Controllers\Auth;
 
-use App\Dto\Request\Email\ResendVerificationEmailRequest;
+use App\Dto\Request\Auth\ResendVerificationEmailRequest;
 use App\Services\User\ResendVerificationEmailService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
 final class ResendVerificationPostController extends ResourceController
 {
-	private ResendVerificationEmailService $service;
+    private ResendVerificationEmailService $service;
 
-	public function __construct()
-	{
-		$this->service = new ResendVerificationEmailService();
-	}
+    public function __construct()
+    {
+        $this->service = new ResendVerificationEmailService();
+    }
 
-	public function resend(): ResponseInterface
-	{
-		$request = $this->getRequest();
-		$this->service->resend($request->getEmail());
+    public function resend(): ResponseInterface
+    {
+        $request = $this->getRequest();
+        
+        // Pasamos la instancia del DTO completa
+        $this->service->resend($request);
 
-		return $this->response->setJSON([
-			'message' => 'Si el email corresponde a una cuenta pendiente, recibirás un nuevo enlace.',
-		]);
-	}
+        return $this->response->setJSON([
+            'message' => 'Si el email corresponde a una cuenta pendiente, recibirás un nuevo enlace.',
+        ]);
+    }
 
-	private function getRequest(): ResendVerificationEmailRequest
-	{
-		$parameters = $this->request->getJSON();
+    private function getRequest(): ResendVerificationEmailRequest
+    {
+        $parameters = $this->request->getJSON();
 
-		return new ResendVerificationEmailRequest((string) $parameters->email);
-	}
+        $parameters = (object) $parameters;
+
+        return new ResendVerificationEmailRequest(
+            email: (string) ($parameters->email ?? '')
+        );
+    }
 }

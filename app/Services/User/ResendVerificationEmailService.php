@@ -2,6 +2,7 @@
 
 namespace App\Services\User;
 
+use App\Dto\Request\Auth\ResendVerificationEmailRequest;
 use App\Models\User\UserModel;
 
 final class ResendVerificationEmailService
@@ -15,9 +16,9 @@ final class ResendVerificationEmailService
         $this->sender = new SendVerificationEmailService();
     }
 
-    public function resend(string $email): void
+    public function resend(ResendVerificationEmailRequest $request): void
     {
-        $user = $this->userModel->findByEmail($email);
+        $user = $this->userModel->findByEmail($request->getEmail());
 
         if (!$user || $user->getIsVerified()) {
             return;

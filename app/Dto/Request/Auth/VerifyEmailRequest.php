@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dto\Request\Email;
+namespace App\Dto\Request\Auth;
 
 final class VerifyEmailRequest
 {

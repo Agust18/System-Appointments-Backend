@@ -2,30 +2,36 @@
 
 namespace App\Controllers\Auth;
 
-use App\Dto\Request\Email\VerifyEmailRequest;
+use App\Dto\Request\Auth\VerifyEmailRequest;
 use App\Services\User\VerifyEmailService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
 final class VerifyEmailGetController extends ResourceController
 {
-	private VerifyEmailService $service;
+    private VerifyEmailService $service;
 
-	public function __construct()
-	{
-		$this->service = new VerifyEmailService();
-	}
+    public function __construct()
+    {
+        $this->service = new VerifyEmailService();
+    }
 
-	public function verify(): ResponseInterface
-	{
-		$request = $this->getRequest();
-		$this->service->verify($request->getToken());
+    public function verify(): ResponseInterface
+    {
+        $request = $this->getRequest();
 
-		return $this->response->setJSON(['message' => 'Email verificado correctamente.']);
-	}
+        $this->service->verify($request);
 
-	private function getRequest(): VerifyEmailRequest
-	{
-		return new VerifyEmailRequest((string) $this->request->getGet('token'));
-	}
+        return $this->response->setJSON(['message' => 'Email verificado correctamente.']);
+    }
+
+    private function getRequest(): VerifyEmailRequest
+    {
+        // Obtenemos el parámetro directamente de la Query String (?token=...)
+        $token = $this->request->getGet('token');
+
+        return new VerifyEmailRequest(
+            token: (string) ($token ?? '')
+        );
+    }
 }

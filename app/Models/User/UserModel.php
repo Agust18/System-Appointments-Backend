@@ -257,4 +257,12 @@ final class UserModel
 
         return $user;
     }
+
+    public function updatePassword(int $userId, string $hashedPassword): void
+    {
+        $query = "UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?";
+        $this->db->query($query, [$hashedPassword, $userId]);
+    }
+
+
 }
