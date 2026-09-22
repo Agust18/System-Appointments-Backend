@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Entity\Patient\Projection;
 
 use DateTime;
@@ -6,16 +7,15 @@ use DateTime;
 final class PatientProjection
 {
     public function __construct(
-        private int $id,                    
-        private int $userId,               
-        private string $pacienteNombre,    
-        private ?string $dni,               
-        private ?DateTime $birthDate,       
-        private bool $isActive,             
-        private ?DateTime $createdAt,       
-        private ?DateTime $updatedAt        
-    ) {
-    }
+        private int $id,
+        private int $userId,
+        private string $pacienteNombre,
+        private ?string $dni,
+        private ?DateTime $birthDate,
+        private bool $isActive,
+        private ?DateTime $createdAt,
+        private ?DateTime $updatedAt
+    ) {}
 
     public function getId(): ?int
     {
@@ -38,7 +38,7 @@ final class PatientProjection
     {
         return $this->birthDate;
     }
-   
+
     public function isActive(): bool
     {
         return $this->isActive;

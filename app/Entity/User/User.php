@@ -96,6 +96,7 @@ final class User
         $this->isVerified = true;
     }
 
+
     public function getRoleId(): ?int
     {
         return $this->roleId;

@@ -2,48 +2,36 @@
 
 namespace App\Controllers\Auth;
 
-use App\Exception\User\InvalidVerificationTokenException;
-use App\Exception\User\UserAlreadyVerifiedException;
-use App\Services\User\UserVerificationAccountService;
+use App\Dto\Request\Auth\VerifyEmailRequest;
+use App\Services\User\VerifyEmailService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class VerifyEmailGetController extends ResourceController
+final class VerifyEmailGetController extends ResourceController
 {
-    private UserVerificationAccountService $verificationService;
+    private VerifyEmailService $service;
 
     public function __construct()
     {
-        $this->verificationService = new UserVerificationAccountService();
+        $this->service = new VerifyEmailService();
     }
 
     public function verify(): ResponseInterface
     {
-        // lee el token de la URL (?token=xxx)
+        $request = $this->getRequest();
+
+        $this->service->verify($request);
+
+        return $this->response->setJSON(['message' => 'Email verificado correctamente.']);
+    }
+
+    private function getRequest(): VerifyEmailRequest
+    {
+        // Obtenemos el parámetro directamente de la Query String (?token=...)
         $token = $this->request->getGet('token');
 
-        // valida que venga
-        if (empty($token)) {
-            return $this->response
-                ->setStatusCode(400)
-                ->setJSON(['error' => 'Token requerido']);
-        }
-
-        // verificar
-        try {
-            $this->verificationService->verifyEmail($token);
-
-            return $this->response->setJSON([
-                'message' => 'Cuenta verificada correctamente.',
-            ]);
-        } catch (UserAlreadyVerifiedException $e) {
-            return $this->response->setJSON([
-                'message' => 'Tu cuenta ya estaba verificada.',
-            ]);
-        } catch (InvalidVerificationTokenException $e) {
-            return $this->response
-                ->setStatusCode(400)
-                ->setJSON(['error' => $e->getMessage()]);
-        }
+        return new VerifyEmailRequest(
+            token: (string) ($token ?? '')
+        );
     }
 }

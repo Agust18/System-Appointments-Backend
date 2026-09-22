@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Dto\Request\Appointment;
 
 use App\Dto\Request\PaginationRequest;
@@ -12,8 +13,7 @@ final readonly class AppointmentFilterRequest
         private ?string $status = null,
         private ?string $fecha = null,
         private ?string $search = null
-    ) {
-    }
+    ) {}
 
     public function getPagination(): PaginationRequest
     {
@@ -22,7 +22,6 @@ final readonly class AppointmentFilterRequest
     public function getSearch(): ?string
     {
         return $this->search;
-
     }
     public function getMedicalId(): ?int
     {
@@ -57,7 +56,7 @@ final readonly class AppointmentFilterRequest
     {
         return !empty($this->fecha);
     }
-       public function hasSearch(): bool
+    public function hasSearch(): bool
     {
         return !empty($this->search);
     }

@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models\Patient;
+
 use App\Converter\Patient\PrimitiveToPatientConverter;
 use App\Converter\Patient\Projection\PrimitiveToPatientProjectionConverter;
 use App\Dto\Request\Patient\PatientFilterRequest;
@@ -104,7 +106,7 @@ final class PatientModel
         return $this->converterProjection->convert($data);
     }
 
-   
+
     public function findByUserIdProjection(int $userId): ?PatientProjection
     {
         $query = "SELECT 
@@ -136,8 +138,8 @@ final class PatientModel
         $orderQuery = "ORDER BY P.id ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
-        $parameters[] = $request->getPagination()->getOffset(); 
-        $parameters[] = $request->getPagination()->getLimit();  
+        $parameters[] = $request->getPagination()->getOffset();
+        $parameters[] = $request->getPagination()->getLimit();
 
         $fullQuery = $selectQuery . $fromQuery . $whereQuery . $orderQuery . $paginationQuery;
 
@@ -183,8 +185,8 @@ final class PatientModel
         $orderQuery = "ORDER BY U.username ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
-        $parameters[] = $request->getPagination()->getOffset(); 
-        $parameters[] = $request->getPagination()->getLimit();  
+        $parameters[] = $request->getPagination()->getOffset();
+        $parameters[] = $request->getPagination()->getLimit();
 
         $fullQuery = $selectQuery . $fromQuery . $whereQuery . $orderQuery . $paginationQuery;
 
@@ -200,36 +202,30 @@ final class PatientModel
         return $entities;
     }
 
-      public function countProjection(PatientFilterRequest $request): int
-{
-    $parameters = [];
+    public function countProjection(PatientFilterRequest $request): int
+    {
+        $parameters = [];
 
-    $query = "SELECT COUNT(*) as total 
+        $query = "SELECT COUNT(*) as total 
               FROM patients P 
               INNER JOIN users U ON U.id = P.user_id 
               WHERE 1 = 1 ";
 
 
-    if ($request->hasSearch()) {
-        $query .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
-        $like = "%{$request->getSearch()}%";
-        $parameters[] = $like;
-        $parameters[] = $like;
-    }
+        if ($request->hasSearch()) {
+            $query .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $like = "%{$request->getSearch()}%";
+            $parameters[] = $like;
+            $parameters[] = $like;
+        }
 
-    $result = $this->db->query($query, $parameters);
-    return $result->getRow()->total ?? 0;
-}
+        $result = $this->db->query($query, $parameters);
+        return $result->getRow()->total ?? 0;
+    }
 
     public function delete(int $id): void
     {
         $query = "DELETE FROM patients WHERE id = ?";
         $this->db->query($query, [$id]);
     }
-
-
-
-
-  
-
 }

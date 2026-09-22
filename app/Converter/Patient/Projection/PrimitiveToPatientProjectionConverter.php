@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Converter\Patient\Projection;
 
 use App\Entity\Patient\Projection\PatientProjection;

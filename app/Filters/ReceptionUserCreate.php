@@ -14,16 +14,16 @@ class ReceptionUserCreate implements FilterInterface
         $roleId = session()->get('roleId');
         $response = \Config\Services::response();
 
-        // ADMIN puede crear cualquier tipo de usuario
-        if ($roleId === Role::ADMIN) {
-            return $request;
-        }
-
-        // Solo RECEPCIÓN tiene permisos limitados
-        if ($roleId !== Role::RECEPTION) {
+        if (!in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
             return $response->setStatusCode(403)->setJSON([
                 "message" => "No tenés permiso para crear usuarios"
             ]);
+        }
+
+        $expectedRole = $this->expectedRole($arguments);
+
+        if ($roleId === Role::ADMIN && $expectedRole === null) {
+            return $request;
         }
 
         // Obtener el body JSON
@@ -50,17 +50,24 @@ class ReceptionUserCreate implements FilterInterface
 
         $requestedRole = (int) $requestedRole;
 
-        // RECEPCIÓN solamente puede crear PACIENTES o MÉDICOS
-        if (!in_array($requestedRole, [
-            Role::PATIENT,
-            Role::MEDICAL
-        ], true)) {
+        if ($expectedRole !== null && $requestedRole !== $expectedRole) {
             return $response->setStatusCode(403)->setJSON([
-                "message" => "Solo podés crear usuarios con rol paciente o médico"
+                "message" => "El rol no coincide con el tipo de recurso que se quiere crear"
             ]);
         }
 
         return $request;
+    }
+
+    private function expectedRole($arguments): ?int
+    {
+        $resource = is_array($arguments) ? ($arguments[0] ?? null) : null;
+
+        return match ($resource) {
+            'patient' => Role::PATIENT,
+            'medical' => Role::MEDICAL,
+            default => null,
+        };
     }
 
     public function after(

@@ -114,6 +114,78 @@ final class MedicalModel
         return $this->converterprojection->convert($data);
     }
 
+    /**
+     * @return MedicalProjection[]
+     */
+    public function searchAvailableProjection(MedicalFilterRequest $request): array
+    {
+        [$whereQuery, $parameters] = $this->buildAvailableWhereClause($request);
+
+        $query = "SELECT
+                    M.id,
+                    M.user_id,
+                    M.specialty_id,
+                    M.tuition,
+                    M.phone,
+                    M.is_active,
+                    M.created_at,
+                    M.updated_at,
+                    U.username AS medico_nombre,
+                    S.name AS especialidad_nombre
+                  FROM medicals M
+                  INNER JOIN users U ON U.id = M.user_id
+                  INNER JOIN specialties S ON S.id = M.specialty_id
+                  {$whereQuery}
+                  ORDER BY U.username ASC
+                  LIMIT ?, ?";
+
+        $parameters[] = $request->getPagination()->getOffset();
+        $parameters[] = $request->getPagination()->getLimit();
+
+        $result = $this->db->query($query, $parameters);
+        $projections = [];
+
+        foreach ($result->getResult() as $primitive) {
+            $projections[] = $this->converterprojection->convert($primitive);
+        }
+
+        return $projections;
+    }
+
+    public function countAvailableProjection(MedicalFilterRequest $request): int
+    {
+        [$whereQuery, $parameters] = $this->buildAvailableWhereClause($request);
+
+        $query = "SELECT COUNT(*) AS total
+                  FROM medicals M
+                  INNER JOIN users U ON U.id = M.user_id
+                  INNER JOIN specialties S ON S.id = M.specialty_id
+                  {$whereQuery}";
+
+        $result = $this->db->query($query, $parameters);
+        return (int) ($result->getRow()->total ?? 0);
+    }
+
+    private function buildAvailableWhereClause(MedicalFilterRequest $request): array
+    {
+        $whereQuery = 'WHERE M.is_active = 1 AND U.is_active = 1';
+        $parameters = [];
+
+        if ($request->hasSpecialtyId()) {
+            $whereQuery .= ' AND M.specialty_id = ?';
+            $parameters[] = $request->getSpecialtyId();
+        }
+
+        if ($request->hasSearch()) {
+            $whereQuery .= ' AND (U.username LIKE ? OR S.name LIKE ?)';
+            $like = '%' . $request->getSearch() . '%';
+            $parameters[] = $like;
+            $parameters[] = $like;
+        }
+
+        return [$whereQuery, $parameters];
+    }
+
     public function search(MedicalFilterRequest $request): array
     {
         $parameters = [];

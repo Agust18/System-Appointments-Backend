@@ -6,46 +6,48 @@ use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientQuickRequest;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Response\Patient\PatientResponse;
+use App\Services\User\SendVerificationEmailService;
 use App\Services\User\UserCreatorService;
-use App\Services\User\UserVerificationAccountService;
+use App\Services\User\UserFinderService;
 use CodeIgniter\Database\BaseConnection;
 
 final class PatientQuickCreatorService
 {
     private UserCreatorService $userCreatorService;
     private PatientCreatorService $patientCreatorService;
-    private UserVerificationAccountService $verificationService;
+    private SendVerificationEmailService $emailVerificationService;
+    private UserFinderService $userFinderService;
     private BaseConnection $db;
 
     public function __construct()
     {
         $this->userCreatorService = new UserCreatorService();
         $this->patientCreatorService = new PatientCreatorService();
-        $this->verificationService = new UserVerificationAccountService();
+        $this->emailVerificationService = new SendVerificationEmailService();
+        $this->userFinderService = new UserFinderService();
         $this->db = \Config\Database::connect();
     }
 
-    public function create(PatientQuickRequest $request): PatientResponse
+    public function create(PatientQuickRequest $request, bool $isVerified = false): PatientResponse
     {
         $this->db->transStart();
-        try {
-            $newUser = $this->userCreatorService->create($request->getUserRequest());
 
-            $patientRequest = $this->buildPatientRequest(
-                $newUser->id,
-                $request->getPatientDataRequest()
+        $newUser = $this->userCreatorService->create($request->getUserRequest(), $isVerified);
+
+        $patientRequest = $this->buildPatientRequest(
+            $newUser->id,
+            $request->getPatientDataRequest()
+        );
+        $result = $this->patientCreatorService->create($patientRequest);
+
+        $this->db->transComplete();
+
+        if (!$isVerified) {
+            $this->emailVerificationService->send(
+                $this->userFinderService->find($newUser->id)
             );
-            $result = $this->patientCreatorService->create($patientRequest);
 
-            $token = $this->verificationService->generateEmailVerificationToken($newUser->id);
-
-            $this->db->transComplete();
-        } catch (\Throwable $e) {
-            $this->db->transRollback();
-            throw $e;
         }
-
-        $this->verificationService->sendVerificationEmail($newUser->id, $token);
 
         return $result;
     }
