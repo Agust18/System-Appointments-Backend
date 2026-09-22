@@ -5,6 +5,7 @@ namespace App\Filters;
 use App\Constants\Role;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\Medical\MedicalModel;
+use App\Models\Patient\PatientModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -41,10 +42,24 @@ class AppointmentPermission implements FilterInterface
             ]);
         }
 
-        // PACIENTE no puede modificar ni eliminar turnos
+        // El paciente solo puede cancelar su propio turno pendiente.
         if ($roleId === Role::PATIENT) {
+            if ($method === 'put') {
+                $parameters = json_decode($request->getBody(), true) ?? [];
+                $patient = (new PatientModel())->findByUserId($userId);
+
+                if (
+                    $patient &&
+                    $appointment->getPatientId() === $patient->getId() &&
+                    $appointment->getStatus() === 'pending' &&
+                    ($parameters['status'] ?? null) === 'cancelled'
+                ) {
+                    return $request;
+                }
+            }
+
             return $response->setStatusCode(403)->setJSON([
-                "message" => "Los pacientes no pueden modificar ni eliminar turnos"
+                "message" => "Los pacientes solo pueden cancelar sus turnos pendientes"
             ]);
         }
 

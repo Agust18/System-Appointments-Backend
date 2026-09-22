@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 namespace App\Controllers\User;
 
 use App\Dto\Request\User\UserRequest;
@@ -7,26 +8,28 @@ use CodeIgniter\RESTful\ResourceController;
 use App\Services\User\UserCreatorService;
 
 
-class UserPostController extends ResourceController{
+class UserPostController extends ResourceController
+{
     private UserCreatorService  $userCreatorService;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->userCreatorService = new UserCreatorService();
-
     }
 
-    public function create():ResponseInterface{
+    public function create(): ResponseInterface
+    {
         $userRequest = $this->getRequest();
-        $userResponse = $this->userCreatorService->create($userRequest,true);
+        $userResponse = $this->userCreatorService->create($userRequest, true);
 
-        
+
         return $this->response->setJSON($userResponse);
     }
-    
-    private function getRequest():UserRequest
+
+    private function getRequest(): UserRequest
     {
         $parameters = $this->request->getJSON();
-        
+
         return new UserRequest(
             $parameters->username,
             $parameters->email,
@@ -35,8 +38,5 @@ class UserPostController extends ResourceController{
             $parameters->isActive ?? true,
             $parameters->roleId
         );
-
-
     }
-
 }

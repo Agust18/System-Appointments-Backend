@@ -32,7 +32,6 @@ final class UserCreatorService
             $user->markAsVerified();
         }
 
-
         $newUser = $this->userModel->insert($user);
 
         $userResponse = $this->converter->convert($newUser);

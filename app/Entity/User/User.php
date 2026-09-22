@@ -22,8 +22,7 @@ final class User
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
 
-    ) {
-    }
+    ) {}
 
 
     public function modify(UserUpdaterRequest $request): void
@@ -92,9 +91,10 @@ final class User
     }
 
     public function markAsVerified(): void
-    {
-        $this->isVerified = true;
-    }
+{
+    $this->isVerified = true;
+}
+
 
     public function getRoleId(): ?int
     {

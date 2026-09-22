@@ -19,8 +19,8 @@ class PatientQuickPostController extends ResourceController
 
     public function create(): ResponseInterface
     {
-        $patientQuickRequest = $this->getRequest();
-        $patientResponse = $this->patientQuickCreatorService->create($patientQuickRequest);
+        $patientAccountRequest = $this->getRequest();
+        $patientResponse = $this->patientQuickCreatorService->create($patientAccountRequest,true);
 
         return $this->response->setJSON($patientResponse);
     }

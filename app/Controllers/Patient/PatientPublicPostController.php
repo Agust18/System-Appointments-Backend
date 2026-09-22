@@ -21,7 +21,7 @@ class PatientPublicPostController extends ResourceController
         $patientPublicRegisterRequest = $this->getRequest();
 
         $patientResponse = $this->patientQuickCreatorService->create(
-            $patientPublicRegisterRequest->toPatientQuickRequest()
+            $patientPublicRegisterRequest->toPatientQuickRequest(),false
         );
 
         return $this->response->setJSON($patientResponse);

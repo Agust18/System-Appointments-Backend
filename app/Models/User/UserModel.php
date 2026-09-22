@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\User;
+
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use App\Entity\User\User;
@@ -63,16 +64,16 @@ final class UserModel
 
     public function update(User $user): User
     {
-        $query = "UPDATE users SET username = ?, email = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?, ";
+        $query = "UPDATE users SET username = ?, email = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?,updated_at = NOW(), ";
         $query .= "token = ?, token_expiration_date = ? ";
         $query .= "WHERE id = ?";
         $this->db->query($query, [
-            $user->getUserName(),
+            $user->getUsername(),
             $user->getEmail(),
             $user->getPassword(),
             $user->getDni(),
             $user->getIsActive(),
-            $user->getIsVerified(),   
+            $user->getIsVerified(),
             $user->getRoleId(),
             $user->getToken(),
             $user->getTokenExpirationDate()?->format("Y-m-d H:i:s"),
@@ -190,34 +191,34 @@ final class UserModel
     public function countByFilter(UserFilterRequest $request): int
     {
         $parameters = [];
-       
+
+        $fromQuery = "FROM users U ";
+
         $whereQuery = "WHERE 1 = 1 ";
 
-      
-
         if ($request->hasEmail()) {
-            $whereQuery .= " AND email LIKE ? ";
+            $whereQuery .= " AND U.email LIKE ? ";
             $parameters[] = "%{$request->getEmail()}%";
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (username LIKE ? OR dni LIKE ?) ";
+            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
         }
 
         if ($request->hasRoleId()) {
-            $whereQuery .= " AND role_id = ? ";
+            $whereQuery .= " AND U.role_id = ? ";
             $parameters[] = $request->getRoleId();
         }
 
         if ($request->hasIsActive()) {
-            $whereQuery .= " AND is_active = ? ";
+            $whereQuery .= " AND U.is_active = ? ";
             $parameters[] = $request->getIsActive();
         }
 
-        $query = "SELECT COUNT(*) as total FROM users {$whereQuery}";
+        $query = "SELECT COUNT(*) as total {$fromQuery} {$whereQuery}";
         $result = $this->db->query($query, $parameters);
         return $result->getRow()->total ?? 0;
     }
@@ -228,11 +229,17 @@ final class UserModel
         $this->db->query($query, [$id]);
     }
 
+    public function markAsVerified(int $userId): void
+    {
+        $query = "UPDATE users SET is_verified = 1, updated_at = NOW() WHERE id = ?";
+        $this->db->query($query, [$userId]);
+    }
+
     public function countByRoleId(int $roleId): int
     {
         $query = "SELECT COUNT(*) as total FROM users WHERE role_id = ?";
         $result = $this->db->query($query, [$roleId]);
-        return $result->getRow()->total;
+        return (int) ($result->getRow()->total ?? 0);
     }
 
     public function findByDni(string $dni): ?User
@@ -250,7 +257,4 @@ final class UserModel
 
         return $user;
     }
-
-
 }
-

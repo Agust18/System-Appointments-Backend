@@ -2,7 +2,7 @@
 
 namespace App\Dto\Request\Patient;
 
-use App\Constants\Role; 
+use App\Constants\Role;
 use App\Dto\Request\User\UserRequest;
 
 final class PatientPublicRegisterRequest
