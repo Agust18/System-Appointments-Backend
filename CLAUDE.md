@@ -64,6 +64,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
 - Checklist para crear un recurso CRUD → `.claude/rules/checklist-nuevo-recurso.md`
 - Métricas del dashboard → `.claude/rules/metrics.md`
+- Tests → `.claude/rules/tests.md`
 
 ---
 
