@@ -6,7 +6,7 @@ use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\Appointment\AppointmentFinderService;
 
-class AppointmentGetController extends ResourceController
+final class AppointmentGetController extends ResourceController
 {
 
     private AppointmentFinderService $appointmentFinderService;

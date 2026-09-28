@@ -5,7 +5,7 @@ use App\Services\MedicalSchedule\MedicalScheduleDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalScheduleDeleteController extends ResourceController
+final class MedicalScheduleDeleteController extends ResourceController
 {
     private MedicalScheduleDeleterService $deleterService;
 

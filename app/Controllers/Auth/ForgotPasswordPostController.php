@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ForgotPasswordRequest;
-use App\Services\User\ForgotPasswordService;
+use App\Services\auth\ForgotPasswordService;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;

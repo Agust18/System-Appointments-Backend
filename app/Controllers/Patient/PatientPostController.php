@@ -6,7 +6,7 @@ use App\Services\Patient\PatientCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class PatientPostController extends ResourceController
+final class PatientPostController extends ResourceController
 {
     private PatientCreatorService $patientCreatorService;
 

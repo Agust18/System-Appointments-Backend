@@ -6,7 +6,7 @@ use App\Services\Specialty\SpecialtyUpdaterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class SpecialtyPutController extends ResourceController
+final class SpecialtyPutController extends ResourceController
 {
     private SpecialtyUpdaterService $specialtyUpdaterService;
 

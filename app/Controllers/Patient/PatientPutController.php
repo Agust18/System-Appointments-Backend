@@ -6,7 +6,7 @@ use App\Services\Patient\PatientUpdaterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class PatientPutController extends ResourceController
+final class PatientPutController extends ResourceController
 {
     private PatientUpdaterService $patientUpdaterService;
 

@@ -16,7 +16,7 @@ final class PrimitiveToAppointmentProjectionConverter
             serviceId: (int) $primitive->service_id,
 
 
-
+            paciente_email:$primitive->paciente_email,
             medicoNombre: $primitive->medico_nombre,
             servicioNombre: $primitive->servicio_nombre ?? null,
             pacienteNombre: $primitive->paciente_nombre,

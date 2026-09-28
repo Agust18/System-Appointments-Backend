@@ -3,7 +3,7 @@ namespace App\Services\Specialty;
 
 use App\Converter\Specialty\SpecialtyToSpecialtyResponseConverter;
 use App\Dto\Response\Specialty\SpecialtyResponse;
-use App\exception\Specialty\SpecialtyNotFoundException;
+use App\Exception\Specialty\SpecialtyNotFoundException;
 use App\Models\Specialty\SpecialtyModel;
 use App\Entity\Specialty\Specialty;
 

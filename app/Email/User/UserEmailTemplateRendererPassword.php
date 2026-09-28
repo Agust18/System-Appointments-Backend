@@ -1,28 +1,17 @@
 <?php
-
 namespace App\Email\User;
-
 use App\Entity\User\User;
-use App\Services\User\PasswordResetTokenService;
-
-
 final class UserEmailTemplateRendererPassword
 {
-    private PasswordResetTokenService $tokenService;
-    private UserEmailTemplateRenderer $renderer;
-
-      public function __construct()
+    public function __construct()
     {
-        $this->tokenService = new PasswordResetTokenService();
-        $this->renderer = new UserEmailTemplateRenderer();
     }
-
     public function renderPasswordResetBody(User $user, string $resetUrl): string
-{
-    $username = htmlspecialchars($user->getUsername(), ENT_QUOTES, 'UTF-8');
-    $url = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
+    {
+        $username = htmlspecialchars($user->getUsername(), ENT_QUOTES, 'UTF-8');
+        $url = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
 
-    return <<<HTML
+        return <<<HTML
     <!DOCTYPE html>
     <html>
     <head>
@@ -49,7 +38,7 @@ final class UserEmailTemplateRendererPassword
     </body>
     </html>
     HTML;
-}
+    }
 
 
 }

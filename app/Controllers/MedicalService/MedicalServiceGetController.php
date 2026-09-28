@@ -5,7 +5,7 @@ use App\Services\MedicalService\Projection\MedicalServicesProjectionFinderServic
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalServiceGetController extends ResourceController
+final class MedicalServiceGetController extends ResourceController
 {
     private MedicalServicesProjectionFinderService $medicalServicesProjectionFinderService;
 

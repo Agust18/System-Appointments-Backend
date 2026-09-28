@@ -6,7 +6,7 @@ use App\Services\Patient\PatientDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class PatientDeleteController extends ResourceController
+final class PatientDeleteController extends ResourceController
 {
     private PatientDeleterService $patientDeleterService;
 

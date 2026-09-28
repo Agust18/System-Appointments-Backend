@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentRequest;
@@ -7,7 +8,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class AppointmentPostController extends ResourceController
+final class AppointmentPostController extends ResourceController
 {
     private AppointmentCreatorService $appointmentCreatorService;
 
@@ -25,21 +26,21 @@ class AppointmentPostController extends ResourceController
     }
 
     private function getRequest(): AppointmentRequest
-{
-    $parameters = $this->request->getJSON(true) ?? [];
+    {
+        $parameters = $this->request->getJSON(true) ?? [];
 
-    RequestValidator::validate($parameters, AppointmentRequest::rules(), AppointmentRequest::messages());
+        RequestValidator::validate($parameters, AppointmentRequest::rules(), AppointmentRequest::messages());
 
-    $parameters = (object) $parameters;
+        $parameters = (object) $parameters;
 
-    return new AppointmentRequest(
-        medicalId: (int) ($parameters->medicalId ?? 0),
-        patientId: (int) ($parameters->patientId ?? 0),
-        serviceId: (int) ($parameters->serviceId ?? 0),
-        fecha:     (string) ($parameters->fecha ?? ''),
-        hora:      (string) ($parameters->hora ?? ''),
-        nota:      $parameters->nota ?? null,
-        status:    $parameters->status ?? 'pending',
-    );
-}
+        return new AppointmentRequest(
+            medicalId: (int) ($parameters->medicalId ?? 0),
+            patientId: (int) ($parameters->patientId ?? 0),
+            serviceId: (int) ($parameters->serviceId ?? 0),
+            fecha: (string) ($parameters->fecha ?? ''),
+            hora: (string) ($parameters->hora ?? ''),
+            nota: $parameters->nota ?? null,
+            status: $parameters->status ?? 'pending',
+        );
+    }
 }

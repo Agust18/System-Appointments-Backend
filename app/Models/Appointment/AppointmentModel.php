@@ -172,6 +172,62 @@ final class AppointmentModel
     }
 
     /**
+     * Turnos de mañana (en 24 hs) con status pending o confirmed, con datos
+     * de paciente (email, nombre), médico y servicio para enviar recordatorios.
+     */
+    public function findUpcomingIn24Hours(): array
+    {
+        $query = "SELECT
+            A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
+            U_pac.email    AS paciente_email,
+            U_med.username AS medico_nombre,
+            U_pac.username AS paciente_nombre,
+            SRV.name       AS servicio_nombre
+        FROM appointments A
+        INNER JOIN medicals M   ON M.id  = A.medical_id
+        INNER JOIN users U_med  ON U_med.id = M.user_id
+        INNER JOIN patients P   ON P.id  = A.patient_id
+        INNER JOIN users U_pac  ON U_pac.id = P.user_id
+        INNER JOIN services SRV ON SRV.id = A.service_id
+        WHERE A.fecha = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+          AND A.status IN ('pending', 'confirmed')
+        ORDER BY A.hora ASC";
+
+        $result   = $this->db->query($query);
+        $entities = [];
+        foreach ($result->getResult() as $row) {
+            $entities[] = $this->projectionConverter->convert($row);
+        }
+        return $entities;
+    }
+
+    public function findProjection(int $id): ?AppointmentProjection
+    {
+        $query = "SELECT
+            A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
+            U_pac.email  AS paciente_email,
+            U_med.username AS medico_nombre,
+            U_pac.username AS paciente_nombre,
+            SRV.name       AS servicio_nombre
+        FROM appointments A
+        INNER JOIN medicals M   ON M.id  = A.medical_id
+        INNER JOIN users U_med  ON U_med.id = M.user_id
+        INNER JOIN patients P   ON P.id  = A.patient_id
+        INNER JOIN users U_pac  ON U_pac.id = P.user_id
+        INNER JOIN services SRV ON SRV.id = A.service_id
+        WHERE A.id = ?";
+
+        $result = $this->db->query($query, [$id]);
+        $row    = $result->getRow();
+
+        if (!$row) {
+            return null;
+        }
+
+        return $this->projectionConverter->convert($row);
+    }
+
+    /**
      * Turnos activos (no cancelados) de un médico en una fecha, con
      * hora/hora_fin ya resueltos (fallback +30 min si hora_fin viniera
      * NULL). Usado por AppointmentAvailabilityService para chequear
@@ -198,21 +254,22 @@ final class AppointmentModel
         [$whereQuery, $parameters] = $this->buildWhereClause($request);
 
         $selectQuery = "SELECT 
-    A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status,
-    A.service_id,
-    SRV.name as servicio_nombre,
-    U_med.username as medico_nombre,
-    U_pac.username as paciente_nombre
-";
+            A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status,
+            A.service_id,
+            U_pac.email as paciente_email,
+            SRV.name as servicio_nombre,
+            U_med.username as medico_nombre,
+            U_pac.username as paciente_nombre
+        ";
 
 
         $fromQuery = "FROM appointments A 
-      INNER JOIN medicals M ON M.id = A.medical_id
-      INNER JOIN users U_med ON U_med.id = M.user_id
-      INNER JOIN patients P ON P.id = A.patient_id
-      INNER JOIN users U_pac ON U_pac.id = P.user_id
-      INNER JOIN services SRV ON SRV.id = A.service_id
-      ";
+            INNER JOIN medicals M ON M.id = A.medical_id
+            INNER JOIN users U_med ON U_med.id = M.user_id
+            INNER JOIN patients P ON P.id = A.patient_id
+            INNER JOIN users U_pac ON U_pac.id = P.user_id
+            INNER JOIN services SRV ON SRV.id = A.service_id
+            ";
         $orderQuery = "ORDER BY A.fecha DESC, A.hora DESC ";
         $paginationQuery = "LIMIT ?, ? ";
 
@@ -304,7 +361,7 @@ final class AppointmentModel
         // Arranca con todos los estados en 0 para que el frontend
         // siempre reciba las mismas keys
         $stats = [
-            'pending'   => 0,
+            'pending' => 0,
             'confirmed' => 0,
             'cancelled' => 0,
             'completed' => 0,

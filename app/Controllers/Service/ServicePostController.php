@@ -6,7 +6,7 @@ use App\Services\Service\ServiceCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class ServicePostController extends ResourceController
+final class ServicePostController extends ResourceController
 {
     private ServiceCreatorService $serviceCreatorService;
 

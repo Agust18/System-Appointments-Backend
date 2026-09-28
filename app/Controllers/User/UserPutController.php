@@ -8,7 +8,7 @@ use App\Services\User\UserUpdaterService;
 use CodeIgniter\RESTful\ResourceController;
 use App\Dto\Request\User\UserUpdaterRequest;
 
-class UserPutController extends ResourceController
+final class UserPutController extends ResourceController
 {
     private UserUpdaterService $userUpdaterService;
 

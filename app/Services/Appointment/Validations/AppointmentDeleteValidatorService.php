@@ -1,5 +1,7 @@
 <?php
 namespace App\Services\Appointment\Validations;
+
+use App\Exception\Appointment\AppointmentPastCannotBeDeletedException;
 use DateTime;
 
 final class AppointmentDeleteValidatorService
@@ -20,7 +22,7 @@ final class AppointmentDeleteValidatorService
         $appointmentDate->setTime(0, 0);
 
         if ($appointmentDate < $today) {
-            throw new \Exception('No se puede eliminar un turno que ya pasó');
+            throw new AppointmentPastCannotBeDeletedException();
         }
 
 

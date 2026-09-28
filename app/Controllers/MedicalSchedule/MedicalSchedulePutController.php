@@ -6,7 +6,7 @@ use App\Services\MedicalSchedule\MedicalScheduleUpdaterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalSchedulePutController extends ResourceController
+final class MedicalSchedulePutController extends ResourceController
 {
     private MedicalScheduleUpdaterService $updaterService;
 

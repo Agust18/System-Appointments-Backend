@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ResetPasswordRequest;
-use App\Services\User\ResetPasswordService;
+use App\Services\auth\ResetPasswordService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 

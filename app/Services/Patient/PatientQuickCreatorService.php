@@ -6,7 +6,7 @@ use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientQuickRequest;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Response\Patient\PatientResponse;
-use App\Services\User\SendVerificationEmailService;
+use App\Services\auth\SendVerificationEmailService;
 use App\Services\User\UserCreatorService;
 use App\Services\User\UserFinderService;
 use CodeIgniter\Database\BaseConnection;

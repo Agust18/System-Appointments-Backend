@@ -5,7 +5,7 @@ use App\Services\Service\ServiceFinderService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class ServiceGetController extends ResourceController
+final class ServiceGetController extends ResourceController
 {
     private ServiceFinderService $serviceFinderService;
 

@@ -1,7 +1,7 @@
 <?php
 namespace App\Services\Appointment;
 
-use App\exception\Appointment\AppointmentNotFoundException;
+use App\Exception\Appointment\AppointmentNotFoundException;
 use App\Models\Appointment\AppointmentModel;
 use DateTime;
 use App\Services\Appointment\Validations\AppointmentDeleteValidatorService;

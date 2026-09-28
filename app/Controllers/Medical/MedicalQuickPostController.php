@@ -8,7 +8,7 @@ use App\Services\Medical\MedicalQuickCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalQuickPostController extends ResourceController
+final class MedicalQuickPostController extends ResourceController
 {
     private MedicalQuickCreatorService $medicalQuickCreatorService;
 

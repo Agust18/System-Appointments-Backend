@@ -21,6 +21,7 @@ final class AppointmentProjectionToAppointmentProjectionResponseConverter
             medicoNombre: $appointment->getMedicoNombre(),
             pacienteNombre: $appointment->getPacienteNombre(),
             servicioNombre: $appointment->getServicioNombre(),
+            paciente_email:$appointment->getEmail(),
 
             fecha: $appointment->getFecha()->format('Y-m-d'),
             hora: $appointment->getHora()->format('H:i:s'),

@@ -6,7 +6,7 @@ use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\User\UserFinderService;
 
-class UserGetController extends ResourceController
+final class UserGetController extends ResourceController
 {
 
     private UserFinderService $UserFinderService;

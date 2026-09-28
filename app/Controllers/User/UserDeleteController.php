@@ -6,7 +6,7 @@ use App\Services\User\UserDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class UserDeleteController extends ResourceController
+final class UserDeleteController extends ResourceController
 {
     private UserDeleterService $userDeleterService;
 

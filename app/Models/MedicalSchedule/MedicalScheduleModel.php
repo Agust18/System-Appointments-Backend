@@ -216,46 +216,6 @@ final class MedicalScheduleModel
         $this->db->query($query, [$id]);
     }
 
-    public function search(MedicalScheduleFilterRequest $request): array
-    {
-        $parameters = [];
-        $query = "SELECT * FROM medical_schedules WHERE 1=1 ";
-
-        if ($request->hasMedicalId()) {
-            $query .= " AND medical_id = ? ";
-            $parameters[] = $request->getMedicalId();
-        }
-
-        if ($request->hasDayOfWeek()) {
-            $query .= " AND day_of_week = ? ";
-            $parameters[] = $request->getDayOfWeek();
-        }
-
-        if ($request->hasIsActive()) {
-            $query .= " AND is_active = ? ";
-            $parameters[] = $request->getIsActive() ? 1 : 0;
-        }
-
-        $query .= " ORDER BY medical_id ASC, day_of_week ASC ";
-
-
-        $paginationQuery = "LIMIT ?, ? ";
-        $parameters[] = $request->getPagination()->getOffset();
-        $parameters[] = $request->getPagination()->getLimit();
-
-        $fullQuery = $query . $paginationQuery;
-
-        $result = $this->db->query($fullQuery, $parameters);
-        $primitives = $result->getResult();
-
-        $schedules = [];
-        foreach ($primitives as $primitive) {
-            $schedules[] = $this->converter->convert($primitive);
-        }
-
-        return $schedules;
-    }
-
     public function searchProjection(MedicalScheduleFilterRequest $request): array
     {
         $parameters = [];

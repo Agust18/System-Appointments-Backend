@@ -7,7 +7,7 @@ use App\Services\Patient\PatientQuickCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class PatientPublicPostController extends ResourceController
+final class PatientPublicPostController extends ResourceController
 {
     private PatientQuickCreatorService $patientQuickCreatorService;
 

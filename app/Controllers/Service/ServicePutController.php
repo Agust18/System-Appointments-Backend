@@ -6,7 +6,7 @@ use App\Services\Service\ServiceUpdaterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class ServicePutController extends ResourceController
+final class ServicePutController extends ResourceController
 {
     private ServiceUpdaterService $serviceUpdaterService;
 

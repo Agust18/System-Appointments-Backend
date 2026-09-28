@@ -8,7 +8,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class AppointmentPutController extends ResourceController
+final class AppointmentPutController extends ResourceController
 {
     private AppointmentUpdaterService $appointmentUpdaterService;
 

@@ -4,8 +4,14 @@ namespace App\Services\Appointment\Validations;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Exception\Appointment\AppointmentNotPast;
+use App\Exception\Appointment\CannotCreateAppointmentForOtherPatientException;
 use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Appointment\InvalidInitialStatusException;
+use App\Exception\Appointment\MedicalCannotCreateAppointmentException;
+use App\Exception\Appointment\MedicalServiceNotOfferedException;
+use App\Exception\Appointment\PatientCannotBeMedicalException;
+use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Exception\Patient\UserNotPatientException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
@@ -39,16 +45,16 @@ final class AppointmentCreateValidatorService
 
         $userRoleId = session()->get('roleId');
         if ($userRoleId === Role::MEDICAL) {
-            throw new \Exception('Los Profesionales no pueden crear turnos');
+            throw new MedicalCannotCreateAppointmentException();
         }
         if ($userRoleId === Role::PATIENT) {
             if ($request->getStatus() !== 'pending') {
-                throw new \Exception('Los pacientes solo pueden crear turnos con estado "Pendiente"');
+                throw new InvalidInitialStatusException('pacientes');
             }
         }
         if ($userRoleId === Role::RECEPTION) {
             if ($request->getStatus() !== 'pending') {
-                throw new \Exception('Los recepcionistas solo pueden crear turnos con estado "Pendiente"');
+                throw new InvalidInitialStatusException('recepcionistas');
             }
         }
 
@@ -66,9 +72,7 @@ final class AppointmentCreateValidatorService
             $currentUserId = session()->get('userId');
 
             if ($patient->getUserId() !== $currentUserId) {
-                throw new \Exception(
-                    'No podés crear un turno para otro paciente'
-                );
+                throw new CannotCreateAppointmentForOtherPatientException();
             }
         }
         if ($patientUser->getRoleId() !== Role::PATIENT) {
@@ -77,7 +81,7 @@ final class AppointmentCreateValidatorService
 
         // Validar que el paciente no sea el mismo que el médico
         if ($patientUser->getId() === $user->getId()) {
-            throw new \Exception('El paciente no puede ser el mismo que el médico');
+            throw new PatientCannotBeMedicalException();
         }
 
         // Validar fecha no pasada
@@ -136,12 +140,12 @@ final class AppointmentCreateValidatorService
         $service = $this->finder->find($serviceId);
 
         if (!$service->isActive()) {
-            throw new \Exception('El servicio seleccionado no se encuentra activo');
+            throw new ServiceNotAvailableException('El servicio seleccionado no se encuentra activo');
         }
         // Validar que el médico ofrezca este servicio de forma activa
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
         if (!$medicalService) {
-            throw new \Exception('El profesional seleccionado no ofrece el servicio indicado o se encuentra inactivo');
+            throw new MedicalServiceNotOfferedException();
         }
 
         $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)

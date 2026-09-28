@@ -5,7 +5,7 @@ use App\Services\Role\RoleFinderService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RoleGetController extends ResourceController
+final class RoleGetController extends ResourceController
 {
     private RoleFinderService $roleFinderService;
 

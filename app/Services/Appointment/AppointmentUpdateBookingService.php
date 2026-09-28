@@ -4,6 +4,10 @@ namespace App\Services\Appointment;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
+use App\Exception\Appointment\AppointmentServiceRequiredException;
+use App\Exception\Appointment\BookingLockTimeoutException;
+use App\Exception\Appointment\MedicalServiceNotOfferedException;
+use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
@@ -36,14 +40,14 @@ final class AppointmentUpdateBookingService
         $finalHora = $request->getHora() ?? $appointment->getHora()->format('H:i:s');
 
         if ($finalServiceId === null) {
-            throw new Exception('Este turno no tiene un servicio asociado; debe indicar serviceId para poder editarlo.');
+            throw new AppointmentServiceRequiredException();
         }
 
         $lockName = sprintf('appt_lock_%d_%s', $finalMedicalId, $finalFecha);
 
         $lockAcquired = $this->acquireLock($lockName, 10);
         if (!$lockAcquired) {
-            throw new Exception('El sistema está ocupado procesando otra reserva para este profesional. Por favor, intente nuevamente en unos segundos.');
+            throw new BookingLockTimeoutException();
         }
 
         try {
@@ -52,12 +56,12 @@ final class AppointmentUpdateBookingService
             // Recalcular duración/buffer con el servicio y override vigentes.
             $service = $this->serviceModel->find($finalServiceId);
             if (!$service || !$service->isActive()) {
-                throw new Exception('El servicio seleccionado no está disponible.');
+                throw new ServiceNotAvailableException('El servicio seleccionado no está disponible.');
             }
 
             $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($finalMedicalId, $finalServiceId);
             if (!$medicalService) {
-                throw new Exception('El profesional no ofrece este servicio actualmente.');
+                throw new MedicalServiceNotOfferedException('El profesional no ofrece este servicio actualmente.');
             }
 
             $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)

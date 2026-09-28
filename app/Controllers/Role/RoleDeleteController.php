@@ -5,7 +5,7 @@ use App\Services\Role\RoleDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RoleDeleteController extends ResourceController
+final class RoleDeleteController extends ResourceController
 {
     private RoleDeleterService $roleDeleterService;
 

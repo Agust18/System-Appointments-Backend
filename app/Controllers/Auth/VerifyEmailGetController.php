@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\VerifyEmailRequest;
-use App\Services\User\VerifyEmailService;
+use App\Services\auth\VerifyEmailService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -27,7 +27,7 @@ final class VerifyEmailGetController extends ResourceController
 
     private function getRequest(): VerifyEmailRequest
     {
-        // Obtenemos el parámetro directamente de la Query String (?token=...)
+
         $token = $this->request->getGet('token');
 
         return new VerifyEmailRequest(

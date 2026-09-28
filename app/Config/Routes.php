@@ -8,7 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 //login
-$routes->post('login', 'User\UserLoginController::login');
+$routes->post('login', 'Auth\UserLoginController::login');
 
 $routes->post('patients/register', 'Patient\PatientPublicPostController::create');
 
@@ -89,6 +89,13 @@ $routes->get('appointments', 'Appointment\AppointmentsGetController::search', ['
 //stats
 $routes->get('appointments/stats', 'Appointment\AppointmentStatsGetController::get', ['filter' => 'auth']);
 
+//metrics
+$routes->get('metrics/kpis', 'Metrics\MetricsKpisGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/by-medical', 'Metrics\MetricsByMedicalGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/monthly-trend', 'Metrics\MetricsMonthlyTrendGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/top-services', 'Metrics\MetricsTopServicesGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+
 //roles
 $routes->post('roles', 'Role\RolePostController::create', ['filter' => ['auth', 'adminOnly']]);
 
@@ -112,7 +119,7 @@ $routes->put('medical-schedules/(:num)', 'MedicalSchedule\MedicalSchedulePutCont
 
 $routes->delete('medical-schedules/(:num)', 'MedicalSchedule\MedicalScheduleDeleteController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 
-$routes->get('medical-schedules', 'MedicalSchedule\MedicalsScheduleGetController::search', ['filter' => 'auth']);
+$routes->get('medical-schedules', 'MedicalSchedule\MedicalSchedulesGetController::search', ['filter' => 'auth']);
 
 
 // Services

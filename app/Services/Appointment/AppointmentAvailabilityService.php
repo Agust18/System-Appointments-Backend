@@ -2,11 +2,14 @@
 namespace App\Services\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentAvailabilityRequest;
+use App\Exception\Appointment\InvalidAppointmentDateException;
+use App\Exception\Appointment\InvalidAppointmentDateFormatException;
+use App\Exception\Appointment\MedicalServiceNotOfferedException;
+use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
-use Exception;
 
 final class AppointmentAvailabilityService
 {
@@ -39,13 +42,13 @@ final class AppointmentAvailabilityService
         //valida y obtener el servicio
         $service = $this->serviceModel->find($serviceId);
         if (!$service || !$service->isActive()) {
-            throw new Exception('El servicio seleccionado no existe o no se encuentra activo.');
+            throw new ServiceNotAvailableException();
         }
 
         //valida y obtener la asignación del médico
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
         if (!$medicalService) {
-            throw new Exception('El profesional seleccionado no ofrece el servicio indicado.');
+            throw new MedicalServiceNotOfferedException('El profesional seleccionado no ofrece el servicio indicado.');
         }
 
         //calcula duración efectiva del servicio y bloque total (con buffer)
@@ -114,12 +117,12 @@ final class AppointmentAvailabilityService
     private function validateFecha(string $fecha): void
     {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-            throw new Exception('El formato de fecha debe ser YYYY-MM-DD');
+            throw new InvalidAppointmentDateFormatException();
         }
 
         [$year, $month, $day] = explode('-', $fecha);
         if (!checkdate((int)$month, (int)$day, (int)$year)) {
-            throw new Exception('La fecha proporcionada no es una fecha válida en el calendario');
+            throw new InvalidAppointmentDateException();
         }
     }
 

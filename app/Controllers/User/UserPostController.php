@@ -8,7 +8,7 @@ use CodeIgniter\RESTful\ResourceController;
 use App\Services\User\UserCreatorService;
 
 
-class UserPostController extends ResourceController
+final class UserPostController extends ResourceController
 {
     private UserCreatorService  $userCreatorService;
 

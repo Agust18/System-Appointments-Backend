@@ -6,7 +6,7 @@ use App\Services\Role\RoleUpdaterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RolePutController extends ResourceController
+final class RolePutController extends ResourceController
 {
     private RoleUpdaterService $roleUpdaterService;
 

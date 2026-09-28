@@ -1,7 +1,7 @@
 <?php
 namespace App\Services\Specialty;
 
-use App\exception\Specialty\SpecialtyNotFoundException;
+use App\Exception\Specialty\SpecialtyNotFoundException;
 use App\Models\Medical\MedicalModel;
 use App\Models\Specialty\SpecialtyModel;
 

@@ -6,7 +6,7 @@ use App\Services\MedicalService\MedicalServiceAssignmentService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalServicePostController extends ResourceController
+final class MedicalServicePostController extends ResourceController
 {
     private MedicalServiceAssignmentService $medicalServiceAssignmentService;
 

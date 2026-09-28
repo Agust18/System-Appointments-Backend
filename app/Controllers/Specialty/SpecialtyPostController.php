@@ -6,7 +6,7 @@ use App\Services\Specialty\SpecialtyCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class SpecialtyPostController extends ResourceController
+final class SpecialtyPostController extends ResourceController
 {
     private SpecialtyCreatorService $specialtyCreatorService;
 

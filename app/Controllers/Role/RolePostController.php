@@ -6,7 +6,7 @@ use App\Services\Role\RoleCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RolePostController extends ResourceController
+final class RolePostController extends ResourceController
 {
     private RoleCreatorService $roleCreatorService;
 
