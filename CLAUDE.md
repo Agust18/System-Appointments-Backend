@@ -44,8 +44,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 
 | Capa | Regla |
 |---|---|
-| **Filter** | Valida token de auth + RBAC. Puede consultar la DB para verificar ownership. Devuelve un Response de CI4 para cortar la cadena (no lanza excepciones). |
-| **Controller** | Parsea HTTP → Request DTO (primero ejecuta `RequestValidator::validate()`), llama a un único Service, devuelve `$this->response->setJSON()`. Sin lógica de negocio. |
+| 
 | **Service (verbo)** | Dueño de toda la lógica de negocio para un verbo HTTP. Delega en Validator Services y Delegate Services. Devuelve un Response DTO tipado o `void`. |
 | **Service (delegado)** | Operación técnica no ligada a un verbo: booking atómico con lock (`AppointmentBookingService`), construcción de filtros con conciencia de RBAC (`AppointmentFilterBuilderService`), disponibilidad de horarios (`AppointmentAvailabilityService`). Lo llaman otros Services. |
 | **Service (validador)** | Reglas de dominio sin efectos secundarios. Siempre en el subfolder `Validations/`. Lanza una excepción tipada si falla. |
@@ -62,9 +61,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Auth/RBAC y roles → `.claude/rules/auth-rbac.md`
 - Sistema de Email → `.claude/rules/email.md`
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
-- Checklist para crear un recurso CRUD → `.claude/rules/checklist-nuevo-recurso.md`
-- Métricas del dashboard → `.claude/rules/metrics.md`
-- Tests → `.claude/rules/tests.md`
+
 
 ---
 

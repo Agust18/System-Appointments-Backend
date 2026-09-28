@@ -1,12 +1,14 @@
 <?php
 namespace App\Services\Medical;
 
+use App\Constants\Role;
 use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Dto\Request\Medical\MedicalQuickRequest;
 use App\Dto\Request\Medical\MedicalRequest;
 use App\Dto\Response\Medical\MedicalResponse;
 use App\Services\User\UserCreatorService;
 use CodeIgniter\Database\BaseConnection;
+use Exception;
 
 final class MedicalQuickCreatorService
 {
@@ -23,6 +25,15 @@ final class MedicalQuickCreatorService
 
     public function create(MedicalQuickRequest $request): MedicalResponse
     {
+        $requestedRole = $request->getUserRequest()->getRoleId();
+
+        if ($requestedRole === null) {
+            throw new Exception('El campo roleId es requerido', 400);
+        }
+        if ($requestedRole !== Role::MEDICAL) {
+            throw new Exception('El rol no coincide con el tipo de recurso que se quiere crear', 403);
+        }
+
         $this->db->transStart();
 
         try {

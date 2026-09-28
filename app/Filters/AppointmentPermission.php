@@ -4,8 +4,7 @@ namespace App\Filters;
 
 use App\Constants\Role;
 use App\Models\Appointment\AppointmentModel;
-use App\Models\Medical\MedicalModel;
-use App\Models\Patient\PatientModel;
+use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -42,20 +41,12 @@ class AppointmentPermission implements FilterInterface
             ]);
         }
 
+        $permissionsService = new PermissionsService();
+
         // El paciente solo puede cancelar su propio turno pendiente.
         if ($roleId === Role::PATIENT) {
-            if ($method === 'put') {
-                $parameters = json_decode($request->getBody(), true) ?? [];
-                $patient = (new PatientModel())->findByUserId($userId);
-
-                if (
-                    $patient &&
-                    $appointment->getPatientId() === $patient->getId() &&
-                    $appointment->getStatus() === 'pending' &&
-                    ($parameters['status'] ?? null) === 'cancelled'
-                ) {
-                    return $request;
-                }
+            if ($method === 'put' && $permissionsService->canCancelAppointment($roleId, $userId, $appointment)) {
+                return $request;
             }
 
             return $response->setStatusCode(403)->setJSON([
@@ -66,14 +57,8 @@ class AppointmentPermission implements FilterInterface
         // MÉDICO
         if ($roleId === Role::MEDICAL) {
 
-            $medicalModel = new MedicalModel();
-            $medical = $medicalModel->findByUserId($userId);
-
             // El médico solo puede modificar sus propios turnos
-            if (
-                !$medical ||
-                $appointment->getMedicalId() !== $medical->getId()
-            ) {
+            if (!$permissionsService->canEditAppointment($roleId, $userId, $appointment)) {
                 return $response->setStatusCode(403)->setJSON([
                     "message" => "No podés modificar turnos de otro médico"
                 ]);

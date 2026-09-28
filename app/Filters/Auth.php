@@ -2,7 +2,6 @@
 
 namespace App\Filters;
 
-use App\Exception\Auth\TokenNotFoundException;
 use App\Services\Auth\TokenValidatorService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
@@ -14,10 +13,12 @@ class Auth implements FilterInterface {
     public function before(RequestInterface $request, $arguments = null)
     {
         $token = $_SERVER["HTTP_AUTHORIZATION"] ?? null;
-        
+        $response = \Config\Services::response();
 
         if (empty($token)) {
-            throw new TokenNotFoundException();
+            return $response->setStatusCode(401)->setJSON([
+                "message" => "Token no encontrado"
+            ]);
         }
 
         $validatorService = new TokenValidatorService();
@@ -25,7 +26,6 @@ class Auth implements FilterInterface {
         $user = $validatorService->validate($token);
 
         if (!$user) {
-            $response = \Config\Services::response();
             return $response->setStatusCode(401)->setJSON([
                 "message" => "Token invalido o expirado"
             ]);

@@ -159,8 +159,8 @@ final class AppointmentModel
 
     public function findByMedicalUserId(int $userId): array
     {
-        $query = "SELECT a.* FROM appointments a 
-              INNER JOIN medicals m ON m.id = a.medical_id 
+        $query = "SELECT a.* FROM appointments a
+              INNER JOIN medicals m ON m.id = a.medical_id
               WHERE m.user_id = ?";
         $result = $this->db->query($query, [$userId]);
         $primitives = $result->getResult();
@@ -169,6 +169,22 @@ final class AppointmentModel
             $appointments[] = $this->converter->convert($primitive);
         }
         return $appointments;
+    }
+
+    public function hasRelationWithPatient(int $medicalUserId, int $patientId): bool
+    {
+        $sql = "SELECT EXISTS(
+            SELECT 1
+            FROM appointments a
+            INNER JOIN medicals m ON m.id = a.medical_id
+            WHERE m.user_id = ?
+              AND a.patient_id = ?
+        ) AS has_relation";
+
+        $result = $this->db->query($sql, [$medicalUserId, $patientId]);
+        $row = $result->getRow();
+
+        return (bool) ($row->has_relation ?? false);
     }
 
     /**

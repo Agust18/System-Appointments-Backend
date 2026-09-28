@@ -2,6 +2,7 @@
 
 namespace App\Services\Patient;
 
+use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientQuickRequest;
 use App\Dto\Request\Patient\PatientRequest;
@@ -10,6 +11,7 @@ use App\Services\auth\SendVerificationEmailService;
 use App\Services\User\UserCreatorService;
 use App\Services\User\UserFinderService;
 use CodeIgniter\Database\BaseConnection;
+use Exception;
 
 final class PatientQuickCreatorService
 {
@@ -30,6 +32,15 @@ final class PatientQuickCreatorService
 
     public function create(PatientQuickRequest $request, bool $isVerified = false): PatientResponse
     {
+        $requestedRole = $request->getUserRequest()->getRoleId();
+
+        if ($requestedRole === null) {
+            throw new Exception('El campo roleId es requerido', 400);
+        }
+        if ($requestedRole !== Role::PATIENT) {
+            throw new Exception('El rol no coincide con el tipo de recurso que se quiere crear', 403);
+        }
+
         $this->db->transStart();
 
         $newUser = $this->userCreatorService->create($request->getUserRequest(), $isVerified);
