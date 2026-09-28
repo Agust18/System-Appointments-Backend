@@ -191,12 +191,45 @@ final class MedicalScheduleModel
 
     public function findActiveRangesByMedicalAndDay(int $medicalId, int $dayOfWeek): array
     {
-        $query = "SELECT * FROM medical_schedules 
-                  WHERE medical_id = ? 
-                    AND day_of_week = ? 
-                    AND is_active = 1 
+        $query = "SELECT * FROM medical_schedules
+                  WHERE medical_id = ?
+                    AND day_of_week = ?
+                    AND is_active = 1
                   ORDER BY start_time ASC";
         $result = $this->db->query($query, [$medicalId, $dayOfWeek]);
+        $primitives = $result->getResult();
+
+        $schedules = [];
+        foreach ($primitives as $primitive) {
+            $schedules[] = $this->converter->convert($primitive);
+        }
+
+        return $schedules;
+    }
+
+    /**
+     * Igual que findActiveRangesByMedicalAndDay pero para varios días de la
+     * semana en una sola query (usado por el endpoint batch de disponibilidad
+     * para no hacer una query por día).
+     *
+     * @param int[] $daysOfWeek
+     * @return \App\Entity\MedicalSchedule\MedicalSchedule[]
+     */
+    public function findActiveRangesByMedicalAndDays(int $medicalId, array $daysOfWeek): array
+    {
+        if (empty($daysOfWeek)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($daysOfWeek), '?'));
+        $query = "SELECT * FROM medical_schedules
+                  WHERE medical_id = ?
+                    AND day_of_week IN ({$placeholders})
+                    AND is_active = 1
+                  ORDER BY day_of_week ASC, start_time ASC";
+
+        $params = array_merge([$medicalId], $daysOfWeek);
+        $result = $this->db->query($query, $params);
         $primitives = $result->getResult();
 
         $schedules = [];

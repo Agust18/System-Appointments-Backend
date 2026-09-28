@@ -21,6 +21,7 @@ final class AppointmentBookingService
     private AppointmentModel $appointmentModel;
     private ServiceModel $serviceModel;
     private MedicalServiceModel $medicalServiceModel;
+    private ServiceDurationCalculatorService $durationCalculator;
 
     public function __construct()
     {
@@ -28,6 +29,7 @@ final class AppointmentBookingService
         $this->appointmentModel = new AppointmentModel();
         $this->serviceModel = new ServiceModel();
         $this->medicalServiceModel = new MedicalServiceModel();
+        $this->durationCalculator = new ServiceDurationCalculatorService();
     }
 
     public function book(AppointmentRequest $request): Appointment
@@ -57,11 +59,8 @@ final class AppointmentBookingService
                 throw new MedicalServiceNotOfferedException('El profesional no ofrece este servicio actualmente.');
             }
 
-            $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)
-                ? $medicalService->getCustomDurationMinutes()
-                : $service->getDurationMinutes();
-
-            $totalBlockMinutes = $effectiveDuration + $service->getBufferMinutes();
+            $duration = $this->durationCalculator->calculate($service, $medicalService);
+            $totalBlockMinutes = $duration->getTotalBlockMinutes();
 
             //calcular horas de inicio y fin del turno
             $horaInicioFormatted = substr($request->getHora(), 0, 5) . ':00';

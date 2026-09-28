@@ -51,13 +51,21 @@
         <!-- Directory containing the front controller (index.php) -->
         <const name="PUBLICPATH" value="./public/"/>
         <!-- Database configuration -->
-        <!-- Uncomment to provide your own database for testing
-            <env name="database.tests.hostname" value="localhost"/>
-            <env name="database.tests.database" value="tests"/>
-            <env name="database.tests.username" value="tests_user"/>
-            <env name="database.tests.password" value=""/>
-            <env name="database.tests.DBDriver" value="MySQLi"/>
-            <env name="database.tests.DBPrefix" value="tests_"/>
-            -->
+        <!-- El schema del proyecto usa SQL puro con sintaxis exclusiva de
+             MySQL (ENGINE=InnoDB, ON UPDATE CURRENT_TIMESTAMP, ADDTIME,
+             GET_LOCK), así que las migraciones no corren contra el SQLite
+             en memoria que CI4 usa por defecto para tests. Se apunta al
+             mismo contenedor MySQL de docker-compose (hostname "db", red
+             interna docker), pero a una base separada (turnero_test) para
+             no tocar datos de desarrollo. phpunit debe correr DENTRO del
+             contenedor app (docker exec turnero_app vendor/bin/phpunit ...)
+             porque el host corre PHP 8.1 y el proyecto requiere 8.2+. -->
+        <env name="database.tests.hostname" value="db"/>
+        <env name="database.tests.database" value="turnero_test"/>
+        <env name="database.tests.username" value="turnero_user"/>
+        <env name="database.tests.password" value="turnero_password"/>
+        <env name="database.tests.DBDriver" value="MySQLi"/>
+        <env name="database.tests.port" value="3306"/>
+        <env name="database.tests.DBPrefix" value=""/>
     </php>
 </phpunit>

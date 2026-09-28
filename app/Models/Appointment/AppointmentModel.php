@@ -247,6 +247,25 @@ final class AppointmentModel
         return $result->getResult();
     }
 
+    /**
+     * Igual que findActiveHoursByMedicalAndFecha pero para un rango de
+     * fechas en una sola query (usado por el endpoint batch de
+     * disponibilidad). Cada fila trae también `fecha` para poder agrupar
+     * en PHP.
+     */
+    public function findActiveHoursByMedicalAndFechaRange(int $medicalId, string $from, string $to): array
+    {
+        $query = "SELECT fecha, hora, COALESCE(hora_fin, ADDTIME(hora, '00:30:00')) as hora_fin
+                  FROM appointments
+                  WHERE medical_id = ?
+                    AND fecha BETWEEN ? AND ?
+                    AND status IN ('pending', 'confirmed', 'completed')";
+
+        $result = $this->db->query($query, [$medicalId, $from, $to]);
+
+        return $result->getResult();
+    }
+
 
 
     public function searchProjection(AppointmentFilterRequest $request): array
