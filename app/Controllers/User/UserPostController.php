@@ -31,7 +31,8 @@ final class UserPostController extends ResourceController
         $parameters = $this->request->getJSON();
 
         return new UserRequest(
-            $parameters->username,
+            $parameters->firstName,
+            $parameters->lastName,
             $parameters->email,
             $parameters->password,
             $parameters->dni,

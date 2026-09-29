@@ -196,8 +196,8 @@ final class AppointmentModel
         $query = "SELECT
             A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
             U_pac.email    AS paciente_email,
-            U_med.username AS medico_nombre,
-            U_pac.username AS paciente_nombre,
+            TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre,
+            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS paciente_nombre,
             SRV.name       AS servicio_nombre
         FROM appointments A
         INNER JOIN medicals M   ON M.id  = A.medical_id
@@ -222,8 +222,8 @@ final class AppointmentModel
         $query = "SELECT
             A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
             U_pac.email  AS paciente_email,
-            U_med.username AS medico_nombre,
-            U_pac.username AS paciente_nombre,
+            TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre,
+            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS paciente_nombre,
             SRV.name       AS servicio_nombre
         FROM appointments A
         INNER JOIN medicals M   ON M.id  = A.medical_id
@@ -293,8 +293,8 @@ final class AppointmentModel
             A.service_id,
             U_pac.email as paciente_email,
             SRV.name as servicio_nombre,
-            U_med.username as medico_nombre,
-            U_pac.username as paciente_nombre
+            TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) as medico_nombre,
+            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) as paciente_nombre
         ";
 
 
@@ -368,7 +368,7 @@ final class AppointmentModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U_pac.username LIKE ? OR U_med.username LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U_pac.first_name, ' ', U_pac.last_name) LIKE ? OR CONCAT(U_med.first_name, ' ', U_med.last_name) LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;

@@ -32,7 +32,8 @@ final class PatientPublicPostController extends ResourceController
         $parameters = $this->request->getJSON();
 
         return new PatientPublicRegisterRequest(
-            username: $parameters->username,
+            firstName: $parameters->firstName,
+            lastName: $parameters->lastName,
             email: $parameters->email,
             password: $parameters->password,
             dni: $parameters->dni,

@@ -36,7 +36,8 @@ final class PatientProjectionFinderServiceTest extends CIUnitTestCase
     private function seedPatient(string $email): int
     {
         $this->db->table('users')->insert([
-            'username' => 'paciente_' . uniqid(),
+            'first_name' => 'paciente_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => $email,
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),

@@ -8,7 +8,8 @@ use App\Dto\Request\User\UserRequest;
 final class PatientPublicRegisterRequest
 {
     public function __construct(
-        public readonly string $username,
+        public readonly string $firstName,
+        public readonly string $lastName,
         public readonly string $email,
         public readonly string $password,
         public readonly string $dni,
@@ -20,7 +21,8 @@ final class PatientPublicRegisterRequest
     public function toPatientRequest(): PatientRequest
     {
         $userRequest = new UserRequest(
-            $this->username,
+            $this->firstName,
+            $this->lastName,
             $this->email,
             $this->password,
             $this->dni,

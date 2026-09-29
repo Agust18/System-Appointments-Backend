@@ -30,6 +30,7 @@ final class MedicalCreatorServiceTest extends CIUnitTestCase
     {
         return new UserRequest(
             'user_' . uniqid(),
+            'Apellido',
             uniqid() . '@test.com',
             'password123',
             random_int(1000000, 9999999),

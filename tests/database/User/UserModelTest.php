@@ -27,23 +27,23 @@ final class UserModelTest extends CIUnitTestCase
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
     }
 
-    private function user(string $username, string $email, int $dni): User
+    private function user(string $firstName, string $lastName, string $email, int $dni): User
     {
-        $request = new UserRequest($username, $email, 'password123', $dni, true, Role::PATIENT);
+        $request = new UserRequest($firstName, $lastName, $email, 'password123', $dni, true, Role::PATIENT);
 
         return User::convertFromRequest($request);
     }
 
     public function testInsertReturnsHydratedEntityWithRealTimestamps(): void
     {
-        $newUser = $this->model->insert($this->user('usuario_hidratado', 'hidratado@test.com', 77777777));
+        $newUser = $this->model->insert($this->user('Usuario', 'Hidratado', 'hidratado@test.com', 77777777));
 
         $this->assertNotNull($newUser->getId());
         $this->assertNotNull($newUser->getCreatedAt());
     }
 
     /**
-     * Reproduce el bug real: un INSERT que falla (username duplicado) dentro
+     * Reproduce el bug real: un INSERT que falla (email duplicado) dentro
      * de una transacción administrada no lanza DatabaseException (CI4 no
      * tira excepción por defecto dentro de una transacción), por lo que
      * insertID() devuelve 0. UserModel::insert() debe detectar ese caso y
@@ -51,12 +51,12 @@ final class UserModelTest extends CIUnitTestCase
      */
     public function testInsertFailureInsideTransactionThrowsUserCannotBeCreatedException(): void
     {
-        $this->model->insert($this->user('usuario_duplicado', 'primero@test.com', 88888888));
+        $this->model->insert($this->user('Usuario', 'Duplicado', 'duplicado@test.com', 88888888));
 
         $this->db->transStart();
 
         try {
-            $this->model->insert($this->user('usuario_duplicado', 'segundo@test.com', 99999999));
+            $this->model->insert($this->user('Usuario', 'Duplicado', 'duplicado@test.com', 99999999));
             $this->fail('Se esperaba UserCannotBeCreatedException');
         } catch (UserCannotBeCreatedException $e) {
             $this->assertSame(500, $e->getCode());

@@ -26,25 +26,11 @@ final class UserCreatorServiceTest extends CIUnitTestCase
     }
 
     private function userRequest(
-        string $username,
+        string $firstName,
         string $email,
         int $dni
     ): UserRequest {
-        return new UserRequest($username, $email, 'password123', $dni, true, Role::PATIENT);
-    }
-
-    public function testDuplicateUsernameThrows409AndCreatesNoExtraUser(): void
-    {
-        $this->service->create($this->userRequest('mismo_usuario', 'uno@test.com', 11111111));
-
-        try {
-            $this->service->create($this->userRequest('mismo_usuario', 'dos@test.com', 22222222));
-            $this->fail('Se esperaba UsernameAlreadyRegisteredException');
-        } catch (Exception $e) {
-            $this->assertSame(409, $e->getCode());
-        }
-
-        $this->seeNumRecords(1, 'users', []);
+        return new UserRequest($firstName, 'Apellido', $email, 'password123', $dni, true, Role::PATIENT);
     }
 
     public function testDuplicateEmailThrows409AndCreatesNoExtraUser(): void

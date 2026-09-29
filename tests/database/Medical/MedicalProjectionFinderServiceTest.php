@@ -37,7 +37,8 @@ final class MedicalProjectionFinderServiceTest extends CIUnitTestCase
     private function seedMedical(string $email): int
     {
         $this->db->table('users')->insert([
-            'username' => 'medico_' . uniqid(),
+            'first_name' => 'medico_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => $email,
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),

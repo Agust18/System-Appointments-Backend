@@ -49,7 +49,7 @@ final class MetricsModel
 
     public function getByMedical(string $dateFrom, string $dateTo): array
     {
-        $query = "SELECT M.id AS medical_id, U.username AS medical_name,
+        $query = "SELECT M.id AS medical_id, TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medical_name,
                 COUNT(*) AS total,
                 SUM(CASE WHEN A.status = 'completed' THEN 1 ELSE 0 END) AS completed,
                 SUM(CASE WHEN A.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
@@ -57,7 +57,7 @@ final class MetricsModel
               INNER JOIN medicals M ON M.id = A.medical_id
               INNER JOIN users U ON U.id = M.user_id
               WHERE A.fecha BETWEEN ? AND ?
-              GROUP BY M.id, U.username
+              GROUP BY M.id, U.first_name, U.last_name
               ORDER BY total DESC";
 
         return $this->db->query($query, [$dateFrom, $dateTo])->getResult();

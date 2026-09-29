@@ -24,7 +24,8 @@ final class UserModel
     {
         $query = "
         INSERT INTO users (
-            username,
+            first_name,
+            last_name,
             email,
             password,
             dni,
@@ -32,11 +33,12 @@ final class UserModel
             is_verified,
             role_id
         )
-        VALUES (?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?)
     ";
 
         $this->db->query($query, [
-            $user->getUsername(),
+            $user->getFirstName(),
+            $user->getLastName(),
             $user->getEmail(),
             $user->getPassword(),
             $user->getDni(),
@@ -62,11 +64,12 @@ final class UserModel
 
     public function update(User $user): User
     {
-        $query = "UPDATE users SET username = ?, email = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?,updated_at = NOW(), ";
+        $query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?,updated_at = NOW(), ";
         $query .= "token = ?, token_expiration_date = ? ";
         $query .= "WHERE id = ?";
         $this->db->query($query, [
-            $user->getUsername(),
+            $user->getFirstName(),
+            $user->getLastName(),
             $user->getEmail(),
             $user->getPassword(),
             $user->getDni(),
@@ -82,7 +85,7 @@ final class UserModel
 
     public function find(int $id): ?User
     {
-        $query = "SELECT U.id, U.username, U.email,U.password,U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U where U.id = ?";
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email,U.password,U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U where U.id = ?";
         $result = $this->db->query($query, [$id]);
         $primitive = $result->getRow();
 
@@ -95,26 +98,9 @@ final class UserModel
     }
 
 
-    public function findByUsername(string $username): ?User
-    {
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.username = ? ";
-        $result = $this->db->query($query, [$username]);
-
-        $primitive = $result->getRow();
-
-        if (empty($primitive)) {
-            return null;
-        }
-
-        $user = $this->converter->convert($primitive);
-
-        return $user;
-    }
-
-
     public function findByEmail(string $email): ?User
     {
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.email = ? ";
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.email = ? ";
         $result = $this->db->query($query, [$email]);
 
         $primitive = $result->getRow();
@@ -134,7 +120,7 @@ final class UserModel
         $now = new DateTime();
         $dateNow = $now->format("Y-m-d H:i:s");
 
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni,U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at ";
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.password, U.dni,U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at ";
         $query .= "FROM users U ";
         $query .= "WHERE U.token = ? AND U.token_expiration_date >= ?";
         $result = $this->db->query($query, [$token, $dateNow]);
@@ -157,7 +143,7 @@ final class UserModel
     {
         $parameters = [];
 
-        $selectQuery = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date, U.role_id, created_at, updated_at ";
+        $selectQuery = "SELECT U.id, U.first_name, U.last_name, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date, U.role_id, created_at, updated_at ";
 
         $fromQuery = "FROM users U ";
 
@@ -169,7 +155,7 @@ final class UserModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -217,7 +203,7 @@ final class UserModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -259,7 +245,7 @@ final class UserModel
 
     public function findByDni(string $dni): ?User
     {
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.dni = ? ";
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.password, U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.dni = ? ";
         $result = $this->db->query($query, [$dni]);
 
         $primitive = $result->getRow();

@@ -80,15 +80,15 @@ final class MedicalScheduleModel
 
     public function findProjection(int $id): ?MedicalScheduleProjection
     {
-        $query = "SELECT 
-                ms.id, 
-                ms.medical_id, 
-                u.username as medico_nombre,
-                ms.day_of_week, 
-                ms.start_time, 
-                ms.end_time, 
+        $query = "SELECT
+                ms.id,
+                ms.medical_id,
+                TRIM(CONCAT(u.first_name, ' ', u.last_name)) as medico_nombre,
+                ms.day_of_week,
+                ms.start_time,
+                ms.end_time,
                 ms.is_active,
-                ms.created_at, 
+                ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
               INNER JOIN medicals m ON m.id = ms.medical_id
@@ -149,15 +149,15 @@ final class MedicalScheduleModel
 
     public function findByMedicalIdProjection(int $medicalId): array
     {
-        $query = "SELECT 
-                ms.id, 
-                ms.medical_id, 
-                u.username as medico_nombre,
-                ms.day_of_week, 
-                ms.start_time, 
-                ms.end_time, 
+        $query = "SELECT
+                ms.id,
+                ms.medical_id,
+                TRIM(CONCAT(u.first_name, ' ', u.last_name)) as medico_nombre,
+                ms.day_of_week,
+                ms.start_time,
+                ms.end_time,
                 ms.is_active,
-                ms.created_at, 
+                ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
               INNER JOIN medicals m ON m.id = ms.medical_id
@@ -253,15 +253,15 @@ final class MedicalScheduleModel
     {
         $parameters = [];
 
-        $query = "SELECT 
-                ms.id, 
-                ms.medical_id, 
-                u.username as medico_nombre,
-                ms.day_of_week, 
-                ms.start_time, 
-                ms.end_time, 
+        $query = "SELECT
+                ms.id,
+                ms.medical_id,
+                TRIM(CONCAT(u.first_name, ' ', u.last_name)) as medico_nombre,
+                ms.day_of_week,
+                ms.start_time,
+                ms.end_time,
                 ms.is_active,
-                ms.created_at, 
+                ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
               INNER JOIN medicals m ON m.id = ms.medical_id
@@ -284,7 +284,7 @@ final class MedicalScheduleModel
         }
 
         if ($request->hasSearch()) {
-            $query .= " AND u.username LIKE ? ";
+            $query .= " AND CONCAT(u.first_name, ' ', u.last_name) LIKE ? ";
             $parameters[] = "%" . $request->getSearch() . "%";
         }
 

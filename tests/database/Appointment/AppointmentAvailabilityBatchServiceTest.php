@@ -28,10 +28,11 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
     private function seedMedicalWithService(int $durationMinutes, int $bufferMinutes, int $slotStepMinutes): array
     {
         $this->db->table('users')->insert([
-            'username' => 'medico_' . uniqid(),
-            'email'    => uniqid() . '@test.com',
-            'password' => 'hash',
-            'dni'      => random_int(1000000, 9999999),
+            'first_name' => 'medico_' . uniqid(),
+            'last_name'  => 'Apellido',
+            'email'      => uniqid() . '@test.com',
+            'password'   => 'hash',
+            'dni'        => random_int(1000000, 9999999),
         ]);
         $medicalUserId = $this->db->insertID();
 
@@ -77,10 +78,11 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
     private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): void
     {
         $this->db->table('users')->insert([
-            'username' => 'paciente_' . uniqid(),
-            'email'    => uniqid() . '@test.com',
-            'password' => 'hash',
-            'dni'      => random_int(1000000, 9999999),
+            'first_name' => 'paciente_' . uniqid(),
+            'last_name'  => 'Apellido',
+            'email'      => uniqid() . '@test.com',
+            'password'   => 'hash',
+            'dni'        => random_int(1000000, 9999999),
         ]);
         $patientUserId = $this->db->insertID();
 
@@ -163,10 +165,11 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
     public function testThrowsWhenMedicalDoesNotOfferService(): void
     {
         $this->db->table('users')->insert([
-            'username' => 'medico_' . uniqid(),
-            'email'    => uniqid() . '@test.com',
-            'password' => 'hash',
-            'dni'      => random_int(1000000, 9999999),
+            'first_name' => 'medico_' . uniqid(),
+            'last_name'  => 'Apellido',
+            'email'      => uniqid() . '@test.com',
+            'password'   => 'hash',
+            'dni'        => random_int(1000000, 9999999),
         ]);
         $medicalUserId = $this->db->insertID();
 

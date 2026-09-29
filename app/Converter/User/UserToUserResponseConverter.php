@@ -12,7 +12,9 @@ final class UserToUserResponseConverter
     {
         return new UserResponse(
         $user->getId(),
-        $user->getUsername(),
+        $user->getFirstName(),
+        $user->getLastName(),
+        $user->getFullName(),
         $user->getEmail(),
         $user->getDni(),
         $user->getIsActive(),

@@ -58,7 +58,7 @@ final class MedicalScheduleCreateValidatorService
             }
 
             $user = $this->userFinderService->find($medical->getUserId());
-            throw new ScheduleOverlapException($user->getUsername(), $dayOfWeek);
+            throw new ScheduleOverlapException($user->getFullName(), $dayOfWeek);
         }
     }
 }

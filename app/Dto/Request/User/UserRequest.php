@@ -2,20 +2,26 @@
 namespace App\Dto\Request\User;
 final readonly class UserRequest{
     public function __construct(
-        private string $username,
+        private string $firstName,
+        private string $lastName,
         private string $email,
         private string $password,
         private int $dni,
-        private bool $isActive, 
-        private ?int $roleId 
-       
+        private bool $isActive,
+        private ?int $roleId
+
     ){}
 
-    public function getUsername():string
+    public function getFirstName():string
     {
-        return $this->username;
+        return $this->firstName;
     }
-    
+
+    public function getLastName():string
+    {
+        return $this->lastName;
+    }
+
     public function getEmail():string
     {
         return $this->email;
@@ -39,10 +45,10 @@ final readonly class UserRequest{
         return $this->isActive;
     }
 
-    
-    
-    
-    
+
+
+
+
 
 }
 

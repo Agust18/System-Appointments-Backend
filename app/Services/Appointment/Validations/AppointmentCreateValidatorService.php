@@ -62,7 +62,7 @@ final class AppointmentCreateValidatorService
         
         $user = $this->userFinderService->find($medical->getUserId());
         
-        $doctorName = $user ? $user->getUsername() : 'Profesional';
+        $doctorName = $user ? $user->getFullName() : 'Profesional';
 
         $patient = $this->patientFinderService->find($request->getPatientId());
        

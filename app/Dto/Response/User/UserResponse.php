@@ -5,7 +5,9 @@ final readonly class UserResponse
 {
     public function __construct(
         public int $id,
-        public string $username,
+        public string $firstName,
+        public string $lastName,
+        public string $fullName,
         public string $email,
         public ?int $dni,
         public bool $isActive,

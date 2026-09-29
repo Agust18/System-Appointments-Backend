@@ -28,7 +28,8 @@ final class AppointmentViewPermissionTest extends CIUnitTestCase
     private function seedUser(): int
     {
         $this->db->table('users')->insert([
-            'username' => 'user_' . uniqid(),
+            'first_name' => 'user_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),

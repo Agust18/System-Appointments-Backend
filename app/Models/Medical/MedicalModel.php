@@ -76,7 +76,7 @@ final class MedicalModel
     {
         $query = "SELECT
                 M.*,
-                U.username as medico_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
                 S.name as especialidad_nombre
               FROM medicals M
@@ -100,7 +100,7 @@ final class MedicalModel
     {
         $query = "SELECT
                 M.*,
-                U.username as medico_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
                 S.name as especialidad_nombre
               FROM medicals M
@@ -132,14 +132,14 @@ final class MedicalModel
                     M.is_active,
                     M.created_at,
                     M.updated_at,
-                    U.username AS medico_nombre,
+                    TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medico_nombre,
                     U.email,
                     S.name AS especialidad_nombre
                   FROM medicals M
                   INNER JOIN users U ON U.id = M.user_id
                   INNER JOIN specialties S ON S.id = M.specialty_id
                   {$whereQuery}
-                  ORDER BY U.username ASC
+                  ORDER BY U.first_name ASC, U.last_name ASC
                   LIMIT ?, ?";
 
         $parameters[] = $request->getPagination()->getOffset();
@@ -180,7 +180,7 @@ final class MedicalModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= ' AND (U.username LIKE ? OR S.name LIKE ?)';
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ?)";
             $like = '%' . $request->getSearch() . '%';
             $parameters[] = $like;
             $parameters[] = $like;
@@ -240,12 +240,12 @@ final class MedicalModel
                         M.created_at,
                         M.updated_at,
 
-                        U.username as medico_nombre,
+                        TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                         U.email,
                         S.name as especialidad_nombre
                     ";
 
-        $fromQuery = "FROM medicals M 
+        $fromQuery = "FROM medicals M
                   INNER JOIN users U ON U.id = M.user_id
                   INNER JOIN specialties S ON S.id = M.specialty_id
                   ";
@@ -263,14 +263,14 @@ final class MedicalModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
             $parameters[] = $like;
         }
 
-        $orderQuery = "ORDER BY U.username ASC ";
+        $orderQuery = "ORDER BY U.first_name ASC, U.last_name ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
         $parameters[] = $request->getPagination()->getOffset();
@@ -310,7 +310,7 @@ final class MedicalModel
         }
 
         if ($request->hasSearch()) {
-            $query .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
+            $query .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;

@@ -31,7 +31,8 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
     private function seedAppointment(): int
     {
         $this->db->table('users')->insert([
-            'username' => 'medico_' . uniqid(),
+            'first_name' => 'medico_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),
@@ -49,7 +50,8 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
         $medicalId = $this->db->insertID();
 
         $this->db->table('users')->insert([
-            'username' => 'paciente_' . uniqid(),
+            'first_name' => 'paciente_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),

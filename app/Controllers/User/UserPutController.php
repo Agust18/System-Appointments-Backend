@@ -31,7 +31,8 @@ final class UserPutController extends ResourceController
 
         
     return new UserUpdaterRequest(
-        $request->username ?? null,
+        $request->firstName ?? null,
+        $request->lastName ?? null,
         $request->email ?? null,
         $request->password ?? null,
         $request->dni ?? null,

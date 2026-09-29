@@ -3,12 +3,13 @@ namespace App\Dto\Request\User;
 
 final readonly class UserUpdaterRequest {
     public function __construct(
-        private ?string $username = null,
+        private ?string $firstName = null,
+        private ?string $lastName = null,
         private ?string $email = null,
         private ?string $password = null,
         private ?int $dni = null,
         private ?bool $isActive = null,
-        private ?int $roleId = null  
+        private ?int $roleId = null
 
 
     )
@@ -30,12 +31,17 @@ final readonly class UserUpdaterRequest {
     {
         return $this->email;
     }
-    public function getUserName():?string
+    public function getFirstName():?string
     {
-        return $this->username;
+        return $this->firstName;
     }
 
-     public function getRoleId(): ?int  
+    public function getLastName():?string
+    {
+        return $this->lastName;
+    }
+
+     public function getRoleId(): ?int
     {
         return $this->roleId;
     }

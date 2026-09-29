@@ -90,7 +90,7 @@ final class PatientModel
     {
         $query = "SELECT
                 P.*,
-                U.username as paciente_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                 U.dni,
                 U.email
               FROM patients P
@@ -112,7 +112,7 @@ final class PatientModel
     {
         $query = "SELECT
                 P.*,
-                U.username as paciente_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                 U.dni,
                 U.email
               FROM patients P
@@ -167,12 +167,12 @@ final class PatientModel
                         P.birth_date,
                         P.created_at,
                         P.updated_at,
-                        U.username as paciente_nombre,
+                        TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                         U.dni,
                         U.email
                     ";
 
-        $fromQuery = "FROM patients P 
+        $fromQuery = "FROM patients P
                   INNER JOIN users U ON U.id = P.user_id
                   ";
 
@@ -180,7 +180,7 @@ final class PatientModel
 
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -195,7 +195,7 @@ final class PatientModel
             $parameters[] = $request->getMedicalUserId();
         }
 
-        $orderQuery = "ORDER BY U.username ASC ";
+        $orderQuery = "ORDER BY U.first_name ASC, U.last_name ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
         $parameters[] = $request->getPagination()->getOffset();
@@ -226,7 +226,7 @@ final class PatientModel
 
 
         if ($request->hasSearch()) {
-            $query .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $query .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;

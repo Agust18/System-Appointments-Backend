@@ -10,7 +10,8 @@ final class User
 {
     public function __construct(
         private ?int $id,
-        private string $username,
+        private string $firstName,
+        private string $lastName,
         private string $email,
         private string $password,
         private ?int $dni,
@@ -28,7 +29,8 @@ final class User
 
     public function modify(UserUpdaterRequest $request): void
     {
-        $this->username = $request->getUsername() ?? $this->username;
+        $this->firstName = $request->getFirstName() ?? $this->firstName;
+        $this->lastName = $request->getLastName() ?? $this->lastName;
         $this->email = $request->getEmail() ?? $this->email;
         $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
         $this->dni = $request->getDni() ?? $this->dni;
@@ -58,9 +60,19 @@ final class User
     {
         return $this->id;
     }
-    public function getUsername(): string
+    public function getFirstName(): string
     {
-        return $this->username;
+        return $this->firstName;
+    }
+
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function getFullName(): string
+    {
+        return trim("{$this->firstName} {$this->lastName}");
     }
 
     public function getEmail(): string
@@ -115,7 +127,8 @@ final class User
     {
         return new User(
             null,
-            $request->getUserName(),
+            $request->getFirstName(),
+            $request->getLastName(),
             $request->getEmail(),
             password_hash($request->getPassword(), PASSWORD_BCRYPT),
             $request->getDni(),

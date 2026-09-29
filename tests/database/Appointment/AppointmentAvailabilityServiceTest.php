@@ -32,7 +32,8 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         $roleId = $this->db->table('roles')->insert(['name' => 'medical_role_' . uniqid()]) ? $this->db->insertID() : null;
 
         $this->db->table('users')->insert([
-            'username' => 'medico_' . uniqid(),
+            'first_name' => 'medico_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),
@@ -83,7 +84,8 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
     private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): void
     {
         $this->db->table('users')->insert([
-            'username' => 'paciente_' . uniqid(),
+            'first_name' => 'paciente_' . uniqid(),
+            'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
             'password' => 'hash',
             'dni'      => random_int(1000000, 9999999),

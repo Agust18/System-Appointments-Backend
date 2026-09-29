@@ -8,7 +8,7 @@ final class UserEmailTemplateRendererPassword
     }
     public function renderPasswordResetBody(User $user, string $resetUrl): string
     {
-        $username = htmlspecialchars($user->getUsername(), ENT_QUOTES, 'UTF-8');
+        $firstName = htmlspecialchars($user->getFirstName(), ENT_QUOTES, 'UTF-8');
         $url = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
@@ -19,7 +19,7 @@ final class UserEmailTemplateRendererPassword
         <title>Restablecer contraseña</title>
     </head>
     <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1>Hola, {$username}</h1>
+        <h1>Hola, {$firstName}</h1>
         <p>Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el siguiente enlace para continuar:</p>
         <p style="text-align: center; margin: 30px 0;">
             <a href="{$url}"
