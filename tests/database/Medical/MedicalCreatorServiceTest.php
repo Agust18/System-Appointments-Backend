@@ -2,28 +2,28 @@
 
 use App\Constants\Role;
 use App\Dto\Request\Medical\MedicalDataRequest;
-use App\Dto\Request\Medical\MedicalQuickRequest;
+use App\Dto\Request\Medical\MedicalRequest;
 use App\Dto\Request\User\UserRequest;
-use App\Services\Medical\MedicalQuickCreatorService;
+use App\Services\Medical\MedicalCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 
 /**
  * @internal
  */
-final class MedicalQuickCreatorServiceTest extends CIUnitTestCase
+final class MedicalCreatorServiceTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
 
-    private MedicalQuickCreatorService $service;
+    private MedicalCreatorService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new MedicalQuickCreatorService();
+        $this->service = new MedicalCreatorService();
     }
 
     private function userRequest(?int $roleId): UserRequest
@@ -48,7 +48,7 @@ final class MedicalQuickCreatorServiceTest extends CIUnitTestCase
 
     public function testMissingRoleIdThrows400AndCreatesNoUser(): void
     {
-        $request = new MedicalQuickRequest($this->userRequest(null), $this->medicalDataRequest());
+        $request = new MedicalRequest($this->userRequest(null), $this->medicalDataRequest());
 
         try {
             $this->service->create($request);
@@ -62,7 +62,7 @@ final class MedicalQuickCreatorServiceTest extends CIUnitTestCase
 
     public function testMismatchedRoleIdThrows403AndCreatesNoUser(): void
     {
-        $request = new MedicalQuickRequest($this->userRequest(Role::PATIENT), $this->medicalDataRequest());
+        $request = new MedicalRequest($this->userRequest(Role::PATIENT), $this->medicalDataRequest());
 
         try {
             $this->service->create($request);
@@ -78,7 +78,7 @@ final class MedicalQuickCreatorServiceTest extends CIUnitTestCase
     {
         $this->db->table('roles')->insert(['id' => Role::MEDICAL, 'name' => 'medical']);
 
-        $request = new MedicalQuickRequest($this->userRequest(Role::MEDICAL), $this->medicalDataRequest());
+        $request = new MedicalRequest($this->userRequest(Role::MEDICAL), $this->medicalDataRequest());
 
         $response = $this->service->create($request);
 

@@ -1,7 +1,7 @@
 <?php
 namespace App\Entity\Medical;
 
-use App\Dto\Request\Medical\MedicalRequest;
+use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Dto\Request\Medical\MedicalUpdateRequest;
 use DateTime;
 
@@ -74,11 +74,11 @@ final class Medical
         return $this->updatedAt;
     }
 
-    public static function convertFromRequest(MedicalRequest $request): Medical
+    public static function convertFromRequest(int $userId, MedicalDataRequest $request): Medical
     {
         return new Medical(
             null,
-            $request->getUserId(),
+            $userId,
             $request->getTuition(),
             $request->getSpecialtyId(),
             $request->getPhone(),

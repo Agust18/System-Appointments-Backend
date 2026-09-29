@@ -1,7 +1,9 @@
 <?php
 namespace App\Controllers\Medical;
 
+use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Dto\Request\Medical\MedicalRequest;
+use App\Dto\Request\User\UserRequest;
 use App\Services\Medical\MedicalCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
@@ -17,22 +19,32 @@ final class MedicalPostController extends ResourceController
 
     public function create(): ResponseInterface
     {
-        $medicalRequest = $this->getRequest();
-        $medicalResponse = $this->medicalCreatorService->create($medicalRequest);
-        
-        return $this->response->setJSON($medicalResponse);
+        $request = $this->getRequest();
+        $response = $this->medicalCreatorService->create($request);
+
+        return $this->response->setJSON($response);
     }
 
     private function getRequest(): MedicalRequest
     {
         $parameters = $this->request->getJSON();
-    
-        return new MedicalRequest(
-            $parameters->userId,
-            $parameters->tuition,
-            $parameters->specialtyId,
-            $parameters->phone ?? null,
-            $parameters->isActive ?? true
+
+        $userRequest = new UserRequest(
+            $parameters->user->username,
+            $parameters->user->email,
+            $parameters->user->password,
+            $parameters->user->dni,
+            $parameters->user->isActive ?? true,
+            $parameters->user->roleId ?? null
         );
+
+        $medicalDataRequest = new MedicalDataRequest(
+            tuition: $parameters->medical->tuition,
+            specialtyId: $parameters->medical->specialtyId,
+            phone: $parameters->medical->phone ?? null,
+            isActive: $parameters->medical->isActive ?? true
+        );
+
+        return new MedicalRequest($userRequest, $medicalDataRequest);
     }
 }

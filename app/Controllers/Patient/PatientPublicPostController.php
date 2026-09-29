@@ -3,25 +3,25 @@
 namespace App\Controllers\Patient;
 
 use App\Dto\Request\Patient\PatientPublicRegisterRequest;
-use App\Services\Patient\PatientQuickCreatorService;
+use App\Services\Patient\PatientCreatorService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
 final class PatientPublicPostController extends ResourceController
 {
-    private PatientQuickCreatorService $patientQuickCreatorService;
+    private PatientCreatorService $patientCreatorService;
 
     public function __construct()
     {
-        $this->patientQuickCreatorService = new PatientQuickCreatorService();
+        $this->patientCreatorService = new PatientCreatorService();
     }
 
     public function create(): ResponseInterface
     {
         $patientPublicRegisterRequest = $this->getRequest();
 
-        $patientResponse = $this->patientQuickCreatorService->create(
-            $patientPublicRegisterRequest->toPatientQuickRequest(),false
+        $patientResponse = $this->patientCreatorService->create(
+            $patientPublicRegisterRequest->toPatientRequest(),false
         );
 
         return $this->response->setJSON($patientResponse);

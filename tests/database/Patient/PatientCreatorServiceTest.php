@@ -2,28 +2,28 @@
 
 use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
-use App\Dto\Request\Patient\PatientQuickRequest;
+use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
-use App\Services\Patient\PatientQuickCreatorService;
+use App\Services\Patient\PatientCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 
 /**
  * @internal
  */
-final class PatientQuickCreatorServiceTest extends CIUnitTestCase
+final class PatientCreatorServiceTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
 
-    private PatientQuickCreatorService $service;
+    private PatientCreatorService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new PatientQuickCreatorService();
+        $this->service = new PatientCreatorService();
     }
 
     private function userRequest(?int $roleId): UserRequest
@@ -45,7 +45,7 @@ final class PatientQuickCreatorServiceTest extends CIUnitTestCase
 
     public function testMissingRoleIdThrows400AndCreatesNoUser(): void
     {
-        $request = new PatientQuickRequest($this->userRequest(null), $this->patientDataRequest());
+        $request = new PatientRequest($this->userRequest(null), $this->patientDataRequest());
 
         try {
             $this->service->create($request, true);
@@ -59,7 +59,7 @@ final class PatientQuickCreatorServiceTest extends CIUnitTestCase
 
     public function testMismatchedRoleIdThrows403AndCreatesNoUser(): void
     {
-        $request = new PatientQuickRequest($this->userRequest(Role::MEDICAL), $this->patientDataRequest());
+        $request = new PatientRequest($this->userRequest(Role::MEDICAL), $this->patientDataRequest());
 
         try {
             $this->service->create($request, true);
@@ -75,12 +75,30 @@ final class PatientQuickCreatorServiceTest extends CIUnitTestCase
     {
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
 
-        $request = new PatientQuickRequest($this->userRequest(Role::PATIENT), $this->patientDataRequest());
+        $request = new PatientRequest($this->userRequest(Role::PATIENT), $this->patientDataRequest());
 
         $response = $this->service->create($request, true);
 
         $this->assertNotNull($response);
         $this->seeNumRecords(1, 'users', []);
         $this->seeNumRecords(1, 'patients', []);
+    }
+
+    public function testDbTransactionRollsBackOnFailure(): void
+    {
+        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+
+        $futureBirthDate = (new DateTime('+1 day'))->format('Y-m-d');
+        $request = new PatientRequest($this->userRequest(Role::PATIENT), new PatientDataRequest($futureBirthDate));
+
+        try {
+            $this->service->create($request, true);
+            $this->fail('Se esperaba una excepción');
+        } catch (Exception $e) {
+            // esperado: InvalidBirthDateException
+        }
+
+        $this->seeNumRecords(0, 'users', []);
+        $this->seeNumRecords(0, 'patients', []);
     }
 }

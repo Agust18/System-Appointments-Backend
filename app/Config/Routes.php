@@ -12,10 +12,6 @@ $routes->post('login', 'Auth\UserLoginController::login');
 
 $routes->post('patients/register', 'Patient\PatientPublicPostController::create');
 
-//quick
-$routes->post('patients/quick-create', 'Patient\PatientQuickPostController::create', ['filter' => ['auth', 'receptionUserCreate:patient']]);
-$routes->post('medicals/quick-create', 'Medical\MedicalQuickPostController::create', ['filter' => ['auth', 'receptionUserCreate:medical']]);
-
 //Users
 $routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'adminOnly']]);
 

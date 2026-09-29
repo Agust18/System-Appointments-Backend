@@ -3,7 +3,7 @@
 namespace App\Services\Medical\Validations;
 
 use App\Constants\Role;
-use App\Dto\Request\Medical\MedicalRequest;
+use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Exception\Medical\MedicalTuitionAlreadyExistsException;
 use App\Exception\Medical\MedicalUserAlreadyExistsException;
 use App\Exception\Medical\UserNotMedicalException;
@@ -24,18 +24,18 @@ final class MedicalCreateValidatorService
         $this->specialtyFinderService = new SpecialtyFinderService();
     }
 
-    public function validate(MedicalRequest $request): void
+    public function validate(int $userId, MedicalDataRequest $request): void
     {
-    
-        $user = $this->userFinderService->find($request->getUserId());
+
+        $user = $this->userFinderService->find($userId);
 
         if ($user->getRoleId() !== Role::MEDICAL) {
-            throw new UserNotMedicalException($request->getUserId());
+            throw new UserNotMedicalException($userId);
         }
 
-        $existingMedical = $this->medicalModel->findByUserId($request->getUserId());
+        $existingMedical = $this->medicalModel->findByUserId($userId);
         if ($existingMedical) {
-            throw new MedicalUserAlreadyExistsException($request->getUserId());
+            throw new MedicalUserAlreadyExistsException($userId);
         }
 
         

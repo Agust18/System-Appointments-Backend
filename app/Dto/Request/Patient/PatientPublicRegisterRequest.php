@@ -17,22 +17,22 @@ final class PatientPublicRegisterRequest
     ) {}
 
     
-    public function toPatientQuickRequest(): PatientQuickRequest
+    public function toPatientRequest(): PatientRequest
     {
         $userRequest = new UserRequest(
             $this->username,
             $this->email,
             $this->password,
             $this->dni,
-            true,         
-            Role::PATIENT  
+            true,
+            Role::PATIENT
         );
 
         $patientDataRequest = new PatientDataRequest(
             $this->birthDate,
-          
+
         );
 
-        return new PatientQuickRequest($userRequest, $patientDataRequest);
+        return new PatientRequest($userRequest, $patientDataRequest);
     }
 }
