@@ -41,7 +41,6 @@ class Filters extends BaseFilters
         'appointmentViewPermission' => \App\Filters\AppointmentViewPermission::class,
         'patientViewPermission' => \App\Filters\PatientViewPermission::class,
         'medicalViewPermission' => \App\Filters\MedicalViewPermission::class,
-        'receptionUserCreate' => \App\Filters\ReceptionUserCreate::class,
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
         
         

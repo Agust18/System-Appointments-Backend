@@ -69,4 +69,13 @@ final class AdminOrReceptionTest extends CIUnitTestCase
         $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
         $this->assertSame(403, $result->getStatusCode());
     }
+
+    public function testArgumentsAreIgnored(): void
+    {
+        session()->set('roleId', Role::RECEPTION);
+
+        $result = $this->filter->before($this->request(), ['patient']);
+
+        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
+    }
 }
