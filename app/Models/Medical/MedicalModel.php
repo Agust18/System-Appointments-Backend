@@ -74,9 +74,10 @@ final class MedicalModel
 
     public function findProjection(int $id): ?MedicalProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 M.*,
                 U.username as medico_nombre,
+                U.email,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id
@@ -97,9 +98,10 @@ final class MedicalModel
 
     public function findByUserIdProjection(int $userId): ?MedicalProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 M.*,
                 U.username as medico_nombre,
+                U.email,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id
@@ -131,6 +133,7 @@ final class MedicalModel
                     M.created_at,
                     M.updated_at,
                     U.username AS medico_nombre,
+                    U.email,
                     S.name AS especialidad_nombre
                   FROM medicals M
                   INNER JOIN users U ON U.id = M.user_id
@@ -227,17 +230,18 @@ final class MedicalModel
     {
 
         $parameters = [];
-        $selectQuery = "SELECT 
-                        M.id, 
-                        M.user_id, 
-                        M.tuition, 
-                        M.specialty_id, 
-                        M.phone, 
-                        M.is_active, 
-                        M.created_at, 
+        $selectQuery = "SELECT
+                        M.id,
+                        M.user_id,
+                        M.tuition,
+                        M.specialty_id,
+                        M.phone,
+                        M.is_active,
+                        M.created_at,
                         M.updated_at,
-                        
+
                         U.username as medico_nombre,
+                        U.email,
                         S.name as especialidad_nombre
                     ";
 

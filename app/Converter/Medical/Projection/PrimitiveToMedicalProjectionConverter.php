@@ -13,6 +13,7 @@ final class PrimitiveToMedicalProjectionConverter
             $primitive->user_id,
             $primitive->specialty_id,
             $primitive->medico_nombre,
+            $primitive->email ?? null,
             $primitive->especialidad_nombre,
             $primitive->tuition,
             $primitive->phone ?? null,

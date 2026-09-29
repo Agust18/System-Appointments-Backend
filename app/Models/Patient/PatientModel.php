@@ -88,10 +88,11 @@ final class PatientModel
 
     public function findProjection(int $id): ?PatientProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 P.*,
                 U.username as paciente_nombre,
-                U.dni  
+                U.dni,
+                U.email
               FROM patients P
               INNER JOIN users U ON U.id = P.user_id
               WHERE P.id = ?";
@@ -109,10 +110,11 @@ final class PatientModel
 
     public function findByUserIdProjection(int $userId): ?PatientProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 P.*,
                 U.username as paciente_nombre,
-                U.dni  
+                U.dni,
+                U.email
               FROM patients P
               INNER JOIN users U ON U.id = P.user_id
               WHERE P.user_id = ?";
@@ -159,14 +161,15 @@ final class PatientModel
     {
         $parameters = [];
 
-        $selectQuery = "SELECT 
-                        P.id, 
-                        P.user_id, 
-                        P.birth_date,  
-                        P.created_at, 
+        $selectQuery = "SELECT
+                        P.id,
+                        P.user_id,
+                        P.birth_date,
+                        P.created_at,
                         P.updated_at,
                         U.username as paciente_nombre,
-                        U.dni  
+                        U.dni,
+                        U.email
                     ";
 
         $fromQuery = "FROM patients P 

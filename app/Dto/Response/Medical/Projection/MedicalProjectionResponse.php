@@ -11,6 +11,7 @@ final readonly class MedicalProjectionResponse
         
         // Proyecciones (nombres para mostrar)
         public string $medicoNombre,
+        public ?string $email,
         public string $especialidadNombre,
         
         // Datos del médico

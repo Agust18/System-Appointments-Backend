@@ -13,6 +13,7 @@ final class MedicalProjection
 
         // Proyecciones (nombres para mostrar)
         private string $medicoNombre,
+        private ?string $email,
         private string $especialidadNombre,
 
         // Datos del médico
@@ -42,6 +43,10 @@ final class MedicalProjection
     public function getMedicoNombre(): string
     {
         return $this->medicoNombre;
+    }
+    public function getEmail(): ?string
+    {
+        return $this->email;
     }
     public function getEspecialidadNombre(): string
     {

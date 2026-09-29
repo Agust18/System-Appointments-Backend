@@ -13,6 +13,7 @@ final class MedicalProjectionToMedicalProjectionResponseConverter
             $medical->getUserId(),
             $medical->getSpecialtyId(),
             $medical->getMedicoNombre(),
+            $medical->getEmail(),
             $medical->getEspecialidadNombre(),
             $medical->getTuition(),
             $medical->getPhone(),
