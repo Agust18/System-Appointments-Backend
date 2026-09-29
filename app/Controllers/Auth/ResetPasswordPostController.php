@@ -4,6 +4,7 @@ namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ResetPasswordRequest;
 use App\Services\auth\ResetPasswordService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -28,9 +29,9 @@ final class ResetPasswordPostController extends ResourceController
 
     private function getRequest(): ResetPasswordRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
 
-        // RequestValidator::validate($parameters, ResetPasswordRequest::rules(), ResetPasswordRequest::messages());
+        RequestValidator::validate($parameters, ResetPasswordRequest::rules(), ResetPasswordRequest::messages());
 
         $parameters = (object) $parameters;
 

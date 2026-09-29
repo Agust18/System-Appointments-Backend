@@ -5,6 +5,7 @@ use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
 use App\Services\Patient\PatientCreatorService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -27,7 +28,14 @@ final class PatientPostController extends ResourceController
 
     private function getRequest(): PatientRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters['user'] ?? [], UserRequest::rules(), UserRequest::messages());
+        RequestValidator::validate($parameters['patient'] ?? [], PatientDataRequest::rules(), PatientDataRequest::messages());
+
+        $parameters = (object) $parameters;
+        $parameters->user = (object) $parameters->user;
+        $parameters->patient = (object) $parameters->patient;
 
         $userRequest = new UserRequest(
             $parameters->user->firstName,

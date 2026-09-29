@@ -3,7 +3,6 @@
 namespace App\Services\MedicalSchedule\Validations;
 
 use App\Dto\Request\MedicalSchedule\MedicalScheduleRequest;
-use App\Exception\MedicalSchedule\InvalidDayOfWeekException;
 use App\Exception\MedicalSchedule\InvalidScheduleTimeException;
 use App\Exception\MedicalSchedule\MedicalNotActiveException;
 use App\Exception\MedicalSchedule\ScheduleAlreadyExistsException;
@@ -30,9 +29,6 @@ final class MedicalScheduleCreateValidatorService
         $medical = $this->medicalFinderService->find($request->getMedicalId());
 
         $dayOfWeek = $request->getDayOfWeek();
-        if ($dayOfWeek < 1 || $dayOfWeek > 7) {
-            throw new InvalidDayOfWeekException($dayOfWeek);
-        }
 
         if ($request->getStartTime() >= $request->getEndTime()) {
             throw new InvalidScheduleTimeException();

@@ -19,24 +19,24 @@ final class ResetPasswordRequest
         return $this->password;
     }
 
-    // public static function rules(): array
-    // {
-    //     return [
-    //         'token'    => 'required|string',
-    //         'password' => 'required|min_length[8]',
-    //     ];
-    // }
+    public static function rules(): array
+    {
+        return [
+            'token'    => 'required|string',
+            'password' => 'required|min_length[8]',
+        ];
+    }
 
-    // public static function messages(): array
-    // {
-    //     return [
-    //         'token' => [
-    //             'required' => 'El token es obligatorio.',
-    //         ],
-    //         'password' => [
-    //             'required'   => 'La contraseña es obligatoria.',
-    //             'min_length' => 'La contraseña debe tener al menos 8 caracteres.',
-    //         ],
-    //     ];
-    // }
+    public static function messages(): array
+    {
+        return [
+            'token' => [
+                'required' => 'Falta el token de recuperación.',
+            ],
+            'password' => [
+                'required'   => 'Ingresá tu nueva contraseña.',
+                'min_length' => 'La contraseña necesita al menos 8 caracteres.',
+            ],
+        ];
+    }
 }

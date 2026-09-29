@@ -3,6 +3,7 @@ namespace App\Controllers\Medical;
 
 use App\Dto\Request\Medical\MedicalUpdateRequest;
 use App\Services\Medical\MedicalUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -24,8 +25,12 @@ final class MedicalPutController extends ResourceController
 
     private function getRequest(): MedicalUpdateRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, MedicalUpdateRequest::rules(), MedicalUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new MedicalUpdateRequest(
             $parameters->tuition ?? null,
             $parameters->specialtyId ?? null,

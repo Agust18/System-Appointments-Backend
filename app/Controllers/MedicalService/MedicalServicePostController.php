@@ -3,6 +3,7 @@ namespace App\Controllers\MedicalService;
 
 use App\Dto\Request\MedicalService\MedicalServiceRequest;
 use App\Services\MedicalService\MedicalServiceAssignmentService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -25,7 +26,11 @@ final class MedicalServicePostController extends ResourceController
 
     private function getRequest(): MedicalServiceRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, MedicalServiceRequest::rules(), MedicalServiceRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new MedicalServiceRequest(
             $parameters->serviceId,

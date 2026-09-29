@@ -3,6 +3,7 @@ namespace App\Controllers\Specialty;
 
 use App\Dto\Request\Specialty\SpecialtyRequest;
 use App\Services\Specialty\SpecialtyCreatorService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -25,8 +26,12 @@ final class SpecialtyPostController extends ResourceController
 
     private function getRequest(): SpecialtyRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, SpecialtyRequest::rules(), SpecialtyRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new SpecialtyRequest(
             $parameters->name,
             $parameters->description ?? null

@@ -5,6 +5,7 @@ namespace App\Controllers\User;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Dto\Request\User\UserRequest;
 use App\Services\User\UserUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\RESTful\ResourceController;
 use App\Dto\Request\User\UserUpdaterRequest;
 
@@ -27,9 +28,12 @@ final class UserPutController extends ResourceController
 
     public function getRequest(): UserUpdaterRequest
     {
-        $request = $this->request->getJSON();
+        $request = $this->request->getJSON(true) ?? [];
 
-        
+        RequestValidator::validate($request, UserUpdaterRequest::rules(), UserUpdaterRequest::messages());
+
+        $request = (object) $request;
+
     return new UserUpdaterRequest(
         $request->firstName ?? null,
         $request->lastName ?? null,

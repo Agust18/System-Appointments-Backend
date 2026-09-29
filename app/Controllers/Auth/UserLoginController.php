@@ -4,6 +4,7 @@ namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\UserLoginRequest;
 use App\Services\auth\UserLoginService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -26,8 +27,12 @@ final class UserLoginController extends ResourceController {
 
     private function getRequest(): UserLoginRequest
     {
-        $clientRequest = $this->request->getJSON();
-        
+        $clientRequest = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($clientRequest, UserLoginRequest::rules(), UserLoginRequest::messages());
+
+        $clientRequest = (object) $clientRequest;
+
         return new UserLoginRequest(
             $clientRequest->email,
             $clientRequest->password

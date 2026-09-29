@@ -12,4 +12,20 @@ final class VerifyEmailRequest
     {
         return $this->token;
     }
+
+    public static function rules(): array
+    {
+        return [
+            'token' => 'required',
+        ];
+    }
+
+    public static function messages(): array
+    {
+        return [
+            'token' => [
+                'required' => 'Falta el token de verificación.',
+            ],
+        ];
+    }
 }

@@ -28,7 +28,9 @@ final class ForgotPasswordPostController extends ResourceController
 
     private function getRequest(): ForgotPasswordRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, ForgotPasswordRequest::rules(), ForgotPasswordRequest::messages());
 
         $parameters = (object) $parameters;
 

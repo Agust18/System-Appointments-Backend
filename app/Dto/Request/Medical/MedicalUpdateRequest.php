@@ -29,4 +29,32 @@ final readonly class MedicalUpdateRequest
     {
         return $this->isActive;
     }
+
+    public static function rules(): array
+    {
+        return [
+            'tuition'     => 'permit_empty|max_length[50]',
+            'specialtyId' => 'permit_empty|is_natural_no_zero',
+            'phone'       => 'permit_empty|max_length[20]',
+            'isActive'    => 'permit_empty|in_list[0,1]',
+        ];
+    }
+
+    public static function messages(): array
+    {
+        return [
+            'tuition' => [
+                'max_length' => 'La matrícula es muy larga.',
+            ],
+            'specialtyId' => [
+                'is_natural_no_zero' => 'Elegí una especialidad válida.',
+            ],
+            'phone' => [
+                'max_length' => 'El teléfono es muy largo.',
+            ],
+            'isActive' => [
+                'in_list' => 'El estado no es válido.',
+            ],
+        ];
+    }
 }

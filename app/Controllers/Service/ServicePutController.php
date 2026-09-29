@@ -3,6 +3,7 @@ namespace App\Controllers\Service;
 
 use App\Dto\Request\Service\ServiceUpdateRequest;
 use App\Services\Service\ServiceUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -25,7 +26,11 @@ final class ServicePutController extends ResourceController
 
     private function getRequest(): ServiceUpdateRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, ServiceUpdateRequest::rules(), ServiceUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new ServiceUpdateRequest(
             $parameters->name ?? null,

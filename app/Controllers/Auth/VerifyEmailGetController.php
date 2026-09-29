@@ -4,6 +4,7 @@ namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\VerifyEmailRequest;
 use App\Services\auth\VerifyEmailService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -27,8 +28,9 @@ final class VerifyEmailGetController extends ResourceController
 
     private function getRequest(): VerifyEmailRequest
     {
-
         $token = $this->request->getGet('token');
+
+        RequestValidator::validate(['token' => $token], VerifyEmailRequest::rules(), VerifyEmailRequest::messages());
 
         return new VerifyEmailRequest(
             token: (string) ($token ?? '')

@@ -45,4 +45,46 @@ final readonly class UserUpdaterRequest {
     {
         return $this->roleId;
     }
+
+    public static function rules(): array
+    {
+        return [
+            'firstName' => 'permit_empty|min_length[2]|max_length[100]',
+            'lastName'  => 'permit_empty|min_length[2]|max_length[100]',
+            'email'     => 'permit_empty|valid_email',
+            'password'  => 'permit_empty|min_length[8]',
+            'dni'       => 'permit_empty|is_natural_no_zero',
+            'isActive'  => 'permit_empty|in_list[0,1]',
+            'roleId'    => 'permit_empty|in_list[1,2,3,4]',
+        ];
+    }
+
+    public static function messages(): array
+    {
+        return [
+            'firstName' => [
+                'min_length' => 'El nombre es muy corto.',
+                'max_length' => 'El nombre es muy largo.',
+            ],
+            'lastName' => [
+                'min_length' => 'El apellido es muy corto.',
+                'max_length' => 'El apellido es muy largo.',
+            ],
+            'email' => [
+                'valid_email' => 'Ese email no es válido.',
+            ],
+            'password' => [
+                'min_length' => 'La contraseña necesita al menos 8 caracteres.',
+            ],
+            'dni' => [
+                'is_natural_no_zero' => 'El DNI no es válido.',
+            ],
+            'isActive' => [
+                'in_list' => 'El estado no es válido.',
+            ],
+            'roleId' => [
+                'in_list' => 'Elegí un rol válido.',
+            ],
+        ];
+    }
 }

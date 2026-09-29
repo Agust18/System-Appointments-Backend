@@ -3,6 +3,7 @@ namespace App\Controllers\MedicalSchedule;
 
 use App\Dto\Request\MedicalSchedule\MedicalScheduleUpdateRequest;
 use App\Services\MedicalSchedule\MedicalScheduleUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -24,7 +25,11 @@ final class MedicalSchedulePutController extends ResourceController
 
     private function getRequest(): MedicalScheduleUpdateRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, MedicalScheduleUpdateRequest::rules(), MedicalScheduleUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new MedicalScheduleUpdateRequest(
 

@@ -17,4 +17,25 @@ final readonly class UserLoginRequest {
     {
         return $this->password;
     }
+
+    public static function rules(): array
+    {
+        return [
+            'email'    => 'required|valid_email',
+            'password' => 'required',
+        ];
+    }
+
+    public static function messages(): array
+    {
+        return [
+            'email' => [
+                'required'    => 'Ingresá tu email.',
+                'valid_email' => 'Ese email no es válido.',
+            ],
+            'password' => [
+                'required' => 'Ingresá tu contraseña.',
+            ],
+        ];
+    }
 }
