@@ -53,7 +53,7 @@ $routes->put('patients/(:num)', 'Patient\PatientPutController::do/$1', ['filter'
 
 $routes->delete('patients/(:num)', 'Patient\PatientDeleteController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 
-$routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'adminOrReception',]]);
+$routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'adminReceptionOrMedical']]);
 
 
 

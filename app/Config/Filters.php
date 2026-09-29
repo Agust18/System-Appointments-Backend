@@ -37,6 +37,7 @@ class Filters extends BaseFilters
         'auth' => \App\Filters\Auth::class,
         'adminOnly' => \App\Filters\AdminOnly::class,
         'adminOrReception' => \App\Filters\AdminOrReception::class,
+        'adminReceptionOrMedical' => \App\Filters\AdminReceptionOrMedical::class,
         'appointmentPermission' => \App\Filters\AppointmentPermission::class,
         'appointmentViewPermission' => \App\Filters\AppointmentViewPermission::class,
         'patientViewPermission' => \App\Filters\PatientViewPermission::class,

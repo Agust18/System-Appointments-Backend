@@ -185,6 +185,16 @@ final class PatientModel
             $parameters[] = $like;
             $parameters[] = $like;
         }
+
+        if ($request->hasMedicalUserId()) {
+            $whereQuery .= " AND EXISTS (
+                SELECT 1 FROM appointments A
+                INNER JOIN medicals M ON M.id = A.medical_id
+                WHERE A.patient_id = P.id AND M.user_id = ?
+            ) ";
+            $parameters[] = $request->getMedicalUserId();
+        }
+
         $orderQuery = "ORDER BY U.username ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
@@ -220,6 +230,15 @@ final class PatientModel
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
+        }
+
+        if ($request->hasMedicalUserId()) {
+            $query .= " AND EXISTS (
+                SELECT 1 FROM appointments A
+                INNER JOIN medicals M ON M.id = A.medical_id
+                WHERE A.patient_id = P.id AND M.user_id = ?
+            ) ";
+            $parameters[] = $request->getMedicalUserId();
         }
 
         $result = $this->db->query($query, $parameters);

@@ -7,8 +7,9 @@ final readonly class PatientFilterRequest
 {
     public function __construct(
         private PaginationRequest $pagination,
-      
-        private ?string $search = null
+
+        private ?string $search = null,
+        private ?int $medicalUserId = null
     ) {}
 
     public function getPagination(): PaginationRequest
@@ -26,5 +27,13 @@ final readonly class PatientFilterRequest
         return !empty($this->search);
     }
 
-   
+    public function getMedicalUserId(): ?int
+    {
+        return $this->medicalUserId;
+    }
+
+    public function hasMedicalUserId(): bool
+    {
+        return $this->medicalUserId !== null;
+    }
 }
