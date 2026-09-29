@@ -20,7 +20,7 @@ final class MedicalPostController extends ResourceController
     public function create(): ResponseInterface
     {
         $request = $this->getRequest();
-        $response = $this->medicalCreatorService->create($request);
+        $response = $this->medicalCreatorService->create($request,true);
 
         return $this->response->setJSON($response);
     }

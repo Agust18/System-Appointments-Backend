@@ -30,7 +30,7 @@ final class MedicalCreatorService
         $this->db = \Config\Database::connect();
     }
 
-    public function create(MedicalRequest $request): MedicalResponse
+    public function create(MedicalRequest $request,bool $isVerified = false): MedicalResponse
     {
         $requestedRole = $request->getUserRequest()->getRoleId();
 
@@ -44,7 +44,7 @@ final class MedicalCreatorService
         $this->db->transStart();
 
         try {
-            $newUser = $this->userCreatorService->create($request->getUserRequest());
+            $newUser = $this->userCreatorService->create($request->getUserRequest(),$isVerified);
 
             $this->validator->validate($newUser->id, $request->getMedicalDataRequest());
 
