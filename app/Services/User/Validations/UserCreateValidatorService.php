@@ -7,6 +7,7 @@ use App\Dto\Request\User\UserRequest;
 use App\Exception\Role\RoleNotFoundException;
 use App\Exception\User\DniAlreadyRegisteredException;
 use App\Exception\User\EmailAlreadyRegisteredException;
+use App\Exception\User\UsernameAlreadyRegisteredException;
 use App\Models\User\UserModel;
 use App\Services\Role\RoleFinderService;
 
@@ -24,6 +25,11 @@ final class UserCreateValidatorService
 
     public function validate(UserRequest $request): void
     {
+        $existeUsername = $this->userModel->findByUsername($request->getUsername());
+        if ($existeUsername) {
+            throw new UsernameAlreadyRegisteredException();
+        }
+
         $existeUser = $this->userModel->findByEmail($request->getEmail());
         if ($existeUser) {
             throw new EmailAlreadyRegisteredException();
@@ -33,6 +39,7 @@ final class UserCreateValidatorService
         if ($existeDni) {
             throw new DniAlreadyRegisteredException();
         }
+       
 
         if ($request->getRoleId()) {
             $role = $this->roleFinderService->find($request->getRoleId());

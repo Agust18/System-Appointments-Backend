@@ -41,7 +41,7 @@ final class MedicalCreatorService
             throw new RoleMismatchException();
         }
 
-        $this->db->transStart();
+        $this->db->transBegin();
 
         try {
             $newUser = $this->userCreatorService->create($request->getUserRequest(),$isVerified);
@@ -52,7 +52,7 @@ final class MedicalCreatorService
 
             $newMedical = $this->medicalModel->insert($medical);
 
-            $this->db->transComplete();
+            $this->db->transCommit();
 
             return $this->converter->convert($newMedical);
         } catch (\Throwable $e) {

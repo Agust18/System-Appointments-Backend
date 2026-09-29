@@ -48,7 +48,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 | **Service (verbo)** | Dueño de toda la lógica de negocio para un verbo HTTP. Delega en Validator Services y Delegate Services. Devuelve un Response DTO tipado o `void`. |
 | **Service (delegado)** | Operación técnica no ligada a un verbo: booking atómico con lock (`AppointmentBookingService`), construcción de filtros con conciencia de RBAC (`AppointmentFilterBuilderService`), disponibilidad de horarios (`AppointmentAvailabilityService`). Lo llaman otros Services. |
 | **Service (validador)** | Reglas de dominio sin efectos secundarios. Siempre en el subfolder `Validations/`. Lanza una excepción tipada si falla. |
-| **Model** | SQL puro via `$db->query($sql, $params)` únicamente. Acepta y devuelve Entities. Después de un `INSERT`, re-fetchea con `find($this->db->insertID())` y devuelve la entidad hidratada. |
+| **Model** | SQL puro via `$db->query($sql, $params)` únicamente. Acepta y devuelve Entities. Después de un `INSERT`, re-fetchea con `find($this->db->insertID())` y devuelve la entidad hidratada.Si mas de una consulta repite query usar Querybuilder |
 | **Entity** | Objeto de dominio mutable. Tiene factory estático `fromRequest()` y método `modify(UpdateRequest)`. Las Projection Entities (en subfolder `Projection/`) son de solo lectura y nunca se persisten. |
 | **Converter** | Un único método `convert()`, sin estado. `PrimitiveToFooConverter`: `stdClass` (fila de DB) → Entity (se usa dentro de Models). `FooToFooResponseConverter`: Entity → Response DTO (se usa dentro de Services). |
 | **Request DTO** | `final readonly class` con props privadas promovidas + getters. Lleva `static rules(): array` y `static messages(): array` para la validación de CI4. |

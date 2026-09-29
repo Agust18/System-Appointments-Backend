@@ -47,7 +47,7 @@ final class PatientCreatorService
             throw new RoleMismatchException();
         }
 
-        $this->db->transStart();
+        $this->db->transBegin();
 
         try {
             $newUser = $this->userCreatorService->create($request->getUserRequest(), $isVerified);
@@ -58,19 +58,21 @@ final class PatientCreatorService
 
             $newPatient = $this->patientModel->insert($patient);
 
-            $this->db->transComplete();
+            $this->db->transCommit();
         } catch (\Throwable $e) {
             $this->db->transRollback();
             throw $e;
         }
-
-        $patientResponse = $this->converter->convert($newPatient);
-
+        
         if (!$isVerified) {
             $this->emailVerificationService->send(
                 $this->userFinderService->find($newUser->id)
             );
         }
+
+        $patientResponse = $this->converter->convert($newPatient);
+
+        
 
         return $patientResponse;
     }

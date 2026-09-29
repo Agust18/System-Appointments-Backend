@@ -7,6 +7,7 @@ use Config\Database;
 use App\Entity\User\User;
 use App\Converter\User\PrimitiveToUserConverte;
 use App\Dto\Request\User\UserFilterRequest;
+use App\Exception\User\UserCannotBeCreatedException;
 use DateTime;
 
 final class UserModel
@@ -46,20 +47,17 @@ final class UserModel
 
         $id = $this->db->insertID();
 
-        return new User(
-            $id,
-            $user->getUsername(),
-            $user->getEmail(),
-            $user->getPassword(),
-            $user->getDni(),
-            $user->getIsActive(),
-            $user->getIsVerified(),
-            null,
-            null,
-            $user->getRoleId(),
-            null,
-            null
-        );
+        if (!$id) {
+            throw new UserCannotBeCreatedException();
+        }
+
+        $newUser = $this->find($id);
+
+        if ($newUser === null) {
+            throw new UserCannotBeCreatedException();
+        }
+
+        return $newUser;
     }
 
     public function update(User $user): User
@@ -93,6 +91,23 @@ final class UserModel
         }
 
         $user = $this->converter->convert($primitive);
+        return $user;
+    }
+
+
+    public function findByUsername(string $username): ?User
+    {
+        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.username = ? ";
+        $result = $this->db->query($query, [$username]);
+
+        $primitive = $result->getRow();
+
+        if (empty($primitive)) {
+            return null;
+        }
+
+        $user = $this->converter->convert($primitive);
+
         return $user;
     }
 
