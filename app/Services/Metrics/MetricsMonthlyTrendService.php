@@ -2,11 +2,7 @@
 
 namespace App\Services\Metrics;
 
-use App\Converter\Metrics\Projection\MonthlyTrendProjectionToMetricsMonthlyTrendResponseConverter;
-use App\Converter\Metrics\Projection\PrimitiveToMonthlyTrendProjectionConverter;
 use App\Dto\Request\Metrics\MetricsFilterRequest;
-use App\Dto\Response\Metrics\MetricsMonthlyTrendResponse;
-use App\Entity\Metrics\Projection\MonthlyTrendProjection;
 use App\Models\Metrics\MetricsModel;
 
 final class MetricsMonthlyTrendService
@@ -14,18 +10,14 @@ final class MetricsMonthlyTrendService
     private const WINDOW_MONTHS = 6;
 
     private MetricsModel $metricsModel;
-    private PrimitiveToMonthlyTrendProjectionConverter $projectionConverter;
-    private MonthlyTrendProjectionToMetricsMonthlyTrendResponseConverter $responseConverter;
 
     public function __construct()
     {
         $this->metricsModel = new MetricsModel();
-        $this->projectionConverter = new PrimitiveToMonthlyTrendProjectionConverter();
-        $this->responseConverter = new MonthlyTrendProjectionToMetricsMonthlyTrendResponseConverter();
     }
 
     /**
-     * @return MetricsMonthlyTrendResponse[]
+     * @return array<int, array{month: string, total: int, completed: int, cancelled: int, noshow: int}>
      */
     public function get(MetricsFilterRequest $request): array
     {
@@ -57,20 +49,29 @@ final class MetricsMonthlyTrendService
      *
      * @param string[] $months
      * @param object[] $rows
-     * @return MetricsMonthlyTrendResponse[]
+     * @return array<int, array{month: string, total: int, completed: int, cancelled: int, noshow: int}>
      */
     private function fillGaps(array $months, array $rows): array
     {
         $byMonth = [];
         foreach ($rows as $row) {
-            $projection = $this->projectionConverter->convert($row);
-            $byMonth[$projection->getMonth()] = $projection;
+            $byMonth[$row->month] = [
+                'month' => $row->month,
+                'total' => (int) $row->total,
+                'completed' => (int) $row->completed,
+                'cancelled' => (int) $row->cancelled,
+                'noshow' => (int) $row->noshow,
+            ];
         }
 
         return array_map(
-            fn (string $month) => $this->responseConverter->convert(
-                $byMonth[$month] ?? new MonthlyTrendProjection($month, 0, 0, 0, 0)
-            ),
+            fn (string $month) => $byMonth[$month] ?? [
+                'month' => $month,
+                'total' => 0,
+                'completed' => 0,
+                'cancelled' => 0,
+                'noshow' => 0,
+            ],
             $months
         );
     }

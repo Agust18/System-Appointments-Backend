@@ -52,16 +52,16 @@ final class MetricsMonthlyTrendServiceTest extends CIUnitTestCase
 
         $this->assertCount(3, $responses);
 
-        $this->assertSame('2026-01', $responses[0]->month);
-        $this->assertSame(0, $responses[0]->total);
+        $this->assertSame('2026-01', $responses[0]["month"]);
+        $this->assertSame(0, $responses[0]["total"]);
 
-        $this->assertSame('2026-02', $responses[1]->month);
-        $this->assertSame(5, $responses[1]->total);
-        $this->assertSame(3, $responses[1]->completed);
-        $this->assertSame(1, $responses[1]->cancelled);
-        $this->assertSame(1, $responses[1]->noshow);
+        $this->assertSame('2026-02', $responses[1]["month"]);
+        $this->assertSame(5, $responses[1]["total"]);
+        $this->assertSame(3, $responses[1]["completed"]);
+        $this->assertSame(1, $responses[1]["cancelled"]);
+        $this->assertSame(1, $responses[1]["noshow"]);
 
-        $this->assertSame('2026-03', $responses[2]->month);
-        $this->assertSame(0, $responses[2]->total);
+        $this->assertSame('2026-03', $responses[2]["month"]);
+        $this->assertSame(0, $responses[2]["total"]);
     }
 }
