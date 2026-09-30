@@ -14,7 +14,6 @@ use App\Models\Service\ServiceModel;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
-use Exception;
 
 final class AppointmentUpdateBookingService
 {
@@ -96,7 +95,7 @@ final class AppointmentUpdateBookingService
             $this->db->transCommit();
 
             return $updatedAppointment;
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->db->transRollback();
             throw $e;
         } finally {

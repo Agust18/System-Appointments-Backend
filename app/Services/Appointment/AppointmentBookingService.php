@@ -13,7 +13,6 @@ use App\Models\Service\ServiceModel;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
-use Exception;
 
 final class AppointmentBookingService
 {
@@ -98,7 +97,7 @@ final class AppointmentBookingService
             $this->db->transCommit();
             return $createdAppointment;
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             //rollback incondicional si la transacción quedó abierta
             $this->db->transRollback();
             throw $e;
