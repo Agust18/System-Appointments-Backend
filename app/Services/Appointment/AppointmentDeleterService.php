@@ -13,8 +13,8 @@ final class AppointmentDeleterService
     private AppointmentFinderService $finder;
     public function __construct()
     {
-       
-        $this->validator        = new AppointmentDeleteValidatorService();
+        $this->appointmentModel = new AppointmentModel();
+        $this->validator       = new AppointmentDeleteValidatorService();
         $this->finder = new AppointmentFinderService();
     }
 
