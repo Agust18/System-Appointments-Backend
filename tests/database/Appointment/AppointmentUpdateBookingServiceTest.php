@@ -4,6 +4,7 @@ require_once __DIR__ . '/BookingServiceTestCase.php';
 
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
+use App\Exception\Appointment\AppointmentServiceRequiredException;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
 use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
@@ -200,13 +201,10 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
         $this->assertLockReleased($medicalId, self::FECHA);
     }
 
-    public function testLegacyAppointmentWithoutServiceThrowsServiceNotAvailable(): void
+    private function seedLegacyAppointmentWithoutService(int $medicalId, int $patientId): int
     {
         // service_id es nullable en la tabla (turno legacy). PrimitiveToAppointmentConverter
-        // lo castea a 0, por lo que el chequeo `=== null` de AppointmentServiceRequiredException
-        // es inalcanzable hoy: el flujo real termina en ServiceNotAvailableException.
-        [$medicalId, ] = $this->seedMedicalWithService(30, 0);
-        $patientId = $this->seedPatient();
+        // lo castea a 0 al hidratar la entidad.
         $this->db->table('appointments')->insert([
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
@@ -216,17 +214,41 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
             'hora_fin'   => '09:30:00',
             'status'     => 'confirmed',
         ]);
-        $id = (int) $this->db->insertID();
+
+        return (int) $this->db->insertID();
+    }
+
+    public function testLegacyAppointmentWithoutServiceThrowsServiceRequired(): void
+    {
+        [$medicalId, ] = $this->seedMedicalWithService(30, 0);
+        $patientId = $this->seedPatient();
+        $id = $this->seedLegacyAppointmentWithoutService($medicalId, $patientId);
 
         $appointment = $this->appointmentModel->find($id);
 
         try {
-            $this->service->update($appointment, $this->updateRequest(), $id);
-            $this->fail('Se esperaba ServiceNotAvailableException.');
-        } catch (ServiceNotAvailableException) {
-            // esperado
+            $this->service->update($appointment, $this->updateRequest(null, null, null, '10:00'), $id);
+            $this->fail('Se esperaba AppointmentServiceRequiredException.');
+        } catch (AppointmentServiceRequiredException $e) {
+            $this->assertSame(422, $e->getCode());
         }
 
+        // no se modificó nada y no quedó lock tomado
+        $persisted = $this->appointmentModel->find($id);
+        $this->assertSame('09:00:00', $persisted->getHora()->format('H:i:s'));
         $this->assertLockReleased($medicalId, self::FECHA);
+    }
+
+    public function testLegacyAppointmentWithoutServiceCanBeEditedWhenServiceIsProvided(): void
+    {
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
+        $patientId = $this->seedPatient();
+        $id = $this->seedLegacyAppointmentWithoutService($medicalId, $patientId);
+
+        $appointment = $this->appointmentModel->find($id);
+        $updated = $this->service->update($appointment, $this->updateRequest(null, $serviceId), $id);
+
+        $this->assertSame($serviceId, $updated->getServiceId());
+        $this->assertSame('09:30:00', $updated->getHoraFin()->format('H:i:s'));
     }
 }

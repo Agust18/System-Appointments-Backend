@@ -26,7 +26,8 @@ final class AppointmentUpdateBookingService
         $finalFecha = $request->getFecha() ?? $appointment->getFecha()->format('Y-m-d');
         $finalHora = $request->getHora() ?? $appointment->getHora()->format('H:i:s');
 
-        if ($finalServiceId === null) {
+        // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
+        if ($finalServiceId === null || $finalServiceId <= 0) {
             throw new AppointmentServiceRequiredException();
         }
 
