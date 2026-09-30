@@ -2,8 +2,6 @@
 
 namespace App\Services\Metrics;
 
-use App\Converter\Metrics\Projection\MedicalMetricsProjectionToMetricsByMedicalResponseConverter;
-use App\Converter\Metrics\Projection\PrimitiveToMedicalMetricsProjectionConverter;
 use App\Dto\Request\Metrics\MetricsFilterRequest;
 use App\Models\Metrics\MetricsModel;
 
@@ -11,17 +9,16 @@ final class MetricsByMedicalService
 {
     private MetricsModel $metricsModel;
     private MetricsDateRangeResolverService $dateRangeResolverService;
-    private PrimitiveToMedicalMetricsProjectionConverter $projectionConverter;
-    private MedicalMetricsProjectionToMetricsByMedicalResponseConverter $responseConverter;
 
     public function __construct()
     {
         $this->metricsModel = new MetricsModel();
         $this->dateRangeResolverService = new MetricsDateRangeResolverService();
-        $this->projectionConverter = new PrimitiveToMedicalMetricsProjectionConverter();
-        $this->responseConverter = new MedicalMetricsProjectionToMetricsByMedicalResponseConverter();
     }
 
+    /**
+     * @return array<int, array{medicalId: int, medicalName: string, total: int, completed: int, cancelled: int}>
+     */
     public function get(MetricsFilterRequest $request): array
     {
         [$resolvedDateFrom, $resolvedDateTo] = $this->dateRangeResolverService->resolve(
@@ -32,7 +29,13 @@ final class MetricsByMedicalService
         $rows = $this->metricsModel->getByMedical($resolvedDateFrom, $resolvedDateTo);
 
         return array_map(
-            fn (object $row) => $this->responseConverter->convert($this->projectionConverter->convert($row)),
+            fn (object $row) => [
+                'medicalId' => (int) $row->medical_id,
+                'medicalName' => $row->medical_name,
+                'total' => (int) $row->total,
+                'completed' => (int) $row->completed,
+                'cancelled' => (int) $row->cancelled,
+            ],
             $rows
         );
     }
