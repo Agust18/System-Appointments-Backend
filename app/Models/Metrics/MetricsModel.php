@@ -95,6 +95,23 @@ final class MetricsModel
         return $this->db->query($query, $parameters)->getResult();
     }
 
+    public function getTopSpecialties(string $dateFrom, string $dateTo, ?int $medicalId): array
+    {
+        [$whereQuery, $parameters] = $this->buildDateMedicalWhere($dateFrom, $dateTo, $medicalId);
+        $whereQuery .= " AND A.status IN ('pending', 'confirmed', 'completed') ";
+
+        $query = "SELECT SP.id AS specialty_id, SP.name AS specialty_name, COUNT(*) AS total
+              FROM appointments A
+              INNER JOIN medicals M ON M.id = A.medical_id
+              INNER JOIN specialties SP ON SP.id = M.specialty_id
+              {$whereQuery}
+              GROUP BY SP.id, SP.name
+              ORDER BY total DESC
+              LIMIT 5";
+
+        return $this->db->query($query, $parameters)->getResult();
+    }
+
     public function getScheduleHeatmap(string $dateFrom, string $dateTo, ?int $medicalId): array
     {
         [$whereQuery, $parameters] = $this->buildDateMedicalWhere($dateFrom, $dateTo, $medicalId);
