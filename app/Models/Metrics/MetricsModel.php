@@ -108,4 +108,25 @@ final class MetricsModel
 
         return $this->db->query($query, $parameters)->getResult();
     }
+
+    public function getRecentAppointments(string $dateFrom, string $dateTo, ?int $medicalId): array
+    {
+        [$whereQuery, $parameters] = $this->buildDateMedicalWhere($dateFrom, $dateTo, $medicalId);
+
+        $query = "SELECT A.id AS appointment_id, A.fecha, A.hora, A.status, A.created_at, A.updated_at,
+                TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS patient_name,
+                TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medical_name,
+                SRV.name AS service_name
+              FROM appointments A
+              INNER JOIN patients P ON P.id = A.patient_id
+              INNER JOIN users U_pac ON U_pac.id = P.user_id
+              INNER JOIN medicals M ON M.id = A.medical_id
+              INNER JOIN users U_med ON U_med.id = M.user_id
+              LEFT JOIN services SRV ON SRV.id = A.service_id
+              {$whereQuery}
+              ORDER BY A.updated_at DESC, A.id DESC
+              LIMIT 10";
+
+        return $this->db->query($query, $parameters)->getResult();
+    }
 }

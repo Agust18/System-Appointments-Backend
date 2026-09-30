@@ -133,6 +133,8 @@ Para listados con JOIN, agregar también después del paso 7:
 - **Nunca extender `CI4\Model`.** Los Models son clases planas con `BaseConnection $db`.
 - **Nunca poner lógica de negocio en Controllers.** Solo: parsear HTTP → DTO → llamar Service → devolver JSON.
 - **Nunca construir un Response DTO directamente** en un Service o Model. Siempre usar un Converter.
+  - **Excepción: Metrics** (`app/Services/Metrics/`). Son agregaciones, no entidades: no usan Projection, Converter ni Response DTO.
+    Los Services castean `(int)`/`(float)` y devuelven arrays en camelCase; todo el SQL vive en `MetricsModel`.
 - **Nunca persistir una Projection Entity.** Las entidades en `Entity/*/Projection/` son de solo lectura.
 - **Nunca usar contenedor de DI.** Las dependencias se instancian con `new` en los constructores.
 - **Nunca usar PATCH.** Las actualizaciones usan PUT únicamente.

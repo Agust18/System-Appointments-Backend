@@ -48,7 +48,8 @@
 
 - ✅ **Tasa de ausentismo** — cerrada (30/09/2026). `noshowRate` y `cancellationRate` en `GET /metrics/kpis`.
 - ⏳ Especialidades más demandadas. *(verificar si `services` tiene `specialty_id`)*
-- ⏳ Turnos recientes / en vivo.
+- ✅ **Turnos recientes** — cerrada (30/09/2026). `GET /metrics/recent-appointments`: últimos 10 por `updated_at DESC`, filtrados por `A.fecha` (rango + `medicalId`).
+- ✅ **Refactor métricas** — cerrado (30/09/2026). Métricas no usa Projection+Converter. Es intencional: son agregaciones, no entidades. 1 método en `MetricsModel` + 1 Service (devuelve array) + 1 Controller por métrica; JSON verificado idéntico con diff antes/después. Excepción documentada en `CLAUDE.md`.
 - ⏳ Alertas del sistema (post-MVP).
 
 ---

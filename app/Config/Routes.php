@@ -91,6 +91,7 @@ $routes->get('metrics/by-medical', 'Metrics\MetricsByMedicalGetController::get',
 $routes->get('metrics/monthly-trend', 'Metrics\MetricsMonthlyTrendGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('metrics/top-services', 'Metrics\MetricsTopServicesGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/recent-appointments', 'Metrics\MetricsRecentAppointmentsGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 
 //roles
 $routes->post('roles', 'Role\RolePostController::create', ['filter' => ['auth', 'adminOnly']]);
