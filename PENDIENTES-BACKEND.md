@@ -6,11 +6,16 @@
 
 ## 🔴 Bugs reales
 
-**Ninguno.** ✅
+- **`DELETE /appointments/{id}` devuelve 500 siempre.** `AppointmentDeleterService` declara `$appointmentModel` pero el constructor nunca lo inicializa (falta `new AppointmentModel()`). Detectado el 30/09/2026 probando endpoints; bug previo, no relacionado con R6. Fix de 1 línea + test.
+- **Turno de prueba 110 en `turnero_db`** (médico 10, servicio 3, 2027-03-02 11:00, nota "TEST-R6 editado"): quedó sin borrar por el bug anterior. Borrar a mano.
 
 ---
 
 ## ✅ Cerrado (no volver a tocar)
+
+### Booking / transacciones (30/09/2026)
+- ✅ **B2 — Auditoría `transStart()` vs `transBegin()`**: todo `app/` usa `transBegin` + `transCommit` + `transRollback` manual (correcto: el rollback depende de excepciones de dominio, no de `transStatus`). Única inconsistencia: los 2 booking services capturaban `Exception` en vez de `\Throwable`; unificado (commit `8671dcb`). `MedicalCreatorService` y los seeders siguen el mismo patrón por grep, sin revisión línea a línea.
+- ✅ **R6 — Booking atómico extraído**: nuevo Service delegado `AppointmentSlotLockService::run()` (lock `GET_LOCK` + transacción + validación de servicio + bloque + solapamiento + persistencia inyectada). `AppointmentBookingService` y `AppointmentUpdateBookingService` quedan como adaptadores finos. 22 tests de caracterización escritos antes del refactor (`tests/database/Appointment/`), idénticos antes y después. Suite: 237 tests OK. Endpoints verificados a mano: POST 200, PUT 200, solapamiento 409.
 
 ### Bugs y fixes
 - **Bug "estado inválido" al activar/desactivar** (30/09/2026): CI4 StrictRules `in_list` rechaza `bool` JSON nativo. Fix centralizado en `RequestValidator`: convierte bool de primer nivel del body a 0/1 antes de validar. Cubre MedicalSchedule, MedicalService, Medical, Service y User. Reglas actualizadas a `in_list[0,1,true,false]`.
@@ -28,7 +33,6 @@
 | # | Fix | Esfuerzo |
 |---|---|---|
 | B1 | Chequeo del INSERT en todos los Models (Patient, Medical, Appointment, etc.) | 4-6 h |
-| B2 | Auditoría `transStart()` vs `transBegin()` en todos los Services | 30 min |
 | B3 | Mover transacciones a `Operation/` (Service delegado) | 2-3 h |
 
 ---
@@ -38,7 +42,6 @@
 | # | Refactor | Dónde | Esfuerzo | Impacto |
 |---|---|---|---|---|
 | R5 | Extraer `isDayOff()` a `MedicalDaysOffService` | `AppointmentAvailabilityBatchService` | 30 min | Bajo |
-| R6 | Extraer lógica de booking atómico (duplicada entre Booking y UpdateBooking) | `AppointmentBookingService`, `AppointmentUpdateBookingService` | 2-3 h | Medio |
 
 > **R5 — Detalle:** extraer `isDayOff()` de `AppointmentAvailabilityBatchService` a `MedicalDaysOffService`, inyectarlo en batch, single-date y Booking, e implementar la query real contra `medical_days_off`. Se hace **cuando se implemente la feature de días no laborables** (hoy `isDayOff()` devuelve `false`).
 
@@ -63,25 +66,27 @@
   - user inactivo + medical inactivo → dado de baja total
   Confirmar que los listados y validaciones respetan esto.
 
+- **`AppointmentServiceRequiredException` es código muerto**: `PrimitiveToAppointmentConverter` castea `service_id` NULL a `0`, así que el guard `=== null` de `AppointmentUpdateBookingService` nunca se cumple y un turno legacy sin servicio da 404 `ServiceNotAvailableException`. Recomendado: guard `=== null || <= 0` + ajustar `testLegacyAppointmentWithoutServiceThrowsServiceNotAvailable`. Confirmar antes el código HTTP de la excepción.
+- **Suite lenta (~12-14 min)**: cada test de DB con `$refresh = true` re-migra todo `turnero_test`. Correr con `docker exec turnero_app php vendor/bin/phpunit` (el host `db` solo resuelve dentro de Docker). `turnero_test` se reseteó el 30/09/2026 porque tenía `migrations` marcada sin las tablas.
+
 - **Migración al RequestValidator**: unificar la validación de requests que hoy está dispersa.
 
 ---
 
 ## 🟢 Consistencia de código (backend)
 
-- [ ] Refactors R5, R6
-- [ ] Fixes defensivos B1-B3
+- [ ] Refactor R5 (R6 ✅)
+- [ ] Fixes defensivos B1, B3 (B2 ✅)
 - [ ] Migración al RequestValidator
 
 ---
 
 ## Prioridad sugerida (backend)
 
-1. **B2** — Auditoría `transStart()` vs `transBegin()` (30 min, riesgo bajo, fix defensivo).
+1. **Bug DELETE `/appointments/{id}`** (1 línea).
 2. **R5** — Extraer `isDayOff()` (30 min, preparación para días no laborables).
-3. **R6** — Extraer booking atómico (2-3 h, elimina duplicación).
-4. **B3** — Mover transacciones a `Operation/` (2-3 h).
-5. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
+3. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentSlotLockService`.
+4. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
 
 ---
 
