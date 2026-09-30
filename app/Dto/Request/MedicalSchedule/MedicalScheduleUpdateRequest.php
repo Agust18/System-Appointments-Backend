@@ -40,7 +40,7 @@ final readonly class MedicalScheduleUpdateRequest
             'dayOfWeek' => 'permit_empty|in_list[1,2,3,4,5,6,7]',
             'startTime' => 'permit_empty|regex_match[/^\d{2}:\d{2}(:\d{2})?$/]',
             'endTime'   => 'permit_empty|regex_match[/^\d{2}:\d{2}(:\d{2})?$/]',
-            'isActive'  => 'permit_empty|in_list[0,1]',
+            'isActive'  => 'permit_empty|in_list[0,1,true,false]',
         ];
     }
 
