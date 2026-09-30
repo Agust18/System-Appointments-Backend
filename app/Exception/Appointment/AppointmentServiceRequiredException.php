@@ -8,7 +8,7 @@ class AppointmentServiceRequiredException extends Exception
     public function __construct()
     {
         parent::__construct(
-            'Este turno no tiene un servicio asociado; debe indicar serviceId para poder editarlo.',
+            'Este turno no tiene un servicio asociado; debe indicar un servicio para poder editarlo.',
             422
         );
     }
