@@ -11,6 +11,8 @@ final readonly class MetricsKpisResponse
         public int $cancelled,
         public int $completed,
         public int $noshow,
-        public float $revenue
+        public float $revenue,
+        public float $noshowRate,
+        public float $cancellationRate
     ) {}
 }

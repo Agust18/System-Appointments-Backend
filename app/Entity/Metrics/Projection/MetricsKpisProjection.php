@@ -48,4 +48,23 @@ final class MetricsKpisProjection
     {
         return $this->revenue;
     }
+
+    public function getNoshowRate(): float
+    {
+        return $this->percentage($this->noshow, $this->completed + $this->noshow);
+    }
+
+    public function getCancellationRate(): float
+    {
+        return $this->percentage($this->cancelled, $this->total);
+    }
+
+    private function percentage(int $numerator, int $denominator): float
+    {
+        if ($denominator === 0) {
+            return 0.0;
+        }
+
+        return round($numerator / $denominator * 100, 1);
+    }
 }

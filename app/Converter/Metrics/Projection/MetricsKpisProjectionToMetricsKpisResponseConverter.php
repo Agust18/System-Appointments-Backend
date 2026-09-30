@@ -16,7 +16,9 @@ final class MetricsKpisProjectionToMetricsKpisResponseConverter
             cancelled: $projection->getCancelled(),
             completed: $projection->getCompleted(),
             noshow: $projection->getNoshow(),
-            revenue: $projection->getRevenue()
+            revenue: $projection->getRevenue(),
+            noshowRate: $projection->getNoshowRate(),
+            cancellationRate: $projection->getCancellationRate()
         );
     }
 }
