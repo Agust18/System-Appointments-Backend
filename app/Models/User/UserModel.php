@@ -34,7 +34,7 @@ final class UserModel
             is_verified,
             role_id
         )
-        VALUES (?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?)
     ";
 
         $this->db->query($query, [
