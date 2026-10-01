@@ -48,9 +48,9 @@ final class PatientPublicRegisterRequest
             'firstName' => 'required|min_length[2]|max_length[100]',
             'lastName'  => 'required|min_length[2]|max_length[100]',
             'email'     => 'required|valid_email',
-            'phone'     => 'permit_empty|min_length[10]|max_length[15]',
+            'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
             'password'  => 'required|min_length[8]',
-            'dni'       => 'required|numeric|exact_length[8]',
+            'dni'       => 'required|is_natural_no_zero|min_length[7]|max_length[8]',
             'birthDate' => 'permit_empty|valid_date[Y-m-d]',
         ];
     }
@@ -73,6 +73,7 @@ final class PatientPublicRegisterRequest
                 'valid_email' => 'Ese email no es válido.',
             ],
             'phone' => [
+                'is_natural' => 'El teléfono solo puede tener números.',
                 'min_length' => 'El teléfono es muy corto.',
                 'max_length' => 'El teléfono es muy largo.',
             ],
@@ -81,9 +82,10 @@ final class PatientPublicRegisterRequest
                 'min_length' => 'La contraseña necesita al menos 8 caracteres.',
             ],
             'dni' => [
-                'required'     => 'Ingresá tu DNI.',
-                'numeric'      => 'El DNI debe ser numérico.',
-                'exact_length' => 'El DNI debe tener 8 dígitos.',
+                'required'           => 'Ingresá tu DNI.',
+                'is_natural_no_zero' => 'El DNI debe ser numérico.',
+                'min_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
+                'max_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
             ],
             'birthDate' => [
                 'valid_date' => 'La fecha debe tener el formato Y-m-d (por ejemplo, 1990-05-20).',

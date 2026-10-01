@@ -63,6 +63,15 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
         $this->addToAssertionCount(1);
     }
 
+    public function testPublicRegisterSevenDigitDniPasses(): void
+    {
+        $payload = $this->validPublicRegisterPayload();
+        $payload['dni'] = '7123456';
+
+        RequestValidator::validate($payload, PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+        $this->addToAssertionCount(1);
+    }
+
     public function testPublicRegisterMissingFirstNameThrows422(): void
     {
         $payload = $this->validPublicRegisterPayload();

@@ -58,9 +58,9 @@ final readonly class UserRequest{
             'firstName' => 'required|min_length[2]|max_length[100]',
             'lastName'  => 'required|min_length[2]|max_length[100]',
             'email'     => 'required|valid_email',
-            'phone'     => 'permit_empty|min_length[10]|max_length[15]',
+            'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
             'password'  => 'required|min_length[8]',
-            'dni'       => 'required|is_natural_no_zero',
+            'dni'       => 'required|is_natural_no_zero|min_length[7]|max_length[8]',
             'roleId'    => 'required|in_list[1,2,3,4]',
         ];
     }
@@ -83,6 +83,7 @@ final readonly class UserRequest{
                 'valid_email' => 'Ese email no es válido.',
             ],
             'phone' => [
+                'is_natural' => 'El teléfono solo puede tener números.',
                 'min_length' => 'El número de teléfono es muy corto.',
                 'max_length' => 'El número de teléfono es muy largo.',
             ],
@@ -93,6 +94,8 @@ final readonly class UserRequest{
             'dni' => [
                 'required'           => 'Ingresá el DNI.',
                 'is_natural_no_zero' => 'El DNI no es válido.',
+                'min_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
+                'max_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
             ],
             'roleId' => [
                 'required' => 'Elegí un rol.',

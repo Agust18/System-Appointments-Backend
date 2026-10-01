@@ -74,6 +74,84 @@ final class UserRequestValidationTest extends CIUnitTestCase
         RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
     }
 
+    public function testSevenDigitDniPasses(): void
+    {
+        $payload = $this->validPayload();
+        $payload['dni'] = '7123456';
+
+        RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @dataProvider invalidDniProvider
+     */
+    public function testInvalidDniThrows422(string $dni): void
+    {
+        $payload = $this->validPayload();
+        $payload['dni'] = $dni;
+
+        try {
+            RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+            $this->fail('Se esperaba ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('dni', $e->getErrors());
+        }
+    }
+
+    public static function invalidDniProvider(): array
+    {
+        return [
+            'muy corto'       => ['123456'],
+            'muy largo'       => ['123456789'],
+            'con letras'      => ['12ab5678'],
+            'sin normalizar'  => ['23.525.064'],
+        ];
+    }
+
+    public function testNormalizedPhonePasses(): void
+    {
+        $payload = $this->validPayload();
+        $payload['phone'] = '2325506499';
+
+        RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+        $this->addToAssertionCount(1);
+    }
+
+    public function testNullPhonePasses(): void
+    {
+        $payload = $this->validPayload();
+        $payload['phone'] = null;
+
+        RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @dataProvider invalidPhoneProvider
+     */
+    public function testInvalidPhoneThrows422(string $phone): void
+    {
+        $payload = $this->validPayload();
+        $payload['phone'] = $phone;
+
+        try {
+            RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+            $this->fail('Se esperaba ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('phone', $e->getErrors());
+        }
+    }
+
+    public static function invalidPhoneProvider(): array
+    {
+        return [
+            'muy corto'  => ['232550'],
+            'muy largo'  => ['1234567890123456'],
+            'con letras' => ['2325abc499'],
+        ];
+    }
+
     public function testUpdaterAllowsEmptyPayload(): void
     {
         RequestValidator::validate([], UserUpdaterRequest::rules(), UserUpdaterRequest::messages());
