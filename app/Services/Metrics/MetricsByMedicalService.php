@@ -26,6 +26,9 @@ final class MetricsByMedicalService
             $request->getDateTo()
         );
 
+        //metricsbymedicalresponse (dto response) devuelve mismo campos ya tipeados.
+        //hacer projectionconverter directamente hacer new.
+
         $rows = $this->metricsModel->getByMedical($resolvedDateFrom, $resolvedDateTo);
 
         return array_map(
