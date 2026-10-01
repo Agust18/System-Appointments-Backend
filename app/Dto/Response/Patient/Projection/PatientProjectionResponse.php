@@ -10,6 +10,7 @@ final readonly class PatientProjectionResponse
         public string $pacienteNombre,
         public ?string $dni,
         public ?string $email,
+        public ?string $phone,
         public ?string $birthDate,
         public bool $isActive,
         public ?string $createdAt,

@@ -92,7 +92,8 @@ final class PatientModel
                 P.*,
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                 U.dni,
-                U.email
+                U.email,
+                U.phone
               FROM patients P
               INNER JOIN users U ON U.id = P.user_id
               WHERE P.id = ?";
@@ -114,7 +115,8 @@ final class PatientModel
                 P.*,
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                 U.dni,
-                U.email
+                U.email,
+                U.phone
               FROM patients P
               INNER JOIN users U ON U.id = P.user_id
               WHERE P.user_id = ?";
@@ -169,7 +171,8 @@ final class PatientModel
                         P.updated_at,
                         TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
                         U.dni,
-                        U.email
+                        U.email,
+                        U.phone
                     ";
 
         $fromQuery = "FROM patients P

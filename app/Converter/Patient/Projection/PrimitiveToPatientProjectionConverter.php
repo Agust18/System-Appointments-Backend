@@ -15,6 +15,7 @@ final class PrimitiveToPatientProjectionConverter
             $primitive->paciente_nombre,
             $primitive->dni ?? null,
             $primitive->email ?? null,
+            $primitive->phone ?? null,
             new DateTime($primitive->birth_date),
             (bool)($primitive->is_active ?? true),
             new DateTime($primitive->created_at),

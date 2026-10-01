@@ -15,6 +15,7 @@ final class PatientProjectionToPatientProjectionResponseConverter
             $patient->getPacienteNombre(),
             $patient->getDni(),
             $patient->getEmail(),
+            $patient->getPhone(),
             $patient->getBirthDate()?->format('Y-m-d'),
             $patient->isActive(),
             $patient->getCreatedAt()?->format('Y-m-d H:i:s'),
