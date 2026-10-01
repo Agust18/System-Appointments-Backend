@@ -16,7 +16,6 @@ final class MedicalDataRequestValidationTest extends CIUnitTestCase
         return [
             'tuition'     => 'MP-1234',
             'specialtyId' => 1,
-            'phone'       => '11-2222-3333',
         ];
     }
 

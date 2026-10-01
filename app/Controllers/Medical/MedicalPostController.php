@@ -41,6 +41,7 @@ final class MedicalPostController extends ResourceController
             $parameters->user->firstName,
             $parameters->user->lastName,
             $parameters->user->email,
+            $parameters->user->phone ?? null,
             $parameters->user->password,
             $parameters->user->dni,
             $parameters->user->isActive ?? true,
@@ -50,7 +51,6 @@ final class MedicalPostController extends ResourceController
         $medicalDataRequest = new MedicalDataRequest(
             tuition: $parameters->medical->tuition,
             specialtyId: $parameters->medical->specialtyId,
-            phone: $parameters->medical->phone ?? null,
             isActive: $parameters->medical->isActive ?? true
         );
 

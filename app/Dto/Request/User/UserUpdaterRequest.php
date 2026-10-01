@@ -6,6 +6,7 @@ final readonly class UserUpdaterRequest {
         private ?string $firstName = null,
         private ?string $lastName = null,
         private ?string $email = null,
+        private ?string $phone = null,
         private ?string $password = null,
         private ?int $dni = null,
         private ?bool $isActive = null,
@@ -31,6 +32,11 @@ final readonly class UserUpdaterRequest {
     {
         return $this->email;
     }
+
+    public function getPhone():?string
+    {
+        return $this->phone;
+    }
     public function getFirstName():?string
     {
         return $this->firstName;
@@ -52,6 +58,7 @@ final readonly class UserUpdaterRequest {
             'firstName' => 'permit_empty|min_length[2]|max_length[100]',
             'lastName'  => 'permit_empty|min_length[2]|max_length[100]',
             'email'     => 'permit_empty|valid_email',
+            'phone'     => 'permit_empty|min_length[10]|max_length[15]',
             'password'  => 'permit_empty|min_length[8]',
             'dni'       => 'permit_empty|is_natural_no_zero',
             'isActive'  => 'permit_empty|in_list[0,1]',
@@ -72,6 +79,10 @@ final readonly class UserUpdaterRequest {
             ],
             'email' => [
                 'valid_email' => 'Ese email no es válido.',
+            ],
+            'phone' => [
+                'min_length' => 'El número de teléfono es muy corto.',
+                'max_length' => 'El número de teléfono es muy largo.',
             ],
             'password' => [
                 'min_length' => 'La contraseña necesita al menos 8 caracteres.',

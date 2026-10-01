@@ -34,7 +34,6 @@ final class MedicalPutController extends ResourceController
         return new MedicalUpdateRequest(
             $parameters->tuition ?? null,
             $parameters->specialtyId ?? null,
-            $parameters->phone ?? null,
             $parameters->isActive ?? null
         );
     }

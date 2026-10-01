@@ -24,12 +24,11 @@ final class MedicalModel
     }
     public function insert(Medical $medical): Medical
     {
-        $query = "INSERT INTO medicals (user_id, tuition, specialty_id, phone, is_active) values (?,?,?,?,?)";
+        $query = "INSERT INTO medicals (user_id, tuition, specialty_id, is_active) values (?,?,?,?)";
         $this->db->query($query, [
             $medical->getUserId(),
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
             $medical->getIsActive()
         ]);
         $id = $this->db->insertID();
@@ -38,7 +37,6 @@ final class MedicalModel
             $medical->getUserId(),
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
             $medical->getIsActive(),
             null,
             null
@@ -47,12 +45,11 @@ final class MedicalModel
 
     public function update(Medical $medical): Medical
     {
-        $query = "UPDATE medicals SET tuition = ?, specialty_id = ?, phone = ?, is_active = ? ";
+        $query = "UPDATE medicals SET tuition = ?, specialty_id = ?, is_active = ? ";
         $query .= "WHERE id = ?";
         $this->db->query($query, [
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
             $medical->getIsActive(),
             $medical->getId()
         ]);
@@ -78,6 +75,7 @@ final class MedicalModel
                 M.*,
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
+                U.phone,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id
@@ -102,6 +100,7 @@ final class MedicalModel
                 M.*,
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
+                U.phone,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id
@@ -128,12 +127,12 @@ final class MedicalModel
                     M.user_id,
                     M.specialty_id,
                     M.tuition,
-                    M.phone,
                     M.is_active,
                     M.created_at,
                     M.updated_at,
                     TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medico_nombre,
                     U.email,
+                    U.phone,
                     S.name AS especialidad_nombre
                   FROM medicals M
                   INNER JOIN users U ON U.id = M.user_id
@@ -193,7 +192,7 @@ final class MedicalModel
     {
         $parameters = [];
 
-        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.phone, M.is_active, M.created_at, M.updated_at ";
+        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.is_active, M.created_at, M.updated_at ";
         $fromQuery = "FROM medicals M ";
         $whereQuery = "WHERE 1 = 1 ";
 
@@ -235,13 +234,13 @@ final class MedicalModel
                         M.user_id,
                         M.tuition,
                         M.specialty_id,
-                        M.phone,
                         M.is_active,
                         M.created_at,
                         M.updated_at,
 
                         TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                         U.email,
+                        U.phone,
                         S.name as especialidad_nombre
                     ";
 

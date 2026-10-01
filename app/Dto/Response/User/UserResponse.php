@@ -9,6 +9,7 @@ final readonly class UserResponse
         public string $lastName,
         public string $fullName,
         public string $email,
+        public ?string $phone,
         public ?int $dni,
         public bool $isActive,
         public int $roleId,

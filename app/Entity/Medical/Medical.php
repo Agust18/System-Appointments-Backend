@@ -12,7 +12,6 @@ final class Medical
         private int $userId,
         private string $tuition,
         private int $specialtyId,
-        private ?string $phone,
         private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
@@ -25,7 +24,6 @@ final class Medical
     {
         $this->tuition = $request->getTuition() ?? $this->tuition;
         $this->specialtyId = $request->getSpecialtyId() ?? $this->specialtyId;
-        $this->phone = $request->getPhone() ?? $this->phone;
         $this->isActive = $request->getIsActive() ?? $this->isActive;
     }
 
@@ -49,10 +47,7 @@ final class Medical
         return $this->specialtyId;
     }
 
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
+    
 
     public function getIsActive(): bool
     {
@@ -81,7 +76,6 @@ final class Medical
             $userId,
             $request->getTuition(),
             $request->getSpecialtyId(),
-            $request->getPhone(),
             $request->getIsActive(),
             null,
             null

@@ -24,6 +24,7 @@ final class PatientPublicRegisterRequest
             $this->firstName,
             $this->lastName,
             $this->email,
+            null,
             $this->password,
             $this->dni,
             true,

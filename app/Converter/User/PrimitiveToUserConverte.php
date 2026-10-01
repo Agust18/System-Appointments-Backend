@@ -12,6 +12,7 @@ final class PrimitiveToUserConverte
             $primitive->first_name,
             $primitive->last_name,
             $primitive->email,
+            $primitive->phone ?? null,
             $primitive->password,
             $primitive->dni,
             (bool) $primitive->is_active,

@@ -14,9 +14,9 @@ final class PrimitiveToMedicalProjectionConverter
             $primitive->specialty_id,
             $primitive->medico_nombre,
             $primitive->email ?? null,
+            $primitive->phone ?? null,
             $primitive->especialidad_nombre,
             $primitive->tuition,
-            $primitive->phone ?? null,
             (bool)($primitive->is_active ?? true),
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)

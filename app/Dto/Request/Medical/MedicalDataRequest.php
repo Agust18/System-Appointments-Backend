@@ -6,7 +6,6 @@ final readonly class MedicalDataRequest
     public function __construct(
        private string $tuition,
        private int $specialtyId,
-       private ?string $phone = null,
        private bool $isActive = true
     ) {
     }
@@ -19,10 +18,7 @@ final readonly class MedicalDataRequest
     {
         return $this->specialtyId;
     }
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
+    
     public function getIsActive(): bool
     {
         return $this->isActive;
@@ -33,7 +29,7 @@ final readonly class MedicalDataRequest
         return [
             'tuition'     => 'required|max_length[50]',
             'specialtyId' => 'required|is_natural_no_zero',
-            'phone'       => 'permit_empty|max_length[20]',
+           
         ];
     }
 
@@ -48,9 +44,7 @@ final readonly class MedicalDataRequest
                 'required'           => 'Elegí una especialidad.',
                 'is_natural_no_zero' => 'Elegí una especialidad válida.',
             ],
-            'phone' => [
-                'max_length' => 'El teléfono es muy largo.',
-            ],
+            
         ];
     }
 }

@@ -30,7 +30,7 @@ final class UserCreatorServiceTest extends CIUnitTestCase
         string $email,
         int $dni
     ): UserRequest {
-        return new UserRequest($firstName, 'Apellido', $email, 'password123', $dni, true, Role::PATIENT);
+        return new UserRequest($firstName, 'Apellido', $email, null, 'password123', $dni, true, Role::PATIENT);
     }
 
     public function testDuplicateEmailThrows409AndCreatesNoExtraUser(): void

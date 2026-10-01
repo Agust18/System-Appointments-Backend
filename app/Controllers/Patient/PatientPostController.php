@@ -41,6 +41,7 @@ final class PatientPostController extends ResourceController
             $parameters->user->firstName,
             $parameters->user->lastName,
             $parameters->user->email,
+            $parameters->user->phone ?? null,
             $parameters->user->password,
             $parameters->user->dni,
             $parameters->user->isActive ?? true,

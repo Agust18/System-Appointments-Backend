@@ -39,6 +39,7 @@ final class UserPostController extends ResourceController
             $parameters->firstName,
             $parameters->lastName,
             $parameters->email,
+            $parameters->phone ?? null,
             $parameters->password,
             $parameters->dni,
             $parameters->isActive ?? true,

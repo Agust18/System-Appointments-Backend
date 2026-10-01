@@ -29,7 +29,7 @@ final class UserModelTest extends CIUnitTestCase
 
     private function user(string $firstName, string $lastName, string $email, int $dni): User
     {
-        $request = new UserRequest($firstName, $lastName, $email, 'password123', $dni, true, Role::PATIENT);
+        $request = new UserRequest($firstName, $lastName, $email, null, 'password123', $dni, true, Role::PATIENT);
 
         return User::convertFromRequest($request);
     }

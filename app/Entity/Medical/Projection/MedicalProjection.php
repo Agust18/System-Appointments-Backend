@@ -14,11 +14,11 @@ final class MedicalProjection
         // Proyecciones (nombres para mostrar)
         private string $medicoNombre,
         private ?string $email,
+        private ?string $phone,
         private string $especialidadNombre,
 
         // Datos del médico
         private string $tuition,
-        private ?string $phone,
         private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
@@ -58,6 +58,7 @@ final class MedicalProjection
     {
         return $this->tuition;
     }
+   
     public function getPhone(): ?string
     {
         return $this->phone;

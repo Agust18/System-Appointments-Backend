@@ -14,9 +14,9 @@ final class MedicalProjectionToMedicalProjectionResponseConverter
             $medical->getSpecialtyId(),
             $medical->getMedicoNombre(),
             $medical->getEmail(),
+            $medical->getPhone(),
             $medical->getEspecialidadNombre(),
             $medical->getTuition(),
-            $medical->getPhone(),
             $medical->isActive(),
             $medical->getCreatedAt()->format('Y-m-d H:i:s'),
             $medical->getUpdatedAt()->format('Y-m-d H:i:s')

@@ -5,6 +5,7 @@ final readonly class UserRequest{
         private string $firstName,
         private string $lastName,
         private string $email,
+        private ?string $phone,
         private string $password,
         private int $dni,
         private bool $isActive,
@@ -27,6 +28,12 @@ final readonly class UserRequest{
         return $this->email;
 
     }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
     public function getPassword():string
     {
         return $this->password;
@@ -51,6 +58,7 @@ final readonly class UserRequest{
             'firstName' => 'required|min_length[2]|max_length[100]',
             'lastName'  => 'required|min_length[2]|max_length[100]',
             'email'     => 'required|valid_email',
+            'phone'     => 'permit_empty|min_length[10]|max_length[15]',
             'password'  => 'required|min_length[8]',
             'dni'       => 'required|is_natural_no_zero',
             'roleId'    => 'required|in_list[1,2,3,4]',
@@ -73,6 +81,10 @@ final readonly class UserRequest{
             'email' => [
                 'required'    => 'Ingresá un email.',
                 'valid_email' => 'Ese email no es válido.',
+            ],
+            'phone' => [
+                'min_length' => 'El número de teléfono es muy corto.',
+                'max_length' => 'El número de teléfono es muy largo.',
             ],
             'password' => [
                 'required'   => 'Ingresá una contraseña.',

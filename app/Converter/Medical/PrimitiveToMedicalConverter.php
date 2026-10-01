@@ -13,7 +13,6 @@ final class PrimitiveToMedicalConverter
             $primitive->user_id,
             $primitive->tuition,
             $primitive->specialty_id,
-            $primitive->phone ?? null,
             $primitive->is_active ?? true,
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)

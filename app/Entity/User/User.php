@@ -13,8 +13,9 @@ final class User
         private string $firstName,
         private string $lastName,
         private string $email,
+        private ?string $phone,
         private string $password,
-        private ?int $dni,
+        private int $dni,
         private bool $isActive,
         private bool $isVerified,
         private ?string $token,
@@ -32,6 +33,7 @@ final class User
         $this->firstName = $request->getFirstName() ?? $this->firstName;
         $this->lastName = $request->getLastName() ?? $this->lastName;
         $this->email = $request->getEmail() ?? $this->email;
+        $this->phone = $request->getPhone() ?? $this->phone;
         $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
         $this->dni = $request->getDni() ?? $this->dni;
         $this->isActive = $request->getIsActive() ?? $this->isActive;
@@ -79,11 +81,17 @@ final class User
     {
         return $this->email;
     }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+   
     public function getPassword(): string
     {
         return $this->password;
     }
-    public function getDni(): ?int
+    public function getDni(): int
     {
         return $this->dni;
     }
@@ -130,6 +138,7 @@ final class User
             $request->getFirstName(),
             $request->getLastName(),
             $request->getEmail(),
+            $request->getPhone(),
             password_hash($request->getPassword(), PASSWORD_BCRYPT),
             $request->getDni(),
             $request->getIsActive(),

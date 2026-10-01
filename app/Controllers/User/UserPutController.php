@@ -38,6 +38,7 @@ final class UserPutController extends ResourceController
         $request->firstName ?? null,
         $request->lastName ?? null,
         $request->email ?? null,
+        $request->phone ?? null,
         $request->password ?? null,
         $request->dni ?? null,
         $request->isActive ?? null,

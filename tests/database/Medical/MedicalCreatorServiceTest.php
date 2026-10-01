@@ -32,6 +32,7 @@ final class MedicalCreatorServiceTest extends CIUnitTestCase
             'user_' . uniqid(),
             'Apellido',
             uniqid() . '@test.com',
+            null,
             'password123',
             random_int(1000000, 9999999),
             true,

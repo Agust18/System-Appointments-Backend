@@ -16,6 +16,7 @@ final class UserToUserResponseConverter
         $user->getLastName(),
         $user->getFullName(),
         $user->getEmail(),
+        $user->getPhone(),
         $user->getDni(),
         $user->getIsActive(),
         $user->getRoleId(),

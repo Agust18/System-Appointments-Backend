@@ -13,7 +13,6 @@ final class MedicalToMedicalResponseConverter
             $medical->getUserId(),
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
             $medical->getIsActive()
         );
     }
