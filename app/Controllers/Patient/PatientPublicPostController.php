@@ -40,6 +40,7 @@ final class PatientPublicPostController extends ResourceController
             firstName: $parameters->firstName,
             lastName: $parameters->lastName,
             email: $parameters->email,
+            phone: $parameters->phone ?? null,
             password: $parameters->password,
             dni: $parameters->dni,
             birthDate: $parameters->birthDate ?? null,

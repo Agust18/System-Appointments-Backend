@@ -11,9 +11,11 @@ final class PatientPublicRegisterRequest
         public readonly string $firstName,
         public readonly string $lastName,
         public readonly string $email,
+        public readonly ?string $phone = null,
         public readonly string $password,
         public readonly string $dni,
         public readonly ?string $birthDate = null,
+        
    
     ) {}
 
@@ -24,7 +26,7 @@ final class PatientPublicRegisterRequest
             $this->firstName,
             $this->lastName,
             $this->email,
-            null,
+            $this->phone ?? null,
             $this->password,
             $this->dni,
             true,
@@ -33,6 +35,7 @@ final class PatientPublicRegisterRequest
 
         $patientDataRequest = new PatientDataRequest(
             $this->birthDate,
+            
 
         );
 
@@ -45,6 +48,7 @@ final class PatientPublicRegisterRequest
             'firstName' => 'required|min_length[2]|max_length[100]',
             'lastName'  => 'required|min_length[2]|max_length[100]',
             'email'     => 'required|valid_email',
+            'phone'     => 'permit_empty|min_length[10]|max_length[15]',
             'password'  => 'required|min_length[8]',
             'dni'       => 'required|numeric|exact_length[8]',
             'birthDate' => 'permit_empty|valid_date[Y-m-d]',
@@ -67,6 +71,10 @@ final class PatientPublicRegisterRequest
             'email' => [
                 'required'    => 'Ingresá tu email.',
                 'valid_email' => 'Ese email no es válido.',
+            ],
+            'phone' => [
+                'min_length' => 'El teléfono es muy corto.',
+                'max_length' => 'El teléfono es muy largo.',
             ],
             'password' => [
                 'required'   => 'Ingresá una contraseña.',
