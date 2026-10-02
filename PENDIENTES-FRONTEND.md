@@ -79,7 +79,8 @@ Sin header `Authorization`. Todo bajo `/public`. Los errores son `{ "error": "..
 | `GET /public/medicals/available?specialtyId=` | `{ data: [{ id, medicoNombre, especialidadNombre, isActive }], total }`. Solo médicos activos. |
 | `GET /public/medicals/{id}/services` | `[{ serviceId, name, description, durationMinutes, price }]` (duración y precio efectivos del médico). `409` si el médico está inactivo, `404` si no existe. |
 | `GET /public/services` | `{ data: [{ id, name, description, durationMinutes, price }], total }`. Solo servicios activos. |
-| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | Slots `[{ start_time, end_time, block_end_time }]`. Igual que la ruta autenticada. |
+| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` | Un día: slots `[{ start_time, end_time, block_end_time }]`. Igual que la ruta autenticada. |
+| `GET /public/appointments/availability?medicalId=&serviceId=&from=&to=` | **Rango** (máx. 60 días): `{ data: { "YYYY-MM-DD": ["HH:MM", ...] } }`. Son **strings** `"HH:MM"`, no objetos `{start_time,…}`. Los días sin atención no aparecen; si no hay ninguno, `data` llega como `[]` (PHP serializa el array vacío así), no `{}`. Es lo que usa el wizard. |
 | `POST /public/appointments` | `201` con `{ id, fecha, hora, medicoNombre, servicioNombre, status }`. |
 
 - Los listados **ignoran `page`, `size`, `search` e `isActive`**: tope fijo de 100 ítems, sin paginar.

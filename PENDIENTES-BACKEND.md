@@ -102,6 +102,7 @@ La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los e
 
 
 - **CORS: exponer `Retry-After`.** `app/Config/Cors.php` tiene `exposedHeaders => []`. Con el SPA en otro dominio el navegador no puede leer el `Retry-After` del `429` (el wizard cae al fallback de 15 s). Fix de 1 línea: `'exposedHeaders' => ['Retry-After']` (y un caso en `CorsConfigTest`). Hacerlo antes de exponer `/public/*` con el front en otro dominio.
+- **Agregar campo `code` a los `409` de `POST /public/appointments`.** Hoy el wizard distingue identidad / horario ocupado / médico no disponible / tope de turnos / fecha pasada **por el texto** del mensaje (`bookingErrors.js` en el front), así que reescribir un mensaje rompe el flujo en silencio. Con un `code` estable en el body de error (`{ "error": "...", "code": "IDENTITY_MISMATCH" }`) el front deja de depender del texto. Bajo esfuerzo: es un campo aditivo en `ApiExceptionHandler`/las excepciones tipadas. Al agregarlo, avisar al front para que priorice `code` sobre el texto.
 - **Caso familiar (padre/hijo).** Un padre reserva para su hijo desde la reserva pública:
   - Hijo con **DNI propio** → sin problema (caso A).
   - Hijo con el **email del padre** → `409` neutral (caso C: el email ya es de otro usuario).
