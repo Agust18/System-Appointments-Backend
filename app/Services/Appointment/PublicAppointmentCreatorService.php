@@ -77,8 +77,9 @@ final class PublicAppointmentCreatorService
             self::INITIAL_STATUS
         ));
 
-        // 5. Aviso al email GUARDADO del paciente (no al tipeado), fuera de toda transacción.
-        $this->notificationService->notifyOnCreate($appointment->getId());
+        // 5. Aviso al email GUARDADO del paciente (no al tipeado) y a recepción,
+        //    fuera de toda transacción.
+        $this->notificationService->notifyOnPublicCreate($appointment->getId());
 
         return $this->converter->convert($this->projectionFinder->find($appointment->getId()));
     }

@@ -25,6 +25,7 @@ final class AppointmentProjection
         private ?string $nota,
         private string $status,
 
+        private ?string $paciente_telefono = null,
     ) {}
 
     // Getters para IDs
@@ -80,6 +81,11 @@ final class AppointmentProjection
     {
         return $this->serviceId;
     }
+    public function getTelefono(): ?string
+    {
+        return $this->paciente_telefono;
+    }
+
     public function getServicioNombre(): string
     {
         return $this->servicioNombre;

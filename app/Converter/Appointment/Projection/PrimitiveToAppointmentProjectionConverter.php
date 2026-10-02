@@ -26,6 +26,7 @@ final class PrimitiveToAppointmentProjectionConverter
             hora: new DateTime($primitive->hora),
             nota: $primitive->nota ?? null,
             status: $primitive->status,
+            paciente_telefono: $primitive->paciente_telefono ?? null,
 
         );
     }

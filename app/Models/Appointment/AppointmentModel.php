@@ -245,6 +245,7 @@ final class AppointmentModel
         $query = "SELECT
             A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
             U_pac.email  AS paciente_email,
+            U_pac.phone  AS paciente_telefono,
             TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre,
             TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS paciente_nombre,
             SRV.name       AS servicio_nombre

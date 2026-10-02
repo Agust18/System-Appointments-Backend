@@ -7,19 +7,25 @@ use App\Dto\Request\Email\EmailRequest;
 use App\Email\Appointment\AppointmentEmailTemplateRenderer;
 use App\Email\EmailSenderService;
 use App\Entity\Appointment\Appointment;
+use App\Entity\Appointment\Projection\AppointmentProjection;
 use App\Models\Appointment\AppointmentModel;
 
 final class AppointmentNotificationService
 {
     private AppointmentModel $appointmentModel;
     private AppointmentEmailTemplateRenderer $renderer;
-    private EmailSenderService $emailSender;
+    /** @var callable(EmailRequest): mixed */
+    private $sender;
 
-    public function __construct()
+    /**
+     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
+     *        por defecto envía con EmailSenderService.
+     */
+    public function __construct(?callable $sender = null)
     {
         $this->appointmentModel = new AppointmentModel();
         $this->renderer         = new AppointmentEmailTemplateRenderer();
-        $this->emailSender      = new EmailSenderService();
+        $this->sender           = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
     }
 
     public function notifyOnCreate(int $appointmentId): void
@@ -34,6 +40,46 @@ final class AppointmentNotificationService
             to:      $projection->getEmail(),
             subject: 'Tu turno fue confirmado',
             body:    $body,
+        ));
+    }
+
+    /**
+     * Turno nacido confirmado por reserva pública: avisa al paciente (asunto propio)
+     * y a recepción. Cada envío es independiente: si falla uno, el otro sale igual.
+     */
+    public function notifyOnPublicCreate(int $appointmentId): void
+    {
+        $projection = $this->appointmentModel->findProjection($appointmentId);
+        if ($projection === null || $projection->getStatus() !== 'confirmed') {
+            return;
+        }
+
+        $this->sendSafely(new EmailRequest(
+            to:      $projection->getEmail(),
+            subject: 'Tu turno fue creado y confirmado',
+            body:    $this->renderer->renderConfirmedBody($projection),
+        ));
+
+        $this->notifyReception($projection);
+    }
+
+    private function notifyReception(AppointmentProjection $projection): void
+    {
+        $enabled = filter_var(env('reception.emailEnabled', true), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+        if (!$enabled) {
+            return;
+        }
+
+        $receptionEmail = trim((string) env('reception.email', ''));
+        if ($receptionEmail === '') {
+            log_message('warning', 'reception.email no está configurado: no se avisó a recepción del turno ' . $projection->getId() . '.');
+            return;
+        }
+
+        $this->sendSafely(new EmailRequest(
+            to:      $receptionEmail,
+            subject: 'Nuevo turno agendado',
+            body:    $this->renderer->renderReceptionNewAppointmentBody($projection),
         ));
     }
 
@@ -95,7 +141,7 @@ final class AppointmentNotificationService
     private function sendSafely(EmailRequest $request): void
     {
         try {
-            $this->emailSender->send($request);
+            ($this->sender)($request);
         } catch (\Throwable $e) {
             log_message('error', 'No se pudo enviar el email de notificación de turno: ' . $e->getMessage());
         }

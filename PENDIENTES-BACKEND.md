@@ -82,6 +82,7 @@ La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los e
 - [ ] **`cors.allowedOrigins` / `cors.allowedOriginsPatterns`** con los dominios de cada cliente (solo aplica a `/public/*`). Si el SPA y el API quedan en dominios distintos, el panel autenticado también necesita CORS: ver "CORS en rutas privadas" abajo.
 - [ ] **Migraciones probadas en una copia de la base** (UNIQUE de `users.dni` y `patients.user_id`; los pre-checks abortan listando duplicados).
 - [ ] **`EMAIL_*` configurado** (el paciente recibe la confirmación al email guardado).
+- [ ] **`reception.email` configurado** (Fase 5): recepción recibe "Nuevo turno agendado" por cada reserva pública. Sin esa variable no se avisa (queda un `warning` en el log). `reception.emailEnabled = false` lo desactiva.
 
 **Cómo limita** (valores aprobados; constantes en `Routes.php` y `PublicIdentityAttemptLimiter`):
 - `GET /public/*`: 60 por minuto por IP. `POST /public/appointments`: 5 por minuto por IP. El Throttler es un *token bucket*: "60 por minuto" = ráfaga de 60 y después 1 por segundo; "5 por minuto" = ráfaga de 5 y después 1 cada 12 s. El preflight `OPTIONS` no gasta cupo.
