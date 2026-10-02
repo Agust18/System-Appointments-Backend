@@ -61,6 +61,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Auth/RBAC y roles → `.claude/rules/auth-rbac.md`
 - Sistema de Email → `.claude/rules/email.md`
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
+- Reserva pública (`/public/*`), identidad sin cuenta, throttle → `.claude/rules/public-booking.md`
 
 
 ---

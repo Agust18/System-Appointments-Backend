@@ -28,6 +28,27 @@ que los Filters cortan la cadena con Response, no con excepciones).
 Los Filters que verifican ownership instancian Models directamente
 (permitido y documentado en la arquitectura).
 
+## Rutas sin auth: `throttle` y `cors`
+Las rutas `/public/*` (reserva pública) y `POST /patients/register` no llevan
+`auth`. Las de `/public/*` se protegen con dos Filters que **no son de RBAC**
+(no miran roles ni sesión):
+
+| Filter | Qué hace |
+|---|---|
+| `cors` | `CodeIgniter\Filters\Cors`. Solo en `/public/*`, para los orígenes de `cors.allowedOrigins` / `cors.allowedOriginsPatterns` del `.env`. Sin orígenes no agrega headers. |
+| `throttle:{capacidad},{segundos}` | `app/Filters/Throttle.php`. Límite por IP (token bucket sobre el cache). Al excederse devuelve un `Response` 429 con `Retry-After` (no lanza excepción, como los demás Filters). Lecturas `throttle:60,60`, reserva `throttle:5,60`. |
+
+`cors` tiene que ir **antes** que `throttle` en la lista de la ruta: el 429 se
+arma sobre la respuesta a la que `cors` ya agregó sus headers.
+
+## Bloqueo por DNI (reserva pública)
+No es un Filter: vive en `PublicIdentityAttemptLimiter` y lo usa
+`PatientGuestResolverService`. Como el filtro `throttle` limita por IP pero
+alguien podría rotar IPs, el teléfono (segundo factor del DNI) tiene su propio
+límite: 5 teléfonos incorrectos para un DNI existente lo bloquean 1 hora y se
+responde el mismo 409 neutral sin consultar la base. Detalle completo en
+`public-booking.md`.
+
 ## `PermissionsService` (`app/Services/Permissions/PermissionsService.php`)
 Centraliza las reglas de rol + ownership que antes estaban duplicadas entre
 Filters. Expone `canViewPatient()`, `canViewAppointment()`, `canEditAppointment()`,

@@ -18,6 +18,7 @@ si el usuario nace verificado y si se dispara el email de verificación
 | Endpoint | Controller | `isVerified` | Envía email |
 |---|---|---|---|
 | `POST /patients/register` | `PatientPublicPostController` | `false` | Sí |
+| `POST /public/appointments` | `PublicAppointmentPostController` | n/a: el usuario nace **sin cuenta** (`password` NULL) | No (solo el aviso del turno, abajo) |
 | `POST /patients` (admin/recepción) | `PatientPostController` | `true` | No |
 | `POST /medicals` (admin/recepción) | `MedicalPostController` | `true` | No |
 
@@ -41,7 +42,8 @@ consultorio, así que nacen verificados y no requieren el paso extra.
 | `notifyOnPublicCreate()` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
 
 Un turno público se identifica por el servicio que lo crea, no por un campo ni por el status
-(un turno de admin también puede nacer `confirmed`).
+(un turno de admin también puede nacer `confirmed`). El email al paciente va al email
+**guardado** en su usuario, no al que se tipeó en el formulario. Flujo completo en `public-booking.md`.
 
 Config de recepción en el `.env`:
 - `reception.email`: destinatario. Si falta, no se envía y se loguea un `warning`.

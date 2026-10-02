@@ -1,6 +1,6 @@
 # PENDIENTES — BACKEND
 
-Última actualización: 02/10/2026
+Última actualización: 02/10/2026 (Fase 6, Parte A: documentación)
 
 ---
 
@@ -64,6 +64,8 @@ Ninguno. ✅
   - user inactivo + medical activo → no puede loguearse pero aparece en listas
   - user inactivo + medical inactivo → dado de baja total
   Confirmar que los listados y validaciones respetan esto.
+  - **Ya cubierto en la reserva pública:** `PublicAppointmentCreateValidatorService` exige médico **y** usuario activos, y `GET /public/medicals/available` filtra `M.is_active = 1 AND U.is_active = 1`.
+  - **Falta auditar** el resto de los listados autenticados: el filtro `isActive` de `MedicalModel` mira solo `M.is_active` (no el del usuario), así que un médico con usuario inactivo puede aparecer.
 
 - **Migración al RequestValidator**: unificar la validación de requests que hoy está dispersa.
 
@@ -75,7 +77,7 @@ Ninguno. ✅
 
 La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los endpoints `/public/*` **NO deben exponerse a internet** hasta tildar todo esto:
 
-- [x] **Suite completa en verde** tras la Fase 4 (02/10/2026): 511 tests, 1268 aserciones, 40 min. Cubre también la Fase 3.
+- [x] **Suite completa en verde** tras la Fase 5 (02/10/2026): 520 tests, 1289 aserciones, 44 min. Cubre también las Fases 3 y 4 (en la Fase 4 eran 511 tests).
 - [ ] **`app.trustedProxies`** (y `app.proxyHeader` si no es `X-Forwarded-For`) configurado si hay un proxy delante. Sin eso todos los usuarios comparten la IP del proxy y el límite de reservas pasa a ser de todos juntos. Y el proxy tiene que **sobrescribir** el header, no agregarle (nginx: `proxy_set_header X-Forwarded-For $remote_addr;`): CodeIgniter toma la primera IP de la lista, que un cliente puede falsear para evadir el throttle.
 - [ ] **`writable/cache` escribible** por el usuario del servidor. Si no lo es, CodeIgniter cae al handler `dummy` (`backupHandler`) y el throttle y el bloqueo por DNI **dejan de limitar sin ningún error** (decisión: falla abierto). El filtro `Throttle` deja un `critical` en el log en cada request en ese caso: revisar los logs después del primer despliegue.
 - [ ] **Varias instancias del backend → cache compartido (Redis).** Con `file` cada instancia cuenta por su cuenta y los límites se multiplican.
@@ -95,8 +97,28 @@ La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los e
 
 ## 🟡 Pendiente (reserva pública)
 
-- **Flujo autenticado: `fecha`/`hora` sin largo exacto.** `AppointmentRequest` usa `valid_date[Y-m-d]` sin `exact_length`: `2026-10-5` y `2026-10-05` son el mismo día pero generan locks distintos (`appt_lock_{id}_{fecha}`), así que dos reservas simultáneas no se serializan. Además `hora` solo tiene `required` y el validador compara horas como strings (`9:30` vs `10:00` da mal). Arreglar en la **Fase 6** (agregar `exact_length[10]` / `exact_length[5]` + `valid_date[H:i]`, como ya hace `PublicAppointmentRequest`). Tocar también `AppointmentUpdateRequest`.
+- **Flujo autenticado: `fecha`/`hora` sin largo exacto.** `AppointmentRequest` usa `valid_date[Y-m-d]` sin `exact_length`: `2026-10-5` y `2026-10-05` son el mismo día pero generan locks distintos (`appt_lock_{id}_{fecha}`), así que dos reservas simultáneas no se serializan. Además `hora` solo tiene `required` y el validador compara horas como strings (`9:30` vs `10:00` da mal). Pendiente (sin fase asignada): agregar `exact_length[10]` / `exact_length[5]` + `valid_date[H:i]`, como ya hace `PublicAppointmentRequest`. Tocar también `AppointmentUpdateRequest`. Es un cambio de contrato para el front autenticado: verificar que mande siempre `YYYY-MM-DD` y `HH:MM` con ceros.
 - **Tope de turnos futuros "blando".** `PublicAppointmentCreatorService` cuenta los turnos activos del paciente antes de reservar, sin lock: dos solicitudes simultáneas del mismo paciente podrían pasar el tope por uno. Si molesta, resolver con un lock por paciente (como el de `public_identity_{dni}`).
+
+
+- **CORS: exponer `Retry-After`.** `app/Config/Cors.php` tiene `exposedHeaders => []`. Con el SPA en otro dominio el navegador no puede leer el `Retry-After` del `429` (el wizard cae al fallback de 15 s). Fix de 1 línea: `'exposedHeaders' => ['Retry-After']` (y un caso en `CorsConfigTest`). Hacerlo antes de exponer `/public/*` con el front en otro dominio.
+- **Caso familiar (padre/hijo).** Un padre reserva para su hijo desde la reserva pública:
+  - Hijo con **DNI propio** → sin problema (caso A).
+  - Hijo con el **email del padre** → `409` neutral (caso C: el email ya es de otro usuario).
+  - Hijo **sin DNI** → no puede reservar (el DNI es obligatorio).
+  - **Solución actual:** la resuelve recepción a mano (alta del paciente con `POST /patients` y turno desde el panel). La solución definitiva son los perfiles de familia (ver "Features futuras").
+---
+
+## 🔵 Features futuras (no empezar sin pedido)
+
+- **WhatsApp como canal de aviso alternativo al email.**
+  - Costo: ~USD 0.005–0.05 por mensaje.
+  - Esfuerzo: 8–12 h + configuración del proveedor.
+  - Cuándo: con 10+ clientes.
+  - Punto de entrada: `AppointmentNotificationService` (hoy envía por `EmailSenderService`; el `?callable $sender` ya desacopla el canal).
+- **Perfiles de familia.** Un titular con varios pacientes a cargo, que reserva para sus hijos. Resuelve el "caso familiar" de arriba.
+  - Esfuerzo: ~12–15 h.
+  - Cuándo: cuando un cliente lo pida.
 
 ---
 
