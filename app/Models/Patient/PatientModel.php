@@ -7,6 +7,7 @@ use App\Converter\Patient\Projection\PrimitiveToPatientProjectionConverter;
 use App\Dto\Request\Patient\PatientFilterRequest;
 use App\Entity\Patient\Patient;
 use App\Entity\Patient\Projection\PatientProjection;
+use App\Exception\Patient\PatientCannotBeCreatedException;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
@@ -37,6 +38,12 @@ final class PatientModel
         ]);
 
         $id = $this->db->insertID();
+
+        // Dentro de una transacción CI4 no lanza si el INSERT falla (p. ej. UNIQUE de user_id):
+        // insertID() queda en 0 y devolver un Patient con id 0 ocultaría el error.
+        if (!$id) {
+            throw new PatientCannotBeCreatedException();
+        }
 
         return new Patient(
             $id,
