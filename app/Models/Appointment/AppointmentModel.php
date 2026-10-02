@@ -9,6 +9,7 @@ use App\Entity\Appointment\Appointment;
 use App\Entity\Appointment\Projection\AppointmentProjection;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
+use DateTime;
 
 final class AppointmentModel
 {
@@ -72,6 +73,28 @@ final class AppointmentModel
         $row = $result->getRow();
 
         return $row && (int) $row->total > 0;
+    }
+
+    /**
+     * Turnos pendientes o confirmados del paciente que todavía no ocurrieron.
+     */
+    public function countActiveFutureByPatient(int $patientId, DateTime $from): int
+    {
+        $query = "SELECT COUNT(*) as total
+                  FROM appointments
+                  WHERE patient_id = ?
+                    AND status IN ('pending', 'confirmed')
+                    AND (fecha > ? OR (fecha = ? AND hora >= ?))";
+
+        $result = $this->db->query($query, [
+            $patientId,
+            $from->format('Y-m-d'),
+            $from->format('Y-m-d'),
+            $from->format('H:i:s'),
+        ]);
+        $row = $result->getRow();
+
+        return $row ? (int) $row->total : 0;
     }
 
     public function update(Appointment $appointment): Appointment

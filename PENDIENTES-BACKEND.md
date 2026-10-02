@@ -1,6 +1,6 @@
 # PENDIENTES — BACKEND
 
-Última actualización: 30/09/2026
+Última actualización: 02/10/2026
 
 ---
 
@@ -65,11 +65,30 @@ Ninguno. ✅
   - user inactivo + medical inactivo → dado de baja total
   Confirmar que los listados y validaciones respetan esto.
 
-- **Suite lenta (~12-14 min)**: cada test de DB con `$refresh = true` re-migra todo `turnero_test`. Correr con `docker exec turnero_app php vendor/bin/phpunit` (el host `db` solo resuelve dentro de Docker). `turnero_test` se reseteó el 30/09/2026 porque tenía `migrations` marcada sin las tablas.
-
 - **Migración al RequestValidator**: unificar la validación de requests que hoy está dispersa.
 
 - **Micro-deuda**: el guard de `AppointmentUpdateBookingService` tiene `=== null || <= 0`, pero `=== null` es inalcanzable por tipos. Se puede simplificar a `<= 0`.
+
+---
+
+## 🟡 Suite lenta (~25 min)
+
+Cada test de DB con `$refresh = true` re-migra todo `turnero_test` (unos 12 s por test). Correr con `docker exec turnero_app php vendor/bin/phpunit` (el host `db` solo resuelve dentro de Docker). `turnero_test` se reseteó el 30/09/2026 porque tenía `migrations` marcada sin las tablas.
+
+**Regla de trabajo** (mientras tanto):
+- Después de cada cambio: tests del archivo afectado.
+- Después de cada commit: tests de la fase.
+- Al final de la fase: suite completa.
+- **No** correr la suite completa después de cada cambio.
+- **Excepción:** si el cambio toca algo compartido (Service base, Converter, Model), correr la suite completa.
+
+**Refactor futuro:** tests con transacciones que se revierten en vez de re-migrar (~4-6 h).
+
+⏳ **Pendiente: verificar la suite completa tras la sub-fase 3.3** (reserva pública). Se commiteó con los tests nuevos en verde (47 unitarios + 9 + 12 de DB) pero sin esperar la suite completa (430 tests, ~35 min). Corre en background desde el 01/10/2026 22:25; si algo falla, revertir el commit de la 3.3. La 3.3 es casi toda aditiva (archivos nuevos); lo único compartido que toca es un método nuevo en `AppointmentModel` (`countActiveFutureByPatient`).
+
+⚠️ Tests que rompen el `refresh` si no se cuidan (se descubrió en las fases 1-3):
+- El `down()` de `ReplaceUsernameWithFirstLastName` reconstruye `users.username` (UNIQUE) desde nombre + apellido: los tests deben sembrar usuarios con **nombres únicos** (`uniqid()`).
+- Los tests que dejan un índice borrado o filas que impidan revertir una migración (`uq_users_dni`, `uq_patients_user_id`) tienen que restaurarlo en `tearDown`.
 
 ---
 
