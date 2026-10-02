@@ -401,7 +401,7 @@ final class AppointmentModel
         return [$whereQuery, $parameters];
     }
 
-    //stats
+    
     public function statsByStatus(AppointmentFilterRequest $request): array
     {
         [$whereQuery, $parameters] = $this->buildWhereClause($request);
