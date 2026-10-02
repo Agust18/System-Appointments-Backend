@@ -4,7 +4,7 @@ Un paciente reserva sin cuenta ni login. El teléfono es el segundo factor que a
 Todo vive bajo `/public/*` (más `POST /patients/register`, que no es parte de la reserva pero comparte usuarios sin cuenta).
 
 Código principal: `PublicAppointmentCreatorService`, `PatientGuestResolverService`, `PublicIdentityAttemptLimiter`, filtro `Throttle`.
-Contrato para el frontend: `PENDIENTES-FRONTEND.md`.
+Contrato para el frontend: `bitacora/hecho/contrato-*.md`.
 
 ## Endpoints (`app/Config/Routes.php`)
 
@@ -59,7 +59,7 @@ El padre reserva para un hijo:
 - Hijo con **DNI propio** y email propio o teléfono distinto del titular: caso A, sin problema.
 - Hijo con el **email del padre**: caso C, `409` neutral.
 - Hijo **sin DNI**: no puede reservar (el DNI es obligatorio).
-- Solución actual: lo resuelve recepción a mano. Feature futura: perfiles de familia (`PENDIENTES-BACKEND.md`).
+- Solución actual: lo resuelve recepción a mano. Feature futura: perfiles de familia (`bitacora/features/perfiles-de-familia.md`).
 
 ## Seguridad
 
@@ -69,7 +69,7 @@ El padre reserva para un hijo:
 - **Bloqueo por DNI** (`PublicIdentityAttemptLimiter`): 5 teléfonos incorrectos para un DNI existente lo bloquean 1 hora. Se responde el mismo 409 neutral **sin consultar la base**, así que quien ataca no distingue "bloqueado" de "teléfono incorrecto". Mientras está bloqueado no se suman fallos (vence 1 hora después del último). Una resolución exitosa reinicia la cuenta. Solo cuentan los rechazos por teléfono (B'); el email de otro usuario, el rol o un usuario inactivo no se pueden "adivinar" y no suman. La clave del cache usa `sha256(dni)`.
 - **Falla abierto**: si el cache activo es `DummyHandler` (p. ej. `writable/cache` sin permisos) el throttle y el bloqueo por DNI no limitan, sin ningún error. `Throttle` deja un `critical` en el log en cada request.
 - **Costo asumido**: alguien puede bloquear a propósito a un paciente real durante 1 hora. El paciente puede iniciar sesión o llamar al consultorio.
-- **CORS** solo en `/public/*` y solo para `cors.allowedOrigins` / `cors.allowedOriginsPatterns`. Sin orígenes configurados no se envía ningún header. Limitación conocida: `exposedHeaders` está vacío, así que con el SPA en otro dominio el navegador no puede leer `Retry-After` (ver `PENDIENTES-BACKEND.md`).
+- **CORS** solo en `/public/*` y solo para `cors.allowedOrigins` / `cors.allowedOriginsPatterns`. Sin orígenes configurados no se envía ningún header. Limitación conocida: `exposedHeaders` está vacío, así que con el SPA en otro dominio el navegador no puede leer `Retry-After` (ver `bitacora/pendiente/cors-exponer-retry-after.md`).
 
 ## Respuestas de error
 
@@ -82,5 +82,5 @@ El padre reserva para un hijo:
 
 ## Checklist de deploy
 
-Los endpoints `/public/*` **no deben exponerse a internet** hasta completar el checklist de `PENDIENTES-BACKEND.md` (sección "Reserva pública"). Resumen:
+Los endpoints `/public/*` **no deben exponerse a internet** hasta completar el checklist de `bitacora/pendiente/deploy-*.md`. Resumen:
 `app.trustedProxies`, `writable/cache` escribible, cache compartido si hay varias instancias, `cors.*`, migraciones probadas en una copia (UNIQUE de `users.dni` y `patients.user_id`), `EMAIL_*` y `reception.email`.
