@@ -31,7 +31,7 @@ final class PatientModel
 
         $this->db->query($query, [
             $patient->getUserId(),
-            $patient->getBirthDate()->format('Y-m-d'),
+            $patient->getBirthDate()?->format('Y-m-d'),
             $patient->getCreatedAt()->format('Y-m-d H:i:s'),
             $patient->getUpdatedAt()->format('Y-m-d H:i:s')
         ]);
@@ -52,7 +52,7 @@ final class PatientModel
         $query = "UPDATE patients SET birth_date = ?, updated_at = ? ";
         $query .= "WHERE id = ?";
         $this->db->query($query, [
-            $patient->getBirthDate()->format('Y-m-d'),
+            $patient->getBirthDate()?->format('Y-m-d'),
             $patient->getUpdatedAt()->format('Y-m-d H:i:s'),
             $patient->getId()
         ]);

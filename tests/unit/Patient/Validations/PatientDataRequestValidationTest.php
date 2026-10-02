@@ -18,10 +18,11 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
         $this->addToAssertionCount(1);
     }
 
-    public function testMissingBirthDateThrows422(): void
+    public function testMissingBirthDatePasses(): void
     {
-        $this->expectException(ValidationException::class);
+        // La fecha de nacimiento es opcional: la reserva pública no la pide.
         RequestValidator::validate([], PatientDataRequest::rules(), PatientDataRequest::messages());
+        $this->addToAssertionCount(1);
     }
 
     public function testInvalidBirthDateFormatThrows422(): void
@@ -44,6 +45,56 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
     {
         $this->expectException(ValidationException::class);
         RequestValidator::validate(['birthDate' => 'no-es-fecha'], PatientUpdateRequest::rules(), PatientUpdateRequest::messages());
+    }
+
+    public function testUpdateAcceptsContactFields(): void
+    {
+        RequestValidator::validate(
+            ['firstName' => 'Juana', 'lastName' => 'Pérez', 'phone' => '2325506499', 'email' => 'juana@example.com'],
+            PatientUpdateRequest::rules(),
+            PatientUpdateRequest::messages()
+        );
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @dataProvider invalidContactFieldsProvider
+     */
+    public function testUpdateRejectsInvalidContactFields(string $field, string $value): void
+    {
+        try {
+            RequestValidator::validate([$field => $value], PatientUpdateRequest::rules(), PatientUpdateRequest::messages());
+            $this->fail('Se esperaba ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey($field, $e->getErrors());
+        }
+    }
+
+    public static function invalidContactFieldsProvider(): array
+    {
+        return [
+            'email inválido'    => ['email', 'no-es-un-email'],
+            'teléfono con letras' => ['phone', '2325abc499'],
+            'teléfono corto'    => ['phone', '2325'],
+            'nombre corto'      => ['firstName', 'J'],
+        ];
+    }
+
+    public function testUpdateWithoutContactFieldsDoesNotTouchTheUser(): void
+    {
+        $this->assertNull((new PatientUpdateRequest('1990-05-20'))->toUserUpdaterRequest());
+    }
+
+    public function testUpdateWithContactFieldsBuildsUserUpdaterRequest(): void
+    {
+        $userRequest = (new PatientUpdateRequest(null, phone: '2325506499', email: 'juana@example.com'))->toUserUpdaterRequest();
+
+        $this->assertNotNull($userRequest);
+        $this->assertSame('2325506499', $userRequest->getPhone());
+        $this->assertSame('juana@example.com', $userRequest->getEmail());
+        $this->assertNull($userRequest->getFirstName());
+        $this->assertNull($userRequest->getPassword());
+        $this->assertNull($userRequest->getDni());
     }
 
     private function validPublicRegisterPayload(): array

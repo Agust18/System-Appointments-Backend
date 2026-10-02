@@ -12,6 +12,7 @@ final readonly class UserResponse
         public ?string $phone,
         public ?int $dni,
         public bool $isActive,
+        public bool $hasAccount,
         public int $roleId,
         public ?string $createdAt,
         public ?string $updatedAt

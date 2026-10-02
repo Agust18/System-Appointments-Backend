@@ -14,7 +14,7 @@ final class User
         private string $lastName,
         private string $email,
         private ?string $phone,
-        private string $password,
+        private ?string $password,
         private int $dni,
         private bool $isActive,
         private bool $isVerified,
@@ -45,9 +45,35 @@ final class User
         return $this->tokenExpirationDate;
     }
 
+    /**
+     * Un usuario sin cuenta (password NULL) nunca puede autenticarse.
+     */
+    public function hasAccount(): bool
+    {
+        return $this->password !== null;
+    }
+
     public function verifyPassword(string $password): bool
     {
+        if (!$this->hasAccount()) {
+            return false;
+        }
+
         return password_verify($password, $this->password);
+    }
+
+    /**
+     * Recepción completa los datos de un usuario sin cuenta que ya existía
+     * (p. ej. creado por reserva pública). Nunca se usa sobre una cuenta real.
+     */
+    public function completeAsAccountless(UserUpdaterRequest $request): void
+    {
+        $this->firstName = $request->getFirstName() ?? $this->firstName;
+        $this->lastName = $request->getLastName() ?? $this->lastName;
+        $this->email = $request->getEmail() ?? $this->email;
+        $this->phone = $request->getPhone() ?? $this->phone;
+        $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
+        $this->isVerified = true;
     }
 
     public function generateToken(): void
@@ -87,7 +113,7 @@ final class User
         return $this->phone;
     }
    
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
@@ -139,13 +165,43 @@ final class User
             $request->getLastName(),
             $request->getEmail(),
             $request->getPhone(),
-            password_hash($request->getPassword(), PASSWORD_BCRYPT),
+            $request->getPassword() !== null ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : null,
             $request->getDni(),
             $request->getIsActive(),
             false,
             null,
             null,
             $request->getRoleId(),
+            null,
+            null
+        );
+    }
+
+    /**
+     * Usuario creado sin contraseña (reserva pública): activo, sin verificar y sin
+     * posibilidad de iniciar sesión hasta que fije una contraseña por link de email.
+     */
+    public static function createWithoutAccount(
+        string $firstName,
+        string $lastName,
+        string $email,
+        ?string $phone,
+        int $dni,
+        int $roleId
+    ): User {
+        return new User(
+            null,
+            $firstName,
+            $lastName,
+            $email,
+            $phone,
+            null,
+            $dni,
+            true,
+            false,
+            null,
+            null,
+            $roleId,
             null,
             null
         );

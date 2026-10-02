@@ -152,6 +152,37 @@ final class UserRequestValidationTest extends CIUnitTestCase
         ];
     }
 
+    public function testPasswordIsRequiredByDefault(): void
+    {
+        $payload = $this->validPayload();
+        unset($payload['password']);
+
+        try {
+            RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+            $this->fail('Se esperaba ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('password', $e->getErrors());
+        }
+    }
+
+    public function testPasswordCanBeOmittedWhenNotRequired(): void
+    {
+        $payload = $this->validPayload();
+        unset($payload['password']);
+
+        RequestValidator::validate($payload, UserRequest::rules(passwordRequired: false), UserRequest::messages());
+        $this->addToAssertionCount(1);
+    }
+
+    public function testShortPasswordStillFailsWhenNotRequired(): void
+    {
+        $payload = $this->validPayload();
+        $payload['password'] = '123';
+
+        $this->expectException(ValidationException::class);
+        RequestValidator::validate($payload, UserRequest::rules(passwordRequired: false), UserRequest::messages());
+    }
+
     public function testUpdaterAllowsEmptyPayload(): void
     {
         RequestValidator::validate([], UserUpdaterRequest::rules(), UserUpdaterRequest::messages());

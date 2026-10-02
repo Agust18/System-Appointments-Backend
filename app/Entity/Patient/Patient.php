@@ -10,7 +10,7 @@ final class Patient
     public function __construct(
         private ?int $id,
         private int $userId,
-        private DateTime $birthDate,
+        private ?DateTime $birthDate,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {
@@ -34,7 +34,7 @@ final class Patient
         return $this->userId;
     }
 
-    public function getBirthDate(): DateTime
+    public function getBirthDate(): ?DateTime
     {
         return $this->birthDate;
     }
@@ -55,7 +55,7 @@ final class Patient
         return new Patient(
             null,
             $userId,
-            new DateTime($request->getBirthDate()),
+            $request->getBirthDate() ? new DateTime($request->getBirthDate()) : null,
             new DateTime(),
             new DateTime()
         );

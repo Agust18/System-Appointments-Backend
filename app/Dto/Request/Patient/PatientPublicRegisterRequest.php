@@ -11,12 +11,10 @@ final class PatientPublicRegisterRequest
         public readonly string $firstName,
         public readonly string $lastName,
         public readonly string $email,
-        public readonly ?string $phone = null,
         public readonly string $password,
         public readonly string $dni,
+        public readonly ?string $phone = null,
         public readonly ?string $birthDate = null,
-        
-   
     ) {}
 
     
@@ -33,11 +31,7 @@ final class PatientPublicRegisterRequest
             Role::PATIENT
         );
 
-        $patientDataRequest = new PatientDataRequest(
-            $this->birthDate,
-            
-
-        );
+        $patientDataRequest = new PatientDataRequest($this->birthDate);
 
         return new PatientRequest($userRequest, $patientDataRequest);
     }

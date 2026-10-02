@@ -11,7 +11,7 @@ final class PatientToPatientResponseConverter
         return new PatientResponse(
             $patient->getId(),
             $patient->getUserId(),
-            $patient->getBirthDate()->format('Y-m-d'),
+            $patient->getBirthDate()?->format('Y-m-d'),
             $patient->getCreatedAt()?->format('Y-m-d H:i:s'),
             $patient->getUpdatedAt()?->format('Y-m-d H:i:s')
         );

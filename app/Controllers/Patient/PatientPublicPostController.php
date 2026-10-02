@@ -3,7 +3,7 @@
 namespace App\Controllers\Patient;
 
 use App\Dto\Request\Patient\PatientPublicRegisterRequest;
-use App\Services\Patient\PatientCreatorService;
+use App\Services\Patient\PatientPublicRegisterService;
 use App\Support\IdentityNormalizer;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -11,20 +11,26 @@ use CodeIgniter\RESTful\ResourceController;
 
 final class PatientPublicPostController extends ResourceController
 {
-    private PatientCreatorService $patientCreatorService;
+    private PatientPublicRegisterService $patientPublicRegisterService;
 
     public function __construct()
     {
-        $this->patientCreatorService = new PatientCreatorService();
+        $this->patientPublicRegisterService = new PatientPublicRegisterService();
     }
 
     public function create(): ResponseInterface
     {
         $patientPublicRegisterRequest = $this->getRequest();
 
-        $patientResponse = $this->patientCreatorService->create(
-            $patientPublicRegisterRequest->toPatientRequest(),false
+        $patientResponse = $this->patientPublicRegisterService->register(
+            $patientPublicRegisterRequest->toPatientRequest()
         );
+
+        if ($patientResponse === null) {
+            return $this->response->setStatusCode(202)->setJSON([
+                'message' => 'Te enviamos un email para que actives tu cuenta.',
+            ]);
+        }
 
         return $this->response->setJSON($patientResponse);
     }

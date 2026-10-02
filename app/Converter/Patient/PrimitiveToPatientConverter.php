@@ -10,7 +10,7 @@ final class PrimitiveToPatientConverter
         return new Patient(
             $primitive->id,
             $primitive->user_id,
-            new DateTime($primitive->birth_date),         
+            $primitive->birth_date ? new DateTime($primitive->birth_date) : null,
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)
         );

@@ -32,8 +32,12 @@ final class PatientPostController extends ResourceController
         $parameters = $this->request->getJSON(true) ?? [];
         $parameters['user'] = IdentityNormalizer::normalizeInput($parameters['user'] ?? []);
 
-        RequestValidator::validate($parameters['user'] ?? [], UserRequest::rules(), UserRequest::messages());
-        RequestValidator::validate($parameters['patient'] ?? [], PatientDataRequest::rules(), PatientDataRequest::messages());
+        $parameters['patient'] ??= [];
+
+        // Recepción puede dar de alta un paciente sin contraseña: nace sin cuenta
+        // y la activa después con el link de "olvidé mi contraseña".
+        RequestValidator::validate($parameters['user'], UserRequest::rules(passwordRequired: false), UserRequest::messages());
+        RequestValidator::validate($parameters['patient'], PatientDataRequest::rules(), PatientDataRequest::messages());
 
         $parameters = (object) $parameters;
         $parameters->user = (object) $parameters->user;
@@ -44,14 +48,14 @@ final class PatientPostController extends ResourceController
             $parameters->user->lastName,
             $parameters->user->email,
             $parameters->user->phone ?? null,
-            $parameters->user->password,
+            ($parameters->user->password ?? null) ?: null,
             $parameters->user->dni,
             $parameters->user->isActive ?? true,
             $parameters->user->roleId ?? null,
         );
 
         $patientDataRequest = new PatientDataRequest(
-            $parameters->patient->birthDate,
+            $parameters->patient->birthDate ?? null,
         );
 
         return new PatientRequest($userRequest, $patientDataRequest);

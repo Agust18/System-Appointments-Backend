@@ -19,6 +19,7 @@ final class UserToUserResponseConverter
         $user->getPhone(),
         $user->getDni(),
         $user->getIsActive(),
+        $user->hasAccount(),
         $user->getRoleId(),
         $user->getCreatedAt()?->format('Y-m-d H:i:s'),
         $user->getUpdatedAt()?->format('Y-m-d H:i:s')

@@ -13,7 +13,7 @@ final class PrimitiveToUserConverte
             $primitive->last_name,
             $primitive->email,
             $primitive->phone ?? null,
-            $primitive->password,
+            $primitive->password ?? null,
             $primitive->dni,
             (bool) $primitive->is_active,
             (bool) $primitive->is_verified,
