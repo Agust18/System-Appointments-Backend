@@ -5,9 +5,12 @@ use App\Dto\Request\Patient\PublicPatientRequest;
 use App\Exception\Patient\PublicBookingIdentityException;
 use App\Exception\Patient\PublicIdentityLockTimeoutException;
 use App\Services\Patient\PatientGuestResolverService;
+use App\Services\Patient\PublicIdentityAttemptLimiter;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\Mock\MockCache;
 use Config\Database;
+use Config\Services;
 
 /**
  * Casos A–E de la reserva pública (ver PatientGuestResolverService).
@@ -29,8 +32,32 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // En tests el cache es 'dummy' (el bloqueo por DNI no cuenta nada). Estos tests usan un
+        // cache en memoria, propio de cada test, para ejercitar el bloqueo sin estado compartido.
+        $this->resetServices();
+        Services::injectMock('cache', new MockCache());
+
         $this->resolver = new PatientGuestResolverService();
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->resetServices();
+        parent::tearDown();
+    }
+
+    /**
+     * Intenta resolver el DNI con un teléfono que no coincide, $times veces, esperando el rechazo.
+     */
+    private function failPhoneAttempts(int $times, int $dni = self::DNI): void
+    {
+        for ($i = 0; $i < $times; $i++) {
+            $this->assertRejected(
+                fn () => $this->resolver->resolve($this->request($dni, "intento{$i}@test.com", '1144440000'))
+            );
+        }
     }
 
     private function request(
@@ -323,6 +350,114 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         }
 
         $this->seeNumRecords(0, 'users', []);
+    }
+
+    // ------------------------------------------------------- bloqueo por DNI
+
+    public function testFiveWrongPhonesBlockTheDniEvenForTheCorrectPhone(): void
+    {
+        $userId = $this->seedUser();
+        $this->seedPatientFor($userId);
+
+        $this->failPhoneAttempts(5);
+
+        // Se borra el usuario: si el resolver consultara la base vería un DNI nuevo y crearía uno
+        // (caso A). Rechaza igual, y con el mismo mensaje, porque el DNI está bloqueado.
+        $this->db->table('patients')->delete(['user_id' => $userId]);
+        $this->db->table('users')->delete(['id' => $userId]);
+
+        $blocked = $this->assertRejected(fn () => $this->resolver->resolve($this->request()));
+
+        $this->seeNumRecords(0, 'users', []);
+        $this->seeNumRecords(0, 'patients', []);
+        $this->assertSame(
+            (new PublicBookingIdentityException())->getMessage(),
+            $blocked->getMessage()
+        );
+    }
+
+    public function testFourWrongPhonesDoNotBlockTheDni(): void
+    {
+        $userId = $this->seedUser();
+        $patientId = $this->seedPatientFor($userId);
+
+        $this->failPhoneAttempts(4);
+
+        $patient = $this->resolver->resolve($this->request());
+
+        $this->assertSame($patientId, $patient->getId());
+    }
+
+    public function testASuccessfulResolutionResetsTheCounter(): void
+    {
+        $userId = $this->seedUser();
+        $patientId = $this->seedPatientFor($userId);
+
+        $this->failPhoneAttempts(4);
+        $this->assertSame($patientId, $this->resolver->resolve($this->request())->getId());
+
+        // Sin el reinicio serían 8 fallos acumulados y el DNI estaría bloqueado.
+        $this->failPhoneAttempts(4);
+        $this->assertSame($patientId, $this->resolver->resolve($this->request())->getId());
+    }
+
+    public function testFailuresAreCountedPerDni(): void
+    {
+        $userId = $this->seedUser();
+        $this->seedPatientFor($userId);
+        $otherUserId = $this->seedUser(30999999, 'otro@test.com', '1155556666');
+        $otherPatientId = $this->seedPatientFor($otherUserId);
+
+        $this->failPhoneAttempts(5);
+
+        $patient = $this->resolver->resolve($this->request(30999999, 'x@test.com', '1155556666'));
+
+        $this->assertSame($otherPatientId, $patient->getId());
+    }
+
+    public function testAUserWithoutPhoneCountsTowardsTheBlock(): void
+    {
+        $userId = $this->seedUser(self::DNI, 'existente@test.com', null);
+        $this->seedPatientFor($userId);
+
+        $this->failPhoneAttempts(5);
+
+        // Aunque recepción le cargue el teléfono después, el DNI sigue bloqueado.
+        $this->db->table('users')->where('id', $userId)->update(['phone' => self::PHONE]);
+
+        $this->assertRejected(fn () => $this->resolver->resolve($this->request()));
+    }
+
+    public function testRejectionsThatCannotBeGuessedDoNotCountTowardsTheBlock(): void
+    {
+        $limiter = new PublicIdentityAttemptLimiter();
+
+        // Rol distinto a paciente.
+        $this->db->table('roles')->insert(['id' => Role::MEDICAL, 'name' => 'medical']);
+        $this->seedUser(30111111, 'medico@test.com', self::PHONE, Role::MEDICAL);
+        // Usuario inactivo.
+        $inactive = $this->seedUser(30222222, 'inactivo@test.com', self::PHONE, Role::PATIENT, false);
+        $this->seedPatientFor($inactive);
+        // Email que pertenece a otro usuario (caso C).
+        $this->seedUser(30333333, 'ocupado@test.com');
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->assertRejected(fn () => $this->resolver->resolve($this->request(30111111, 'a@test.com')));
+            $this->assertRejected(fn () => $this->resolver->resolve($this->request(30222222, 'b@test.com')));
+            $this->assertRejected(fn () => $this->resolver->resolve($this->request(30444444, 'ocupado@test.com')));
+        }
+
+        $this->assertFalse($limiter->isBlocked(30111111));
+        $this->assertFalse($limiter->isBlocked(30222222));
+        $this->assertFalse($limiter->isBlocked(30444444));
+    }
+
+    public function testNewIdentitiesAreNeverBlocked(): void
+    {
+        $patient = $this->resolver->resolve($this->request());
+
+        $this->assertNotNull($patient->getId());
+        $this->assertFalse((new PublicIdentityAttemptLimiter())->isBlocked(self::DNI));
     }
 
     public function testLockOfOneDniDoesNotBlockAnotherDni(): void

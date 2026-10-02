@@ -30,6 +30,9 @@ use Config\Database;
  *  - C. DNI nuevo pero el email es de otro usuario: se rechaza.
  * B' y C devuelven la misma excepción para no revelar cuál de las dos ocurrió.
  *
+ * Los rechazos por teléfono se cuentan por DNI (PublicIdentityAttemptLimiter): al llegar al
+ * límite el DNI queda bloqueado y se responde lo mismo sin consultar la base.
+ *
  * Tiene su propio lock + transacción. NO debe llamarse desde dentro de otra
  * transacción: AppointmentSlotLockService libera su GET_LOCK en un `finally`, y
  * con transacciones anidadas (el commit interno no commitea) liberaría el lock
@@ -43,16 +46,23 @@ final class PatientGuestResolverService
     private BaseConnection $db;
     private UserModel $userModel;
     private PatientModel $patientModel;
+    private PublicIdentityAttemptLimiter $attemptLimiter;
 
     public function __construct()
     {
         $this->db = Database::connect();
         $this->userModel = new UserModel();
         $this->patientModel = new PatientModel();
+        $this->attemptLimiter = new PublicIdentityAttemptLimiter();
     }
 
     public function resolve(PublicPatientRequest $request): Patient
     {
+        // DNI bloqueado por demasiados teléfonos incorrectos: mismo 409 neutral, sin tocar la base.
+        if ($this->attemptLimiter->isBlocked($request->getDni())) {
+            $this->reject('dni_blocked', $request);
+        }
+
         $lockName = sprintf('public_identity_%d', $request->getDni());
 
         // Serializa las solicitudes concurrentes del mismo DNI (get-or-create).
@@ -66,6 +76,9 @@ final class PatientGuestResolverService
             $patient = $this->findOrCreate($request);
 
             $this->db->transCommit();
+
+            // Identidad resuelta: se reinicia la cuenta de teléfonos incorrectos de ese DNI.
+            $this->attemptLimiter->clear($request->getDni());
 
             return $patient;
         } catch (\Throwable $e) {
@@ -120,6 +133,10 @@ final class PatientGuestResolverService
         }
 
         if (!$this->phoneMatches($user, $request)) {
+            // Solo estos rechazos cuentan para el bloqueo: son los que delatan a alguien probando
+            // teléfonos para un DNI existente (incluye el usuario sin teléfono guardado). El email de
+            // otro usuario, el rol o un usuario inactivo no se pueden "adivinar" y no suman.
+            $this->attemptLimiter->recordFailure($request->getDni());
             $this->reject('phone_mismatch', $request);
         }
 

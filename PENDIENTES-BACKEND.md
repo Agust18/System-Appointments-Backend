@@ -71,9 +71,24 @@ Ninguno. ✅
 
 ---
 
-## 🔴 Aviso: endpoints públicos sin throttle
+## 🔴 Reserva pública: checklist antes de exponerla a internet
 
-Hasta que termine la **Fase 4** (throttle por IP + bloqueo por DNI), los endpoints `/public/*` están abiertos a fuerza bruta del teléfono (el segundo factor de la reserva sin cuenta). **NO exponerlos a internet antes de terminar la Fase 4.**
+La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los endpoints `/public/*` **NO deben exponerse a internet** hasta tildar todo esto:
+
+- [ ] **Suite completa en verde** tras la Fase 4 (pendiente de la corrida final).
+- [ ] **`app.trustedProxies`** (y `app.proxyHeader` si no es `X-Forwarded-For`) configurado si hay un proxy delante. Sin eso todos los usuarios comparten la IP del proxy y el límite de reservas pasa a ser de todos juntos. Y el proxy tiene que **sobrescribir** el header, no agregarle (nginx: `proxy_set_header X-Forwarded-For $remote_addr;`): CodeIgniter toma la primera IP de la lista, que un cliente puede falsear para evadir el throttle.
+- [ ] **`writable/cache` escribible** por el usuario del servidor. Si no lo es, CodeIgniter cae al handler `dummy` (`backupHandler`) y el throttle y el bloqueo por DNI **dejan de limitar sin ningún error** (decisión: falla abierto). El filtro `Throttle` deja un `critical` en el log en cada request en ese caso: revisar los logs después del primer despliegue.
+- [ ] **Varias instancias del backend → cache compartido (Redis).** Con `file` cada instancia cuenta por su cuenta y los límites se multiplican.
+- [ ] **`cors.allowedOrigins` / `cors.allowedOriginsPatterns`** con los dominios de cada cliente (solo aplica a `/public/*`). Si el SPA y el API quedan en dominios distintos, el panel autenticado también necesita CORS: ver "CORS en rutas privadas" abajo.
+- [ ] **Migraciones probadas en una copia de la base** (UNIQUE de `users.dni` y `patients.user_id`; los pre-checks abortan listando duplicados).
+- [ ] **`EMAIL_*` configurado** (el paciente recibe la confirmación al email guardado).
+
+**Cómo limita** (valores aprobados; constantes en `Routes.php` y `PublicIdentityAttemptLimiter`):
+- `GET /public/*`: 60 por minuto por IP. `POST /public/appointments`: 5 por minuto por IP. El Throttler es un *token bucket*: "60 por minuto" = ráfaga de 60 y después 1 por segundo; "5 por minuto" = ráfaga de 5 y después 1 cada 12 s. El preflight `OPTIONS` no gasta cupo.
+- **Bloqueo por DNI:** 5 teléfonos incorrectos para un DNI existente lo bloquean 1 hora. Se responde el mismo 409 neutral sin consultar la base, así que quien ataca no distingue "bloqueado" de "teléfono incorrecto". Una reserva exitosa reinicia la cuenta. Solo cuentan los rechazos por teléfono (no el email de otro usuario, ni el rol, ni un usuario inactivo).
+- **Costo asumido:** alguien puede bloquear a propósito a un paciente real durante 1 hora (el paciente puede iniciar sesión o llamar al consultorio).
+
+**CORS en rutas privadas (no incluido):** hoy solo `/public/*` tiene CORS. Si en producción el SPA y el API quedan en dominios distintos, hay que: (1) sumar `Authorization` a `allowedHeaders` y `PUT`/`DELETE` a `allowedMethods` en `Cors.php`; (2) aplicar el filtro `cors` a todas las rutas; (3) una ruta `OPTIONS` global **fuera** del filtro `auth`, para que el preflight no pida token; (4) agregar el origen a `cors.allowedOrigins`. Si se sirven bajo el mismo dominio con un proxy inverso (`/api`), no hace falta.
 
 ---
 

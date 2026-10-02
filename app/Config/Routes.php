@@ -14,17 +14,25 @@ $routes->post('patients/register', 'Patient\PatientPublicPostController::create'
 
 // Reserva pública de turnos (sin auth). El filtro 'cors' solo aplica a este grupo; sin orígenes
 // configurados (cors.allowedOrigins en el .env) no agrega headers. La ruta OPTIONS existe para que
-// el preflight del navegador llegue al filtro, que lo responde antes de tocar ningún controller.
-$routes->group('public', ['filter' => 'cors'], static function ($routes) {
-    $routes->options('(:any)', static function () {
-    });
+// el preflight del navegador llegue al filtro, que lo responde antes de tocar ningún controller
+// (y por eso no consume cupo de throttle).
+//
+// 'throttle:{capacidad},{segundos}' limita por IP. 'cors' tiene que ir ANTES que 'throttle': el 429
+// se arma sobre la misma respuesta a la que 'cors' ya le agregó sus headers, y sin ellos el navegador
+// no deja leerlo. Lecturas: 60 por minuto; reserva (POST): 5 por minuto.
+$publicRead = ['filter' => ['cors', 'throttle:60,60']];
+$publicBooking = ['filter' => ['cors', 'throttle:5,60']];
 
-    $routes->get('specialties', 'Specialty\PublicSpecialtiesGetController::search');
-    $routes->get('services', 'Service\PublicServicesGetController::search');
-    $routes->get('medicals/available', 'Medical\PublicMedicalsGetController::search');
-    $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1');
-    $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability');
-    $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create');
+$routes->group('public', static function ($routes) use ($publicRead, $publicBooking) {
+    $routes->options('(:any)', static function () {
+    }, ['filter' => 'cors']);
+
+    $routes->get('specialties', 'Specialty\PublicSpecialtiesGetController::search', $publicRead);
+    $routes->get('services', 'Service\PublicServicesGetController::search', $publicRead);
+    $routes->get('medicals/available', 'Medical\PublicMedicalsGetController::search', $publicRead);
+    $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1', $publicRead);
+    $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability', $publicRead);
+    $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 
 //Users

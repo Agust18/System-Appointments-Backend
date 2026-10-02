@@ -43,6 +43,7 @@ class Filters extends BaseFilters
         'patientViewPermission' => \App\Filters\PatientViewPermission::class,
         'medicalViewPermission' => \App\Filters\MedicalViewPermission::class,
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
+        'throttle' => \App\Filters\Throttle::class,
         
         
 

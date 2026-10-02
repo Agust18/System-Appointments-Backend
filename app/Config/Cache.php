@@ -195,4 +195,19 @@ class Cache extends BaseConfig
      * @var list<int>
      */
     public array $cacheStatusCodes = [];
+
+    /**
+     * En tests el cache es el handler 'dummy': el throttle por IP y el bloqueo por DNI de la
+     * reserva pública guardan su estado acá, y con un cache de archivos ese estado persistiría
+     * entre tests y entre corridas (un DNI quedaría bloqueado una hora para toda la suite).
+     * Los tests que necesitan ese comportamiento inyectan un MockCache.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        if (ENVIRONMENT === 'testing') {
+            $this->handler = 'dummy';
+        }
+    }
 }
