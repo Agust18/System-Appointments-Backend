@@ -75,7 +75,7 @@ Ninguno. ✅
 
 La Fase 4 (throttle por IP + bloqueo por DNI) está **implementada**, pero los endpoints `/public/*` **NO deben exponerse a internet** hasta tildar todo esto:
 
-- [ ] **Suite completa en verde** tras la Fase 4 (pendiente de la corrida final).
+- [x] **Suite completa en verde** tras la Fase 4 (02/10/2026): 511 tests, 1268 aserciones, 40 min. Cubre también la Fase 3.
 - [ ] **`app.trustedProxies`** (y `app.proxyHeader` si no es `X-Forwarded-For`) configurado si hay un proxy delante. Sin eso todos los usuarios comparten la IP del proxy y el límite de reservas pasa a ser de todos juntos. Y el proxy tiene que **sobrescribir** el header, no agregarle (nginx: `proxy_set_header X-Forwarded-For $remote_addr;`): CodeIgniter toma la primera IP de la lista, que un cliente puede falsear para evadir el throttle.
 - [ ] **`writable/cache` escribible** por el usuario del servidor. Si no lo es, CodeIgniter cae al handler `dummy` (`backupHandler`) y el throttle y el bloqueo por DNI **dejan de limitar sin ningún error** (decisión: falla abierto). El filtro `Throttle` deja un `critical` en el log en cada request en ese caso: revisar los logs después del primer despliegue.
 - [ ] **Varias instancias del backend → cache compartido (Redis).** Con `file` cada instancia cuenta por su cuenta y los límites se multiplican.
