@@ -91,7 +91,7 @@ Cada test de DB con `$refresh = true` re-migra todo `turnero_test` (unos 12 s po
 
 **Refactor futuro:** tests con transacciones que se revierten en vez de re-migrar (~4-6 h).
 
-⏳ **Pendiente: verificar la suite completa tras la sub-fase 3.3** (reserva pública). Se commiteó con los tests nuevos en verde (47 unitarios + 9 + 12 de DB) pero sin esperar la suite completa (430 tests, ~35 min). Corre en background desde el 01/10/2026 22:25; si algo falla, revertir el commit de la 3.3. La 3.3 es casi toda aditiva (archivos nuevos); lo único compartido que toca es un método nuevo en `AppointmentModel` (`countActiveFutureByPatient`).
+✅ **Suite completa tras la sub-fase 3.3 verificada** (01/10/2026): 430 tests, 756 aserciones, todo en verde (34 min). La 3.3 se commiteó sin esperarla; lo único compartido que toca es un método nuevo en `AppointmentModel` (`countActiveFutureByPatient`).
 
 ⚠️ Tests que rompen el `refresh` si no se cuidan (se descubrió en las fases 1-3):
 - El `down()` de `ReplaceUsernameWithFirstLastName` reconstruye `users.username` (UNIQUE) desde nombre + apellido: los tests deben sembrar usuarios con **nombres únicos** (`uniqid()`).
