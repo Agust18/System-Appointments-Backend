@@ -71,6 +71,12 @@ Ninguno. ✅
 
 ---
 
+## 🔴 Aviso: endpoints públicos sin throttle
+
+Hasta que termine la **Fase 4** (throttle por IP + bloqueo por DNI), los endpoints `/public/*` están abiertos a fuerza bruta del teléfono (el segundo factor de la reserva sin cuenta). **NO exponerlos a internet antes de terminar la Fase 4.**
+
+---
+
 ## 🟡 Pendiente (reserva pública)
 
 - **Flujo autenticado: `fecha`/`hora` sin largo exacto.** `AppointmentRequest` usa `valid_date[Y-m-d]` sin `exact_length`: `2026-10-5` y `2026-10-05` son el mismo día pero generan locks distintos (`appt_lock_{id}_{fecha}`), así que dos reservas simultáneas no se serializan. Además `hora` solo tiene `required` y el validador compara horas como strings (`9:30` vs `10:00` da mal). Arreglar en la **Fase 6** (agregar `exact_length[10]` / `exact_length[5]` + `valid_date[H:i]`, como ya hace `PublicAppointmentRequest`). Tocar también `AppointmentUpdateRequest`.
