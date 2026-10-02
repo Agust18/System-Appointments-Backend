@@ -71,6 +71,13 @@ Ninguno. ✅
 
 ---
 
+## 🟡 Pendiente (reserva pública)
+
+- **Flujo autenticado: `fecha`/`hora` sin largo exacto.** `AppointmentRequest` usa `valid_date[Y-m-d]` sin `exact_length`: `2026-10-5` y `2026-10-05` son el mismo día pero generan locks distintos (`appt_lock_{id}_{fecha}`), así que dos reservas simultáneas no se serializan. Además `hora` solo tiene `required` y el validador compara horas como strings (`9:30` vs `10:00` da mal). Arreglar en la **Fase 6** (agregar `exact_length[10]` / `exact_length[5]` + `valid_date[H:i]`, como ya hace `PublicAppointmentRequest`). Tocar también `AppointmentUpdateRequest`.
+- **Tope de turnos futuros "blando".** `PublicAppointmentCreatorService` cuenta los turnos activos del paciente antes de reservar, sin lock: dos solicitudes simultáneas del mismo paciente podrían pasar el tope por uno. Si molesta, resolver con un lock por paciente (como el de `public_identity_{dni}`).
+
+---
+
 ## 🟡 Suite lenta (~25 min)
 
 Cada test de DB con `$refresh = true` re-migra todo `turnero_test` (unos 12 s por test). Correr con `docker exec turnero_app php vendor/bin/phpunit` (el host `db` solo resuelve dentro de Docker). `turnero_test` se reseteó el 30/09/2026 porque tenía `migrations` marcada sin las tablas.
