@@ -16,6 +16,27 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ---
 
+## 🔴 API pública de reserva (Fase 3) — para el wizard sin login
+
+Sin header `Authorization`. Todo bajo `/public`. Los errores son `{ "error": "..." }` (los de validación suman `errors: { campo: mensaje }`).
+
+| Método y ruta | Devuelve |
+|---|---|
+| `GET /public/specialties` | `{ data: [{ id, name, description, createdAt, updatedAt }], total }` |
+| `GET /public/medicals/available?specialtyId=` | `{ data: [{ id, medicoNombre, especialidadNombre, isActive }], total }`. Solo médicos activos. |
+| `GET /public/medicals/{id}/services` | `[{ serviceId, name, description, durationMinutes, price }]` (duración y precio efectivos del médico). `409` si el médico está inactivo, `404` si no existe. |
+| `GET /public/services` | `{ data: [{ id, name, description, durationMinutes, price }], total }`. Solo servicios activos. |
+| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | Slots `[{ start_time, end_time, block_end_time }]`. Igual que la ruta autenticada. |
+| `POST /public/appointments` | `201` con `{ id, fecha, hora, medicoNombre, servicioNombre, status }`. |
+
+- Los listados **ignoran `page`, `size`, `search` e `isActive`**: tope fijo de 100 ítems, sin paginar.
+- **`POST /public/appointments`** — body: `firstName`, `lastName`, `email`, `phone`, `dni`, `medicalId`, `serviceId`, `fecha` (`YYYY-MM-DD`, con ceros), `hora` (`HH:MM`, con ceros) y `nota` (opcional, máx. 500). `status` y `patientId` se ignoran. El turno nace **`confirmed`**.
+  - `422` validación. `409` con el mensaje *"No pudimos validar tus datos. Si ya sos paciente, ingresá con tu teléfono habitual. Si no, contactá al consultorio."* (DNI con otro teléfono, o email de otro usuario: **el mismo texto a propósito**). `409` horario ocupado, médico no disponible o tope de 3 turnos futuros activos. `423` si hay otra solicitud en curso con el mismo DNI (reintentar en unos segundos).
+  - La confirmación por email llega al email **guardado** del paciente, no al tipeado.
+- **CORS:** solo está habilitado en `/public/*` y para los orígenes de `cors.allowedOrigins` / `cors.allowedOriginsPatterns` en el `.env` del backend (sin ellos no se envía ningún header). Cada cliente nuevo con dominio propio hay que agregarlo ahí. Las rutas autenticadas no tienen CORS: siguen necesitando el mismo origen (p. ej. proxy de Vite).
+
+---
+
 ## 🟡 También cambió (Fases 1-2)
 
 - **DNI y teléfono se normalizan en el backend** (se guardan solo con dígitos). El frontend puede mandarlos con puntos, guiones o espacios y debe **formatearlos solo para mostrar**.

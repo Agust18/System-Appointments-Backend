@@ -68,7 +68,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => ['Content-Type', 'Accept'],
 
         /**
          * Set headers to expose.
@@ -93,7 +93,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => ['GET', 'POST', 'OPTIONS'],
 
         /**
          * Set how many seconds the results of a preflight request can be cached.
@@ -102,4 +102,33 @@ class Cors extends BaseConfig
          */
         'maxAge' => 7200,
     ];
+
+    /**
+     * Los orígenes se configuran por entorno, separados por coma (el filtro 'cors' solo se
+     * aplica a /public/*, ver Routes.php). Sin ninguno configurado no se envía ningún header
+     * CORS. BaseConfig no puede sobrescribir arrays vacíos desde el .env, por eso se parsea acá.
+     *
+     *   cors.allowedOrigins = https://clinica-a.com,https://clinica-b.com
+     *   cors.allowedOriginsPatterns = https://[a-z0-9-]+\.miclinica\.com
+     *
+     * Los patrones son regex parciales (el filtro los envuelve en #\A…\z#) y no pueden
+     * contener comas.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->default['allowedOrigins'] = $this->listFromEnv('cors.allowedOrigins');
+        $this->default['allowedOriginsPatterns'] = $this->listFromEnv('cors.allowedOriginsPatterns');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function listFromEnv(string $key): array
+    {
+        $items = array_map('trim', explode(',', (string) env($key, '')));
+
+        return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
+    }
 }

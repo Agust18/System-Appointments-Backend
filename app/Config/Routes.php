@@ -12,6 +12,21 @@ $routes->post('login', 'Auth\UserLoginController::login');
 
 $routes->post('patients/register', 'Patient\PatientPublicPostController::create');
 
+// Reserva pública de turnos (sin auth). El filtro 'cors' solo aplica a este grupo; sin orígenes
+// configurados (cors.allowedOrigins en el .env) no agrega headers. La ruta OPTIONS existe para que
+// el preflight del navegador llegue al filtro, que lo responde antes de tocar ningún controller.
+$routes->group('public', ['filter' => 'cors'], static function ($routes) {
+    $routes->options('(:any)', static function () {
+    });
+
+    $routes->get('specialties', 'Specialty\PublicSpecialtiesGetController::search');
+    $routes->get('services', 'Service\PublicServicesGetController::search');
+    $routes->get('medicals/available', 'Medical\PublicMedicalsGetController::search');
+    $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1');
+    $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability');
+    $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create');
+});
+
 //Users
 $routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'adminOnly']]);
 
