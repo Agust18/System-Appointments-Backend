@@ -5,6 +5,7 @@ use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\Appointment\AppointmentFilterRequest;
 use App\Services\Appointment\AppointmentFilterBuilderService;
 use App\Services\Appointment\Projection\AppointmentsProjectionSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -28,6 +29,8 @@ final class AppointmentsGetController extends ResourceController
 
     private function getRequest(): AppointmentFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), AppointmentFilterRequest::rules(), AppointmentFilterRequest::messages());
+
         return $this->filterBuilderService->build(
             new PaginationRequest(
                 $this->request->getGet('page') ? (int)$this->request->getGet('page') : 1,

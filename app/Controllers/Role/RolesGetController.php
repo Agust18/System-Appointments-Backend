@@ -4,6 +4,7 @@ namespace App\Controllers\Role;
 use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\Role\RoleFilterRequest;
 use App\Services\Role\RolesSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -25,6 +26,7 @@ final class RolesGetController extends ResourceController
 
     private function getRequest(): RoleFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), RoleFilterRequest::rules(), RoleFilterRequest::messages());
 
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');

@@ -127,6 +127,17 @@ Para listados con JOIN, agregar también después del paso 7:
 - `app/Services/Foo/Projection/FoosProjectionSearcherService.php`
 
 ---
+---
+## Tests
+
+- **NUNCA correr la suite completa sin pedirlo explícitamente.** Tarda ~44 min.
+- Para auditar o leer código: NO correr tests. Solo grep, cat, y lectura.
+- Para verificar un cambio: correr solo los tests del módulo afectado:
+  `vendor/bin/phpunit --filter NombreDelTest`
+- Antes de commit: correr la suite completa solo si el usuario lo pide.
+- Siempre dentro del contenedor: `docker exec turnero_app sh -c "cd /var/www/html && vendor/bin/phpunit ..."`
+- El host tiene PHP 8.1 y falla. Los tests van en el contenedor.
+---
 
 ## Prohibiciones
 

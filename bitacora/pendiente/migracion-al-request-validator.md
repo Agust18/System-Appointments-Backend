@@ -1,11 +1,7 @@
-# Migración al RequestValidator
+## Migración al RequestValidator
 
-- **Estado:** ⏳ Pendiente
-- **Repo:** backend
-- **Esfuerzo:** —
-- **Fecha:** —
-- **Origen:** PENDIENTES-BACKEND.md › 🟡 Deuda técnica backend (también en 🟢 Consistencia de código)
-
-## Detalle
-
-- **Migración al RequestValidator**: unificar la validación de requests que hoy está dispersa.
+- [x] A — Validar paginación y filtros en GET (Solución 1)  ← hecho
+- [ ] B — Mover validaciones de formato de services a requests
+- [ ] C — Extraer reglas/mensajes comunes a trait compartido
+- [ ] D — Unificar reglas duplicadas y excepciones tipadas
+- [ ] E — (no aplica, no hay validación inline)

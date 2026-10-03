@@ -5,6 +5,7 @@ namespace App\Controllers\User;
 use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\User\UserFilterRequest;
 use App\Services\User\UsersSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -28,6 +29,8 @@ final class UsersGetController extends ResourceController
 
     private function getRequest(): UserFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), UserFilterRequest::rules(), UserFilterRequest::messages());
+
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $email = $this->request->getGet('email');

@@ -6,6 +6,7 @@ use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\Specialty\SpecialtyFilterRequest;
 
 use App\Services\Specialty\SpecialtiesSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -27,6 +28,8 @@ final class SpecialtiesGetController extends ResourceController
 
     private function getRequest(): SpecialtyFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), SpecialtyFilterRequest::rules(), SpecialtyFilterRequest::messages());
+
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $search = $this->request->getGet('search');

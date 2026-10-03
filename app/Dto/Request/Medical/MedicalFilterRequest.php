@@ -47,4 +47,34 @@ final readonly class MedicalFilterRequest
     {
         return !empty($this->search);
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function rules(): array
+    {
+        return array_merge(PaginationRequest::rules(), [
+            'specialtyId' => 'permit_empty|is_natural_no_zero',
+            'isActive'    => 'permit_empty|in_list[0,1,true,false]',
+            'search'      => 'permit_empty|string|max_length[100]',
+        ]);
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public static function messages(): array
+    {
+        return array_merge(PaginationRequest::messages(), [
+            'specialtyId' => [
+                'is_natural_no_zero' => 'El ID de la especialidad debe ser un número entero mayor que cero.',
+            ],
+            'isActive' => [
+                'in_list' => 'El estado no es válido.',
+            ],
+            'search' => [
+                'max_length' => 'La búsqueda no puede superar los 100 caracteres.',
+            ],
+        ]);
+    }
 }

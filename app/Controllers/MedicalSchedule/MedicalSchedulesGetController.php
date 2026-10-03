@@ -4,6 +4,7 @@ namespace App\Controllers\MedicalSchedule;
 use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\MedicalSchedule\MedicalScheduleFilterRequest;
 use App\Services\MedicalSchedule\Projection\MedicalSchedulesProjectionSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -25,6 +26,8 @@ final class MedicalSchedulesGetController extends ResourceController
 
     private function getRequest(): MedicalScheduleFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), MedicalScheduleFilterRequest::rules(), MedicalScheduleFilterRequest::messages());
+
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $medicalId = $this->request->getGet('medicalId');
