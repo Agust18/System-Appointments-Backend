@@ -22,7 +22,7 @@ final class AppointmentDeleterService
     {
         $appointment = $this->finder->find($id);
 
-        $this->validator->validate($id,$appointment);
+        $this->validator->validate($appointment);
         
         $this->appointmentModel->delete($id);
 
