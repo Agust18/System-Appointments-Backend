@@ -4,19 +4,23 @@ use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
+use App\Dto\Request\Auth\UserLoginRequest;
+use App\Exception\Auth\NotVerifiedException;
 use App\Exception\Email\EmailCannotBeSendedException;
+use App\Services\auth\UserLoginService;
 use App\Services\Patient\PatientPublicRegisterService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 
 /**
- * El registro público nunca acepta una contraseña para un usuario sin cuenta que
- * ya existe: le envía un link a su email guardado (anti pre-hijacking).
+ * El registro público usa la contraseña del request tanto para un usuario nuevo como
+ * para uno sin cuenta existente (mismo DNI y email): queda sin verificar y se le envía
+ * el email de verificación.
  *
  * El envío real de emails queda deshabilitado vaciando EMAIL_HOST: EmailModel
  * devuelve SMTP_CONFIG_ERROR y EmailSenderService lanza EmailCannotBeSendedException
- * sin abrir ninguna conexión. Por eso la rama de activación se verifica por el
- * token generado (que se crea antes de enviar) y por esa excepción.
+ * sin abrir ninguna conexión. Por eso se verifica el estado de la base y el token
+ * generado (que se crea antes de enviar) y esa excepción.
  *
  * @internal
  */
@@ -79,21 +83,63 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
         );
     }
 
-    public function testAccountlessUserWithSameEmailGetsAnActivationLinkAndNoPasswordIsSet(): void
+    private function registerExpectingEmailFailure(PatientRequest $request): void
+    {
+        try {
+            $this->service->register($request);
+            $this->fail('Se esperaba EmailCannotBeSendedException (el envío está deshabilitado en tests)');
+        } catch (EmailCannotBeSendedException) {
+            // Llegó hasta el envío del email de verificación.
+        }
+    }
+
+    public function testAccountlessUserWithSameEmailGetsThePasswordAndAVerificationEmail(): void
     {
         $userId = $this->seedAccountless('reserva@test.com');
 
-        try {
-            $this->service->register($this->registerRequest('reserva@test.com'));
-            $this->fail('Se esperaba EmailCannotBeSendedException (el envío está deshabilitado en tests)');
-        } catch (EmailCannotBeSendedException) {
-            // La rama de activación llegó hasta el envío del email.
-        }
+        $this->registerExpectingEmailFailure($this->registerRequest('reserva@test.com', 'mi-contrasenia-nueva'));
 
-        $this->seeInDatabase('user_verification_tokens', ['user_id' => $userId, 'type' => 'password_reset']);
-        $this->seeInDatabase('users', ['id' => $userId, 'password' => null, 'is_verified' => 0]);
+        $user = $this->db->table('users')->where('id', $userId)->get()->getRow();
+        $this->assertTrue(password_verify('mi-contrasenia-nueva', $user->password));
+        $this->assertSame('0', (string) $user->is_verified);
+        $this->assertSame('Publica', $user->last_name);
+        $this->assertSame('2325506499', $user->phone);
+        $this->assertStringStartsWith('reserva_', $user->first_name);
+        $this->seeInDatabase('user_verification_tokens', ['user_id' => $userId, 'type' => 'email_verification']);
         $this->seeNumRecords(1, 'users', []);
-        $this->seeNumRecords(0, 'patients', []);
+        $this->seeNumRecords(1, 'patients', ['user_id' => $userId]);
+    }
+
+    public function testAccountlessUserWithExistingPatientDoesNotDuplicatePatients(): void
+    {
+        $userId = $this->seedAccountless('reserva@test.com');
+        $this->db->table('patients')->insert(['user_id' => $userId]);
+
+        $this->registerExpectingEmailFailure($this->registerRequest('reserva@test.com'));
+
+        $this->seeNumRecords(1, 'patients', []);
+        $this->seeInDatabase('user_verification_tokens', ['user_id' => $userId, 'type' => 'email_verification']);
+    }
+
+    public function testNewUserIsCreatedWithPasswordUnverifiedAndAVerificationToken(): void
+    {
+        $this->registerExpectingEmailFailure($this->registerRequest('nuevo@test.com', 'contrasenia-nueva'));
+
+        $user = $this->db->table('users')->where('email', 'nuevo@test.com')->get()->getRow();
+        $this->assertTrue(password_verify('contrasenia-nueva', $user->password));
+        $this->assertSame('0', (string) $user->is_verified);
+        $this->seeInDatabase('user_verification_tokens', ['user_id' => $user->id, 'type' => 'email_verification']);
+        $this->seeNumRecords(1, 'patients', ['user_id' => $user->id]);
+    }
+
+    public function testRegisteredUserCannotLoginUntilVerified(): void
+    {
+        $this->seedAccountless('reserva@test.com');
+        $this->registerExpectingEmailFailure($this->registerRequest('reserva@test.com', 'mi-contrasenia-nueva'));
+
+        $this->expectException(NotVerifiedException::class);
+
+        (new UserLoginService())->login(new UserLoginRequest('reserva@test.com', 'mi-contrasenia-nueva'));
     }
 
     public function testAccountlessUserWithDifferentEmailIsRejectedAndGetsNoLink(): void

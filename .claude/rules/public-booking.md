@@ -1,7 +1,7 @@
 # Reserva pública de turnos
 
 Un paciente reserva sin cuenta ni login. El teléfono es el segundo factor que acompaña al DNI.
-Todo vive bajo `/public/*` (más `POST /patients/register`, que no es parte de la reserva pero comparte usuarios sin cuenta).
+Todo vive bajo `/public/*` (más `POST /patients/register`, que no es parte de la reserva pero comparte usuarios sin cuenta: si el DNI es de uno sin cuenta con el mismo email, usa la contraseña del body, crea el paciente si falta y envía el email de verificación; responde siempre `201`, ver `email.md`).
 
 Código principal: `PublicAppointmentCreatorService`, `PatientGuestResolverService`, `PublicIdentityAttemptLimiter`, filtro `Throttle`.
 Contrato para el frontend: `bitacora/hecho/contrato-*.md`.

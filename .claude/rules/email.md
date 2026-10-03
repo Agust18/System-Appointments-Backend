@@ -24,8 +24,14 @@ si el usuario nace verificado y si se dispara el email de verificación
 
 `UserCreatorService::create()` marca al `User` como verificado
 (`$user->markAsVerified()`) cuando `$isVerified` es `true`, antes del insert.
-`PatientCreatorService::create()` es el único que además dispara el email:
-lo hace fuera de la transacción, solo cuando `!$isVerified`.
+`PatientCreatorService::create()` dispara el email de verificación fuera de la
+transacción, solo cuando `!$isVerified`.
+
+`POST /patients/register` siempre responde `201` y siempre envía el email de verificación.
+Si el DNI es de un usuario sin cuenta (mismo email guardado, rol paciente, activo),
+`PatientPublicRegisterService` fija la contraseña del body (solo la contraseña; nombre y
+teléfono no se tocan), crea el paciente si falta y envía el mismo email de verificación
+(el usuario queda `is_verified = 0` y no puede iniciar sesión hasta verificar).
 
 ### Por qué es intencional
 

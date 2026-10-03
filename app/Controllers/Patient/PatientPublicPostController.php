@@ -26,13 +26,7 @@ final class PatientPublicPostController extends ResourceController
             $patientPublicRegisterRequest->toPatientRequest()
         );
 
-        if ($patientResponse === null) {
-            return $this->response->setStatusCode(202)->setJSON([
-                'message' => 'Te enviamos un email para que actives tu cuenta.',
-            ]);
-        }
-
-        return $this->response->setJSON($patientResponse);
+        return $this->response->setStatusCode(201)->setJSON($patientResponse);
     }
 
     private function getRequest(): PatientPublicRegisterRequest

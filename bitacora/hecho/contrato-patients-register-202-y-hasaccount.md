@@ -8,6 +8,8 @@
 
 ## Detalle
 
+> ⚠️ **Reemplazado (03/10/2026):** `POST /patients/register` ya **no devuelve 202**. Siempre responde `201` con el `PatientResponse`, también cuando el DNI pertenece a un usuario sin cuenta (mismo email guardado): se usa la contraseña del body y se envía el email de **verificación** (el usuario queda `is_verified = 0` y no puede iniciar sesión hasta verificar). El frontend debe quitar la rama `202` y no pedir la contraseña dos veces. El punto 1 de abajo queda solo como historia.
+
 ## 🔴 Cambios de contrato (reserva pública, Fase 2)
 
 1. **`POST /patients/register` puede devolver `202` con `{ "message": "..." }`** en vez de `201` con el paciente.

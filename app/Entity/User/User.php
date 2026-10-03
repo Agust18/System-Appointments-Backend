@@ -76,6 +76,15 @@ final class User
         $this->isVerified = true;
     }
 
+    /**
+     * Registro público sobre un usuario sin cuenta: fija la contraseña pero deja
+     * el usuario sin verificar (no puede iniciar sesión hasta verificar su email).
+     */
+    public function setPasswordFromRegistration(string $password): void
+    {
+        $this->password = password_hash($password, PASSWORD_BCRYPT);
+    }
+
     public function generateToken(): void
     {
         //recomendacion  bin2hex(random_bytes(32));  
