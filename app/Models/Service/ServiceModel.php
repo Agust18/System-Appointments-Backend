@@ -21,8 +21,8 @@ final class ServiceModel
 
     public function insert(Service $service): Service
     {
-        $query = "INSERT INTO services (name, description, duration_minutes, buffer_minutes, price, slot_step_minutes, is_active, created_at, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $query = "INSERT INTO services (name, description, duration_minutes, buffer_minutes, price, is_active, created_at, updated_at) 
+                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $this->db->query($query, [
             $service->getName(),
@@ -30,7 +30,6 @@ final class ServiceModel
             $service->getDurationMinutes(),
             $service->getBufferMinutes(),
             $service->getPrice(),
-            $service->getSlotStepMinutes(),
             $service->isActive()
         ]);
 
@@ -42,7 +41,7 @@ final class ServiceModel
     public function update(Service $service): Service
     {
         $query = "UPDATE services 
-                  SET name = ?, description = ?, duration_minutes = ?, buffer_minutes = ?, price = ?, slot_step_minutes = ?, is_active = ?, updated_at = NOW() 
+                  SET name = ?, description = ?, duration_minutes = ?, buffer_minutes = ?, price = ?, is_active = ?, updated_at = NOW() 
                   WHERE id = ?";
 
         $this->db->query($query, [
@@ -51,7 +50,6 @@ final class ServiceModel
             $service->getDurationMinutes(),
             $service->getBufferMinutes(),
             $service->getPrice(),
-            $service->getSlotStepMinutes(),
             $service->isActive(),
             $service->getId()
         ]);

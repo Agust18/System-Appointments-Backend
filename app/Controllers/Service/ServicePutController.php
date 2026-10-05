@@ -38,7 +38,6 @@ final class ServicePutController extends ResourceController
             $parameters->durationMinutes ?? null,
             $parameters->bufferMinutes ?? null,
             $parameters->price ?? null,
-            $parameters->slotStepMinutes ?? null,
             $parameters->isActive ?? null,
         );
     }

@@ -5,6 +5,7 @@ namespace App\Services\Appointment\Validations;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentServiceRequiredException;
 use Exception;
 
 final class AppointmentUpdateValidatorService
@@ -62,6 +63,12 @@ final class AppointmentUpdateValidatorService
                 'No se puede modificar un turno con fecha pasada',
                 409
             );
+        }
+
+        // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
+        $finalServiceId = $request->getServiceId() ?? $appointment->getServiceId();
+        if ($finalServiceId === null || $finalServiceId <= 0) {
+            throw new AppointmentServiceRequiredException();
         }
 
     }

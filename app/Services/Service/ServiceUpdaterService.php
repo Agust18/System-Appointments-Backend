@@ -5,7 +5,6 @@ use App\Converter\Service\ServiceToServiceResponseConverter;
 use App\Dto\Request\Service\ServiceUpdateRequest;
 use App\Dto\Response\Service\ServiceResponse;
 use App\Models\Service\ServiceModel;
-use App\Services\Service\ServiceFinderService;
 
 final class ServiceUpdaterService
 {
@@ -18,7 +17,6 @@ final class ServiceUpdaterService
         $this->serviceModel = new ServiceModel();
         $this->converter = new ServiceToServiceResponseConverter();
         $this->serviceFinderService = new ServiceFinderService();
-
     }
 
     public function update(ServiceUpdateRequest $request, int $id): ServiceResponse

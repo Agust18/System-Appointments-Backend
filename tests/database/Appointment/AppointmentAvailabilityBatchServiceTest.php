@@ -25,7 +25,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
         $this->service = new AppointmentAvailabilityBatchService();
     }
 
-    private function seedMedicalWithService(int $durationMinutes, int $bufferMinutes, int $slotStepMinutes): array
+    private function seedMedicalWithService(int $durationMinutes, int $bufferMinutes): array
     {
         $this->db->table('users')->insert([
             'first_name' => 'medico_' . uniqid(),
@@ -50,7 +50,6 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
             'name'              => 'Servicio ' . uniqid(),
             'duration_minutes'  => $durationMinutes,
             'buffer_minutes'    => $bufferMinutes,
-            'slot_step_minutes' => $slotStepMinutes,
             'is_active'         => 1,
         ]);
         $serviceId = $this->db->insertID();
@@ -105,7 +104,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
     public function testFourteenDayRangeOnlyIncludesAttendedDaysAndExcludesOverlaps(): void
     {
         // 30 min de duración, sin buffer, step de 30 min -> por día: 09:00, 09:30, 10:00
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0, 30);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
 
         $from = '2026-11-02'; // lunes
         $to = '2026-11-15';   // domingo siguiente (14 días)
@@ -130,7 +129,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
 
     public function testAttendedDayWithoutFreeSlotsAppearsAsEmptyArray(): void
     {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(60, 0, 60);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(60, 0);
 
         $from = '2026-11-02';
         $to = '2026-11-03';
@@ -148,7 +147,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
 
     public function testRejectsRangeOver60Days(): void
     {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0, 30);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
 
         $this->expectException(ValidationException::class);
         $this->service->getAvailableSlotsBatch(new AppointmentAvailabilityBatchRequest($medicalId, $serviceId, '2026-01-01', '2026-12-31'));
@@ -156,7 +155,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
 
     public function testRejectsFromAfterTo(): void
     {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0, 30);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
 
         $this->expectException(ValidationException::class);
         $this->service->getAvailableSlotsBatch(new AppointmentAvailabilityBatchRequest($medicalId, $serviceId, '2026-11-15', '2026-11-02'));

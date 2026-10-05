@@ -91,7 +91,6 @@ final class MedicalServiceModel
                     s.duration_minutes as base_duration_minutes,
                     s.buffer_minutes,
                     s.price as base_price,
-                    s.slot_step_minutes,
                     ms.id as medical_service_id,
                     ms.medical_id,
                     ms.custom_price,

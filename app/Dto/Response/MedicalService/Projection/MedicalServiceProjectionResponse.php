@@ -12,7 +12,6 @@ final readonly class MedicalServiceProjectionResponse
         public int $baseDurationMinutes,
         public int $bufferMinutes,
         public float $basePrice,
-        public int $slotStepMinutes,
         public ?float $customPrice,
         public ?int $customDurationMinutes,
         public int $effectiveDurationMinutes,

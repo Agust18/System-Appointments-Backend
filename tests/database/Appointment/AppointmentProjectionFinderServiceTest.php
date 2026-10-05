@@ -68,7 +68,6 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
             'name'              => 'Consulta ' . uniqid(),
             'duration_minutes'  => 30,
             'buffer_minutes'    => 0,
-            'slot_step_minutes' => 30,
             'is_active'         => 1,
         ]);
         $serviceId = $this->db->insertID();

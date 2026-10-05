@@ -15,7 +15,6 @@ final class PrimitiveToServiceConverter
             (int)$primitive->duration_minutes,
             isset($primitive->buffer_minutes) ? (int)$primitive->buffer_minutes : 0,
             (float)$primitive->price,
-            isset($primitive->slot_step_minutes) ? (int)$primitive->slot_step_minutes : 15,
             (bool)$primitive->is_active,
             $primitive->created_at ? new DateTime($primitive->created_at) : null,
             $primitive->updated_at ? new DateTime($primitive->updated_at) : null

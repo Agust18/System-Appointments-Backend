@@ -70,7 +70,6 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
             'name'              => 'Servicio ' . uniqid(),
             'duration_minutes'  => $durationMinutes,
             'buffer_minutes'    => $bufferMinutes,
-            'slot_step_minutes' => 30,
             'is_active'         => $active ? 1 : 0,
         ]);
 

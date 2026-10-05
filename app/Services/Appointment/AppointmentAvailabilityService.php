@@ -2,15 +2,13 @@
 namespace App\Services\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentAvailabilityRequest;
-use App\Exception\Appointment\InvalidAppointmentDateException;
-use App\Exception\Appointment\InvalidAppointmentDateFormatException;
-use App\Exception\Appointment\MedicalServiceNotOfferedException;
-use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
+use App\Services\Appointment\Validations\AppointmentAvailabilityDateValidatorService;
 use App\Services\Appointment\Validations\AppointmentAvailabilityQueryValidatorService;
+use App\Services\Appointment\Validations\AppointmentServiceOfferValidatorService;
 
 final class AppointmentAvailabilityService
 {
@@ -19,6 +17,8 @@ final class AppointmentAvailabilityService
     private MedicalServiceModel $medicalServiceModel;
     private AppointmentModel $appointmentModel;
     private AppointmentAvailabilityQueryValidatorService $queryValidator;
+    private AppointmentAvailabilityDateValidatorService $dateValidator;
+    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
     private ServiceDurationCalculatorService $durationCalculator;
     private SlotGeneratorService $slotGenerator;
 
@@ -29,6 +29,8 @@ final class AppointmentAvailabilityService
         $this->medicalServiceModel = new MedicalServiceModel();
         $this->appointmentModel = new AppointmentModel();
         $this->queryValidator = new AppointmentAvailabilityQueryValidatorService();
+        $this->dateValidator = new AppointmentAvailabilityDateValidatorService();
+        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
         $this->durationCalculator = new ServiceDurationCalculatorService();
         $this->slotGenerator = new SlotGeneratorService();
     }
@@ -45,23 +47,15 @@ final class AppointmentAvailabilityService
         $fecha = $request->getFecha();
 
         $this->queryValidator->validate($medicalId, $serviceId);
-        $this->validateFecha($fecha);
+        $this->dateValidator->validate($fecha);
 
-        //valida y obtener el servicio
+        //obtiene el servicio y la asignación del médico, y valida que estén disponibles
         $service = $this->serviceModel->find($serviceId);
-        if (!$service || !$service->isActive()) {
-            throw new ServiceNotAvailableException();
-        }
-
-        //valida y obtener la asignación del médico
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
-        if (!$medicalService) {
-            throw new MedicalServiceNotOfferedException('El profesional seleccionado no ofrece el servicio indicado.');
-        }
+        $this->serviceOfferValidator->validate($service, $medicalService);
 
         //calcula duración efectiva del servicio y bloque total (con buffer)
         $duration = $this->durationCalculator->calculate($service, $medicalService);
-        $slotStepMinutes = $service->getSlotStepMinutes() > 0 ? $service->getSlotStepMinutes() : 15;
 
         //obtiene rangos activos de atención para el día de la semana
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -78,20 +72,7 @@ final class AppointmentAvailabilityService
             $activeRanges,
             $existingAppointments,
             $duration->getEffectiveDurationMinutes(),
-            $duration->getTotalBlockMinutes(),
-            $slotStepMinutes
+            $duration->getTotalBlockMinutes()
         );
-    }
-
-    private function validateFecha(string $fecha): void
-    {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-            throw new InvalidAppointmentDateFormatException();
-        }
-
-        [$year, $month, $day] = explode('-', $fecha);
-        if (!checkdate((int)$month, (int)$day, (int)$year)) {
-            throw new InvalidAppointmentDateException();
-        }
     }
 }

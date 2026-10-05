@@ -5,6 +5,7 @@ require_once __DIR__ . '/BookingServiceTestCase.php';
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
 use App\Exception\Appointment\AppointmentServiceRequiredException;
+use App\Services\Appointment\Validations\AppointmentUpdateValidatorService;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
 use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
@@ -226,17 +227,20 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
 
         $appointment = $this->appointmentModel->find($id);
 
+        // la regla vive en el validator, que corre antes de tomar el lock
         try {
-            $this->service->update($appointment, $this->updateRequest(null, null, null, '10:00'), $id);
+            (new AppointmentUpdateValidatorService())->validate($this->updateRequest(null, null, null, '10:00'), $appointment, $id);
             $this->fail('Se esperaba AppointmentServiceRequiredException.');
         } catch (AppointmentServiceRequiredException $e) {
             $this->assertSame(422, $e->getCode());
         }
 
-        // no se modificó nada y no quedó lock tomado
+        // Ya no se verifica la liberación del lock (assertLockReleased): esta regla vive en
+        // AppointmentUpdateValidatorService, que corre ANTES de tomar el lock, así que nunca se adquiere.
+        // Si en el futuro la validación se mueve después del lock, este test debe volver a
+        // verificar que el lock quede liberado.
         $persisted = $this->appointmentModel->find($id);
         $this->assertSame('09:00:00', $persisted->getHora()->format('H:i:s'));
-        $this->assertLockReleased($medicalId, self::FECHA);
     }
 
     public function testLegacyAppointmentWithoutServiceCanBeEditedWhenServiceIsProvided(): void

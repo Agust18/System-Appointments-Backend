@@ -4,14 +4,13 @@ namespace App\Services\Appointment;
 use App\Converter\Appointment\SlotsByDateToAvailabilityBatchResponseConverter;
 use App\Dto\Request\Appointment\AppointmentAvailabilityBatchRequest;
 use App\Dto\Response\Appointment\AppointmentAvailabilityBatchResponse;
-use App\Exception\Appointment\MedicalServiceNotOfferedException;
-use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
 use App\Services\Appointment\Validations\AppointmentAvailabilityQueryValidatorService;
 use App\Services\Appointment\Validations\AppointmentAvailabilityRangeValidatorService;
+use App\Services\Appointment\Validations\AppointmentServiceOfferValidatorService;
 use DateTime;
 use Throwable;
 
@@ -23,6 +22,7 @@ final class AppointmentAvailabilityBatchService
     private AppointmentModel $appointmentModel;
     private AppointmentAvailabilityQueryValidatorService $queryValidator;
     private AppointmentAvailabilityRangeValidatorService $rangeValidator;
+    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
     private ServiceDurationCalculatorService $durationCalculator;
     private SlotGeneratorService $slotGenerator;
     private SlotsByDateToAvailabilityBatchResponseConverter $converter;
@@ -35,6 +35,7 @@ final class AppointmentAvailabilityBatchService
         $this->appointmentModel = new AppointmentModel();
         $this->queryValidator = new AppointmentAvailabilityQueryValidatorService();
         $this->rangeValidator = new AppointmentAvailabilityRangeValidatorService();
+        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
         $this->durationCalculator = new ServiceDurationCalculatorService();
         $this->slotGenerator = new SlotGeneratorService();
         $this->converter = new SlotsByDateToAvailabilityBatchResponseConverter();
@@ -49,17 +50,10 @@ final class AppointmentAvailabilityBatchService
         $serviceId = $request->getServiceId();
 
         $service = $this->serviceModel->find($serviceId);
-        if (!$service || !$service->isActive()) {
-            throw new ServiceNotAvailableException();
-        }
-
         $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
-        if (!$medicalService) {
-            throw new MedicalServiceNotOfferedException('El profesional seleccionado no ofrece el servicio indicado.');
-        }
+        $this->serviceOfferValidator->validate($service, $medicalService);
 
         $duration = $this->durationCalculator->calculate($service, $medicalService);
-        $slotStepMinutes = $service->getSlotStepMinutes() > 0 ? $service->getSlotStepMinutes() : 15;
 
         $dates = $this->buildDateRange($request->getFrom(), $request->getTo());
         $daysOfWeek = array_values(array_unique(array_map(
@@ -95,8 +89,7 @@ final class AppointmentAvailabilityBatchService
                     $rangesByDay[$dayOfWeek],
                     $appointmentsByDate[$fecha] ?? [],
                     $duration->getEffectiveDurationMinutes(),
-                    $duration->getTotalBlockMinutes(),
-                    $slotStepMinutes
+                    $duration->getTotalBlockMinutes()
                 );
                 $slotsByDate[$fecha] = array_map(static fn (array $slot): string => $slot['start_time'], $slots);
             } catch (Throwable $e) {

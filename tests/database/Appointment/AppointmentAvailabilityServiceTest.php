@@ -1,9 +1,11 @@
 <?php
 
 use App\Dto\Request\Appointment\AppointmentAvailabilityRequest;
+use App\Exception\Validation\ValidationException;
 use App\Services\Appointment\AppointmentAvailabilityService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Test de regresión: fija el comportamiento ACTUAL de
@@ -27,7 +29,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         $this->service = new AppointmentAvailabilityService();
     }
 
-    private function seedMedicalWithService(int $durationMinutes, int $bufferMinutes, int $slotStepMinutes, ?int $customDurationMinutes = null): array
+    private function seedMedicalWithService(int $durationMinutes, int $bufferMinutes, ?int $customDurationMinutes = null): array
     {
         $roleId = $this->db->table('roles')->insert(['name' => 'medical_role_' . uniqid()]) ? $this->db->insertID() : null;
 
@@ -55,7 +57,6 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
             'name'              => 'Servicio ' . uniqid(),
             'duration_minutes'  => $durationMinutes,
             'buffer_minutes'    => $bufferMinutes,
-            'slot_step_minutes' => $slotStepMinutes,
             'is_active'         => 1,
         ]);
         $serviceId = $this->db->insertID();
@@ -111,7 +112,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
     public function testReturnsSlotsForAttendedDayExcludingExistingAppointment(): void
     {
         // 30 min de duración, sin buffer, step de 30 min -> slots: 09:00, 09:30, 10:00, 10:30
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0, 30);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
 
         $fecha = '2026-10-05'; // se fija el día de la semana dinámicamente
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -134,8 +135,8 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
 
     public function testUsesCustomDurationOverrideAndBuffer(): void
     {
-        // duración base 30, override del médico a 20, buffer 10 -> bloque total 30, step 30
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 10, 30, 20);
+        // duración base 30, override del médico a 20, buffer 10 -> bloque total 30
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 10, 20);
 
         $fecha = '2026-10-06';
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -151,7 +152,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
 
     public function testReturnsEmptyArrayForDayNotAttended(): void
     {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0, 30);
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
 
         $fecha = '2026-10-07';
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -162,5 +163,33 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         $slots = $this->service->getAvailableSlots(new AppointmentAvailabilityRequest($medicalId, $serviceId, $fecha));
 
         $this->assertSame([], $slots);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function invalidFechaProvider(): array
+    {
+        return [
+            'formato libre'             => ['05/10/2026'],
+            'sin ceros'                 => ['2026-1-5'],
+            'vacía'                     => [''],
+            'día inexistente (febrero)' => ['2026-02-30'],
+            'mes inexistente'           => ['2026-13-01'],
+        ];
+    }
+
+    #[DataProvider('invalidFechaProvider')]
+    public function testInvalidFechaThrowsValidationExceptionWithFechaError(string $fecha): void
+    {
+        // la fecha se valida antes de consultar servicio o médico, no hace falta sembrar datos
+        try {
+            $this->service->getAvailableSlots(new AppointmentAvailabilityRequest(1, 1, $fecha));
+            $this->fail('Se esperaba ValidationException.');
+        } catch (ValidationException $e) {
+            $this->assertSame(422, $e->getCode());
+            $this->assertSame(['fecha'], array_keys($e->getErrors()));
+            $this->assertSame('El formato de fecha debe ser YYYY-MM-DD', $e->getErrors()['fecha']);
+        }
     }
 }

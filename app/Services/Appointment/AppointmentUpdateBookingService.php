@@ -3,7 +3,6 @@ namespace App\Services\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
-use App\Exception\Appointment\AppointmentServiceRequiredException;
 use App\Models\Appointment\AppointmentModel;
 use DateTime;
 
@@ -25,11 +24,6 @@ final class AppointmentUpdateBookingService
         $finalServiceId = $request->getServiceId() ?? $appointment->getServiceId();
         $finalFecha = $request->getFecha() ?? $appointment->getFecha()->format('Y-m-d');
         $finalHora = $request->getHora() ?? $appointment->getHora()->format('H:i:s');
-
-        // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
-        if ($finalServiceId === null || $finalServiceId <= 0) {
-            throw new AppointmentServiceRequiredException();
-        }
 
         // Recalcula bloque y verifica solapamiento excluyendo el propio turno que se edita.
         return $this->slotLockService->run(

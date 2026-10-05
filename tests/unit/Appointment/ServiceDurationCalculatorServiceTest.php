@@ -20,7 +20,7 @@ final class ServiceDurationCalculatorServiceTest extends CIUnitTestCase
 
     private function makeService(int $durationMinutes, int $bufferMinutes): Service
     {
-        return new Service(1, 'Servicio', null, $durationMinutes, $bufferMinutes, 100.0, 15, true, null, null);
+        return new Service(1, 'Servicio', null, $durationMinutes, $bufferMinutes, 100.0, true, null, null);
     }
 
     private function makeMedicalService(?int $customDurationMinutes): MedicalService

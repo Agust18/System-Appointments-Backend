@@ -1,10 +1,10 @@
 # Bitácora — BACKEND
 
-Última actualización: 02/10/2026
+Última actualización: 03/10/2026
 
 Solo tareas del **repo backend**. Los archivos `hecho/contrato-*` documentan el contrato de la API pública que el backend le deja al frontend.
 
-**Bugs reales:** ninguno ✅
+**Bugs reales:** 1 — [el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
 
 Fuente de verdad del flujo público en el backend: `.claude/rules/public-booking.md`.
 
@@ -32,7 +32,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: API pública de reserva (Fase 3)](hecho/contrato-api-publica-fase-3.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (21)
+## ⏳ Pendiente (29)
 
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
@@ -55,6 +55,14 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Agregar campo code a los 409 de POST /public/appointments](pendiente/campo-code-en-409-publicos.md)
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)
 - [Suite lenta (~25 min): regla de trabajo y refactor de tests](pendiente/suite-lenta-refactor-tests.md)
+- [Gap funcional: el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
+- [Excepciones tipadas en AppointmentUpdateValidatorService](pendiente/update-validator-excepciones-tipadas.md)
+- [AppointmentOverlapValidatorService](pendiente/appointment-overlap-validator.md)
+- [Duplicaciones menores en los Services de Appointment](pendiente/appointment-duplicaciones-menores.md)
+- [Suite completa sin correr tras el refactor de validators](pendiente/suite-completa-post-refactor-validators.md)
+- [Commit pendiente: refactor de validators de Appointment](pendiente/commit-refactor-validators-appointment.md)
+- [Frontend: se eliminó slotStepMinutes de /services y /medicals/{id}/services](pendiente/eliminar-slot-step-minutes-frontend.md)
+- [Tests de CORS dependen del .env local](pendiente/tests-cors-dependen-del-env-local.md)
 
 ## 🔵 Features (2)
 

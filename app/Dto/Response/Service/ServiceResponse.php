@@ -10,7 +10,6 @@ final readonly class ServiceResponse
         public int $durationMinutes,
         public int $bufferMinutes,
         public float $price,
-        public int $slotStepMinutes,
         public bool $isActive,
         public ?string $createdAt,
         public ?string $updatedAt

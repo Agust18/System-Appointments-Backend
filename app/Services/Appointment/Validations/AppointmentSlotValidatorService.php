@@ -4,12 +4,10 @@ namespace App\Services\Appointment\Validations;
 use App\Exception\Appointment\AppointmentNotPast;
 use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
-use App\Exception\Appointment\MedicalServiceNotOfferedException;
-use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
+use App\Models\Service\ServiceModel;
 use App\Services\Appointment\ServiceDurationCalculatorService;
-use App\Services\Service\ServiceFinderService;
 use DateTime;
 
 /**
@@ -23,16 +21,18 @@ use DateTime;
 final class AppointmentSlotValidatorService
 {
     private MedicalScheduleModel $medicalScheduleModel;
-    private ServiceFinderService $serviceFinder;
+    private ServiceModel $serviceModel;
     private MedicalServiceModel $medicalServiceModel;
     private ServiceDurationCalculatorService $durationCalculator;
+    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
 
     public function __construct()
     {
         $this->medicalScheduleModel = new MedicalScheduleModel();
-        $this->serviceFinder = new ServiceFinderService();
+        $this->serviceModel = new ServiceModel();
         $this->medicalServiceModel = new MedicalServiceModel();
         $this->durationCalculator = new ServiceDurationCalculatorService();
+        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
     }
 
     /**
@@ -88,16 +88,12 @@ final class AppointmentSlotValidatorService
 
     private function calculateTotalBlockMinutes(int $medicalId, ?int $serviceId): int
     {
-        $service = $this->serviceFinder->find($serviceId);
+        $service = $serviceId !== null ? $this->serviceModel->find($serviceId) : null;
+        $medicalService = $serviceId !== null
+            ? $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId)
+            : null;
 
-        if (!$service->isActive()) {
-            throw new ServiceNotAvailableException('El servicio seleccionado no se encuentra activo');
-        }
-        // Validar que el médico ofrezca este servicio de forma activa
-        $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
-        if (!$medicalService) {
-            throw new MedicalServiceNotOfferedException();
-        }
+        $this->serviceOfferValidator->validate($service, $medicalService);
 
         return $this->durationCalculator->calculate($service, $medicalService)->getTotalBlockMinutes();
     }

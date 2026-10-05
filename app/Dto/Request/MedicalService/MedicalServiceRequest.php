@@ -36,7 +36,7 @@ final readonly class MedicalServiceRequest
         return [
             'serviceId'             => 'required|is_natural_no_zero',
             'customPrice'           => 'permit_empty|decimal|greater_than_equal_to[0]',
-            'customDurationMinutes' => 'permit_empty|is_natural_no_zero',
+            'customDurationMinutes' => 'permit_empty|is_natural_no_zero|less_than_equal_to[480]',
             'isActive'              => 'permit_empty|in_list[0,1]',
         ];
     }
@@ -54,6 +54,7 @@ final readonly class MedicalServiceRequest
             ],
             'customDurationMinutes' => [
                 'is_natural_no_zero' => 'La duración no es válida.',
+                'less_than_equal_to' => 'La duración no puede superar los 480 minutos (8 horas).',
             ],
             'isActive' => [
                 'in_list' => 'El estado no es válido.',

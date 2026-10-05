@@ -39,7 +39,6 @@ final class ServicePostController extends ResourceController
             $parameters->durationMinutes,
             $parameters->bufferMinutes ?? 0,
             $parameters->price ?? 0.0,
-            $parameters->slotStepMinutes ?? 15,
             $parameters->isActive ?? true
         );
     }

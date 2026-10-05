@@ -15,8 +15,7 @@ final class SlotGeneratorService
         array $activeRanges,
         array $existingAppointments,
         int $effectiveDuration,
-        int $totalBlockMinutes,
-        int $slotStepMinutes
+        int $totalBlockMinutes
     ): array {
         $availableSlots = [];
 
@@ -25,7 +24,7 @@ final class SlotGeneratorService
             $rangeStartMinutes = $this->timeToMinutes(substr($range->getStartTime(), 0, 5));
             $rangeEndMinutes = $this->timeToMinutes(substr($range->getEndTime(), 0, 5));
 
-            for ($candidateStart = $rangeStartMinutes; $candidateStart <= ($rangeEndMinutes - $totalBlockMinutes); $candidateStart += $slotStepMinutes) {
+            for ($candidateStart = $rangeStartMinutes; $candidateStart <= ($rangeEndMinutes - $totalBlockMinutes); $candidateStart += $totalBlockMinutes) {
                 $candidateEnd = $candidateStart + $totalBlockMinutes;       // Con buffer (bloque total)
                 $visibleEnd = $candidateStart + $effectiveDuration;        // Sin buffer (visible para paciente)
 
@@ -50,8 +49,8 @@ final class SlotGeneratorService
 
                 if (!$overlaps) {
                     $availableSlots[] = [
-                        'start_time'     => substr($candidateStartStr, 0, 5),
-                        'end_time'       => $this->minutesToTime($visibleEnd),       //duración real sin buffer
+                        'start_time' => substr($candidateStartStr, 0, 5),
+                        'end_time' => $this->minutesToTime($visibleEnd),       //duración real sin buffer
                         'block_end_time' => substr($candidateEndStr, 0, 5)          //fin con buffer (bloqueo total)
                     ];
                 }
@@ -64,7 +63,7 @@ final class SlotGeneratorService
     private function timeToMinutes(string $time): int
     {
         [$hours, $minutes] = explode(':', $time);
-        return ((int)$hours * 60) + (int)$minutes;
+        return ((int) $hours * 60) + (int) $minutes;
     }
 
     private function minutesToTime(int $totalMinutes): string

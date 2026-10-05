@@ -15,7 +15,6 @@ final class ServiceToServiceResponseConverter
             $service->getDurationMinutes(),
             $service->getBufferMinutes(),
             $service->getPrice(),
-            $service->getSlotStepMinutes(),
             $service->isActive(),
             $service->getCreatedAt()?->format('Y-m-d H:i:s'),
             $service->getUpdatedAt()?->format('Y-m-d H:i:s')

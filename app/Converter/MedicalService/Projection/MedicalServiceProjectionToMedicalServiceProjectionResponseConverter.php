@@ -17,7 +17,6 @@ final class MedicalServiceProjectionToMedicalServiceProjectionResponseConverter
             $projection->getBaseDurationMinutes(),
             $projection->getBufferMinutes(),
             $projection->getBasePrice(),
-            $projection->getSlotStepMinutes(),
             $projection->getCustomPrice(),
             $projection->getCustomDurationMinutes(),
             $projection->getEffectiveDurationMinutes(),

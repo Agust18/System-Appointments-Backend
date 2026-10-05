@@ -4,11 +4,10 @@ namespace App\Services\Appointment;
 use App\Entity\Appointment\Appointment;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
 use App\Exception\Appointment\BookingLockTimeoutException;
-use App\Exception\Appointment\MedicalServiceNotOfferedException;
-use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalService\MedicalServiceModel;
 use App\Models\Service\ServiceModel;
+use App\Services\Appointment\Validations\AppointmentServiceOfferValidatorService;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
@@ -28,6 +27,7 @@ final class AppointmentSlotLockService
     private ServiceModel $serviceModel;
     private MedicalServiceModel $medicalServiceModel;
     private ServiceDurationCalculatorService $durationCalculator;
+    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
 
     public function __construct()
     {
@@ -36,6 +36,7 @@ final class AppointmentSlotLockService
         $this->serviceModel = new ServiceModel();
         $this->medicalServiceModel = new MedicalServiceModel();
         $this->durationCalculator = new ServiceDurationCalculatorService();
+        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
     }
 
     /**
@@ -62,14 +63,8 @@ final class AppointmentSlotLockService
 
             // recalcula duración y bloque total con servicio/override vigentes
             $service = $this->serviceModel->find($serviceId);
-            if (!$service || !$service->isActive()) {
-                throw new ServiceNotAvailableException('El servicio seleccionado no está disponible.');
-            }
-
             $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
-            if (!$medicalService) {
-                throw new MedicalServiceNotOfferedException('El profesional no ofrece este servicio actualmente.');
-            }
+            $this->serviceOfferValidator->validate($service, $medicalService);
 
             $totalBlockMinutes = $this->durationCalculator->calculate($service, $medicalService)->getTotalBlockMinutes();
 

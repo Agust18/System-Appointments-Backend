@@ -9,7 +9,6 @@ final readonly class ServiceRequest
         private int $durationMinutes,
         private int $bufferMinutes = 0,
         private float $price = 0.0,
-        private int $slotStepMinutes = 15,
         private bool $isActive = true
     ) {
     }
@@ -40,11 +39,6 @@ final readonly class ServiceRequest
         return $this->price;
     }
 
-    public function getSlotStepMinutes(): int
-    {
-        return $this->slotStepMinutes;
-    }
-
     public function getIsActive(): bool
     {
         return $this->isActive;
@@ -58,7 +52,6 @@ final readonly class ServiceRequest
             'durationMinutes' => 'required|is_natural_no_zero|less_than_equal_to[480]',
             'bufferMinutes'   => 'permit_empty|is_natural|less_than_equal_to[120]',
             'price'           => 'permit_empty|decimal|greater_than_equal_to[0]|less_than_equal_to[999999.99]',
-            'slotStepMinutes' => 'permit_empty|is_natural_no_zero|less_than_equal_to[60]',
         ];
     }
 
@@ -87,10 +80,6 @@ final readonly class ServiceRequest
                 'decimal'               => 'El precio no es válido.',
                 'greater_than_equal_to' => 'El precio no puede ser negativo.',
                 'less_than_equal_to'    => 'El precio no puede superar 999.999,99.',
-            ],
-            'slotStepMinutes' => [
-                'is_natural_no_zero' => 'El intervalo debe ser mayor a 0 minutos.',
-                'less_than_equal_to' => 'El intervalo no puede superar los 60 minutos.',
             ],
         ];
     }
