@@ -12,7 +12,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (17)
+## ✅ Hecho (18)
 
 - [B2 — Auditoría de transStart() vs transBegin()](hecho/b2-auditoria-transbegin.md)
 - [R6 — Booking atómico extraído a AppointmentSlotLockService](hecho/r6-booking-atomico-extraido.md)
@@ -30,9 +30,10 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: POST /patients/register (202) y UserResponse.hasAccount](hecho/contrato-patients-register-202-y-hasaccount.md)
 - [Contrato: wizard público (sin login) y manejo de errores](hecho/contrato-wizard-publico.md)
 - [Contrato: API pública de reserva (Fase 3)](hecho/contrato-api-publica-fase-3.md)
+- [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (29)
+## ⏳ Pendiente (28)
 
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
@@ -61,7 +62,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Duplicaciones menores en los Services de Appointment](pendiente/appointment-duplicaciones-menores.md)
 - [Suite completa sin correr tras el refactor de validators](pendiente/suite-completa-post-refactor-validators.md)
 - [Commit pendiente: refactor de validators de Appointment](pendiente/commit-refactor-validators-appointment.md)
-- [Frontend: se eliminó slotStepMinutes de /services y /medicals/{id}/services](pendiente/eliminar-slot-step-minutes-frontend.md)
 - [Tests de CORS dependen del .env local](pendiente/tests-cors-dependen-del-env-local.md)
 
 ## 🔵 Features (2)
