@@ -62,6 +62,14 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Sistema de Email → `.claude/rules/email.md`
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
 - Reserva pública (`/public/*`), identidad sin cuenta, throttle → `.claude/rules/public-booking.md`
+- Multitenant: glosario en `bitacora/glosario.md`, decisiones en `bitacora/adr/`, plan en `bitacora/pendiente/multitenant-plan.md`.
+
+## Multitenant (implementado)
+
+- Toda consulta a tablas con tenant_id debe filtrar por tenant.
+- Los Models ya lo hacen. Si agregás una query nueva, incluí el filtro.
+- Los tests usan FastDatabaseTestTrait para no rehacer migraciones.
+- No consultar tablas con `tenant_id` sin filtro (excepto en tests de aislamiento).
 
 
 ---
