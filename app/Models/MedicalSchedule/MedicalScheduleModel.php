@@ -6,6 +6,7 @@ use App\Converter\MedicalSchedule\Projection\PrimitiveToMedicalScheduleProjectio
 use App\Dto\Request\MedicalSchedule\MedicalScheduleFilterRequest;
 use App\Entity\MedicalSchedule\MedicalSchedule;
 use App\Entity\MedicalSchedule\Projection\MedicalScheduleProjection;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
@@ -24,10 +25,11 @@ final class MedicalScheduleModel
 
     public function insert(MedicalSchedule $schedule): MedicalSchedule
     {
-        $query = "INSERT INTO medical_schedules (medical_id, day_of_week, start_time, end_time, is_active, created_at, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+        $query = "INSERT INTO medical_schedules (tenant_id, medical_id, day_of_week, start_time, end_time, is_active, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $this->db->query($query, [
+            TenantContext::id(),
             $schedule->getMedicalId(),
             $schedule->getDayOfWeek(),
             $schedule->getStartTime(),
@@ -52,7 +54,7 @@ final class MedicalScheduleModel
     {
         $query = "UPDATE medical_schedules 
                   SET medical_id = ?, day_of_week = ?, start_time = ?, end_time = ?, is_active = ?, updated_at = NOW() 
-                  WHERE id = ?";
+                  WHERE id = ? AND tenant_id = ?";
 
         $this->db->query($query, [
             $schedule->getMedicalId(),
@@ -60,7 +62,8 @@ final class MedicalScheduleModel
             $schedule->getStartTime(),
             $schedule->getEndTime(),
             $schedule->isActive(),
-            $schedule->getId()
+            $schedule->getId(),
+            TenantContext::id()
         ]);
 
         return $this->find($schedule->getId());
@@ -68,8 +71,8 @@ final class MedicalScheduleModel
 
     public function find(int $id): ?MedicalSchedule
     {
-        $query = "SELECT * FROM medical_schedules WHERE id = ?";
-        $result = $this->db->query($query, [$id]);
+        $query = "SELECT * FROM medical_schedules WHERE id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -91,11 +94,11 @@ final class MedicalScheduleModel
                 ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
-              INNER JOIN medicals m ON m.id = ms.medical_id
-              INNER JOIN users u ON u.id = m.user_id
-              WHERE ms.id = ?";
+              INNER JOIN medicals m ON m.id = ms.medical_id AND m.tenant_id = ms.tenant_id
+              INNER JOIN users u ON u.id = m.user_id AND u.tenant_id = m.tenant_id
+              WHERE ms.id = ? AND ms.tenant_id = ?";
 
-        $result = $this->db->query($query, [$id]);
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -111,8 +114,9 @@ final class MedicalScheduleModel
         string $endTime
     ): ?MedicalSchedule {
         $query = "SELECT * FROM medical_schedules 
-              WHERE medical_id = ? 
-                AND day_of_week = ? 
+              WHERE medical_id = ?
+                AND tenant_id = ?
+                AND day_of_week = ?
                 AND is_active = 1
                 AND start_time < ?    -- el existente empieza antes de que termine el nuevo
                 AND end_time > ?      -- el existente termina después de que empiece el nuevo
@@ -120,6 +124,7 @@ final class MedicalScheduleModel
 
         $result = $this->db->query($query, [
             $medicalId,
+            TenantContext::id(),
             $dayOfWeek,
             $endTime,
             $startTime,
@@ -135,8 +140,8 @@ final class MedicalScheduleModel
     }
     public function findByMedicalId(int $medicalId): array
     {
-        $query = "SELECT * FROM medical_schedules WHERE medical_id = ? ORDER BY day_of_week ASC";
-        $result = $this->db->query($query, [$medicalId]);
+        $query = "SELECT * FROM medical_schedules WHERE medical_id = ? AND tenant_id = ? ORDER BY day_of_week ASC";
+        $result = $this->db->query($query, [$medicalId, TenantContext::id()]);
         $primitives = $result->getResult();
 
         $schedules = [];
@@ -160,12 +165,12 @@ final class MedicalScheduleModel
                 ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
-              INNER JOIN medicals m ON m.id = ms.medical_id
-              INNER JOIN users u ON u.id = m.user_id
-              WHERE ms.medical_id = ?
+              INNER JOIN medicals m ON m.id = ms.medical_id AND m.tenant_id = ms.tenant_id
+              INNER JOIN users u ON u.id = m.user_id AND u.tenant_id = m.tenant_id
+              WHERE ms.medical_id = ? AND ms.tenant_id = ?
               ORDER BY ms.day_of_week";
 
-        $result = $this->db->query($query, [$medicalId]);
+        $result = $this->db->query($query, [$medicalId, TenantContext::id()]);
         $primitives = $result->getResult();
 
         $schedules = [];
@@ -178,8 +183,8 @@ final class MedicalScheduleModel
 
     public function findByMedicalAndDay(int $medicalId, int $dayOfWeek): ?MedicalSchedule
     {
-        $query = "SELECT * FROM medical_schedules WHERE medical_id = ? AND day_of_week = ? AND is_active = 1";
-        $result = $this->db->query($query, [$medicalId, $dayOfWeek]);
+        $query = "SELECT * FROM medical_schedules WHERE medical_id = ? AND day_of_week = ? AND is_active = 1 AND tenant_id = ?";
+        $result = $this->db->query($query, [$medicalId, $dayOfWeek, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -195,8 +200,9 @@ final class MedicalScheduleModel
                   WHERE medical_id = ?
                     AND day_of_week = ?
                     AND is_active = 1
+                    AND tenant_id = ?
                   ORDER BY start_time ASC";
-        $result = $this->db->query($query, [$medicalId, $dayOfWeek]);
+        $result = $this->db->query($query, [$medicalId, $dayOfWeek, TenantContext::id()]);
         $primitives = $result->getResult();
 
         $schedules = [];
@@ -226,9 +232,10 @@ final class MedicalScheduleModel
                   WHERE medical_id = ?
                     AND day_of_week IN ({$placeholders})
                     AND is_active = 1
+                    AND tenant_id = ?
                   ORDER BY day_of_week ASC, start_time ASC";
 
-        $params = array_merge([$medicalId], $daysOfWeek);
+        $params = array_merge([$medicalId], $daysOfWeek, [TenantContext::id()]);
         $result = $this->db->query($query, $params);
         $primitives = $result->getResult();
 
@@ -245,13 +252,13 @@ final class MedicalScheduleModel
 
     public function delete(int $id): void
     {
-        $query = "DELETE FROM medical_schedules WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "DELETE FROM medical_schedules WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 
     public function searchProjection(MedicalScheduleFilterRequest $request): array
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
         $query = "SELECT
                 ms.id,
@@ -264,9 +271,9 @@ final class MedicalScheduleModel
                 ms.created_at,
                 ms.updated_at
               FROM medical_schedules ms
-              INNER JOIN medicals m ON m.id = ms.medical_id
-              INNER JOIN users u ON u.id = m.user_id
-              WHERE 1=1 ";
+              INNER JOIN medicals m ON m.id = ms.medical_id AND m.tenant_id = ms.tenant_id
+              INNER JOIN users u ON u.id = m.user_id AND u.tenant_id = m.tenant_id
+              WHERE ms.tenant_id = ? ";
 
         if ($request->hasMedicalId()) {
             $query .= " AND ms.medical_id = ? ";
@@ -309,9 +316,9 @@ final class MedicalScheduleModel
 
     public function count(MedicalScheduleFilterRequest $request): int
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
-        $query = "SELECT COUNT(*) as total FROM medical_schedules WHERE 1=1 ";
+        $query = "SELECT COUNT(*) as total FROM medical_schedules WHERE tenant_id = ? ";
 
         if ($request->hasMedicalId()) {
             $query .= " AND medical_id = ? ";

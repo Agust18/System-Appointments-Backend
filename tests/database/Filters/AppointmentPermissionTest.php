@@ -3,7 +3,7 @@
 use App\Constants\Role;
 use App\Filters\AppointmentPermission;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 use Config\Services;
 
 /**
@@ -11,7 +11,7 @@ use Config\Services;
  */
 final class AppointmentPermissionTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -27,7 +27,7 @@ final class AppointmentPermissionTest extends CIUnitTestCase
 
     private function seedUser(): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'user_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
@@ -40,10 +40,10 @@ final class AppointmentPermissionTest extends CIUnitTestCase
 
     private function seedMedical(int $userId): int
     {
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
-        $this->db->table('medicals')->insert([
+        $this->db->table('medicals')->insert(['tenant_id' => 1,
             'user_id'      => $userId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
@@ -54,7 +54,7 @@ final class AppointmentPermissionTest extends CIUnitTestCase
 
     private function seedPatient(int $userId): int
     {
-        $this->db->table('patients')->insert([
+        $this->db->table('patients')->insert(['tenant_id' => 1,
             'user_id'    => $userId,
             'birth_date' => '1990-01-01',
         ]);
@@ -64,7 +64,7 @@ final class AppointmentPermissionTest extends CIUnitTestCase
 
     private function seedAppointment(int $medicalId, int $patientId, string $status = 'pending'): int
     {
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'fecha'      => '2026-10-05',

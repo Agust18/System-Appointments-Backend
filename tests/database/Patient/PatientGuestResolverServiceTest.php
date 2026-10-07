@@ -7,7 +7,7 @@ use App\Exception\Patient\PublicIdentityLockTimeoutException;
 use App\Services\Patient\PatientGuestResolverService;
 use App\Services\Patient\PublicIdentityAttemptLimiter;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 use CodeIgniter\Test\Mock\MockCache;
 use Config\Database;
 use Config\Services;
@@ -19,7 +19,7 @@ use Config\Services;
  */
 final class PatientGuestResolverServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -79,7 +79,7 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         bool $active = true,
         ?string $password = null
     ): int {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name'  => 'existente_' . uniqid(),
             'last_name'   => 'Original',
             'email'       => $email,
@@ -96,7 +96,7 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
 
     private function seedPatientFor(int $userId): int
     {
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
 
         return (int) $this->db->insertID();
     }
@@ -296,7 +296,7 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         $nextUserId = $probeId + 1;
 
         $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
-        $this->db->table('patients')->insert(['user_id' => $nextUserId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $nextUserId, 'birth_date' => '1990-01-01']);
         $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
 
         try {
@@ -320,8 +320,8 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
 
         $other = Database::connect('tests', false);
         $other->query(
-            'INSERT INTO users (first_name, last_name, email, password, dni, role_id) VALUES (?, ?, ?, ?, ?, ?)',
-            ['ganador_' . uniqid(), 'Concurrente', 'carrera@test.com', null, 30999999, Role::PATIENT]
+            'INSERT INTO users (tenant_id, first_name, last_name, email, password, dni, role_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [1, 'ganador_' . uniqid(), 'Concurrente', 'carrera@test.com', null, 30999999, Role::PATIENT]
         );
         $other->close();
 

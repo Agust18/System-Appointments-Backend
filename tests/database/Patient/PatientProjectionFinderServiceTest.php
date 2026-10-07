@@ -6,7 +6,7 @@ use App\Exception\Patient\PatientNotFoundException;
 use App\Models\Patient\PatientModel;
 use App\Services\Patient\Projection\PatientProjectionFinderService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * Cubre el agregado de `email` a PatientProjection: el converter es
@@ -18,7 +18,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class PatientProjectionFinderServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -35,7 +35,7 @@ final class PatientProjectionFinderServiceTest extends CIUnitTestCase
 
     private function seedPatient(string $email): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => $email,
@@ -44,7 +44,7 @@ final class PatientProjectionFinderServiceTest extends CIUnitTestCase
         ]);
         $userId = $this->db->insertID();
 
-        $this->db->table('patients')->insert([
+        $this->db->table('patients')->insert(['tenant_id' => 1,
             'user_id'    => $userId,
             'birth_date' => '1990-01-01',
         ]);

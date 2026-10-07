@@ -1,7 +1,7 @@
 <?php
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * Base común de los tests de caracterización de AppointmentBookingService y
@@ -10,7 +10,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 abstract class BookingServiceTestCase extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null; // corre TODAS las migraciones (App incluida)
@@ -42,7 +42,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
         $this->db->table('roles')->insert(['name' => 'medical_role_' . uniqid()]);
         $roleId = $this->db->insertID();
 
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'medico_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'      => uniqid() . '@test.com',
@@ -52,10 +52,10 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
         ]);
         $userId = $this->db->insertID();
 
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
-        $this->db->table('medicals')->insert([
+        $this->db->table('medicals')->insert(['tenant_id' => 1,
             'user_id'      => $userId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
@@ -66,7 +66,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
 
     protected function seedService(int $durationMinutes, int $bufferMinutes, bool $active = true): int
     {
-        $this->db->table('services')->insert([
+        $this->db->table('services')->insert(['tenant_id' => 1,
             'name'              => 'Servicio ' . uniqid(),
             'duration_minutes'  => $durationMinutes,
             'buffer_minutes'    => $bufferMinutes,
@@ -78,7 +78,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
 
     protected function offerService(int $medicalId, int $serviceId, ?int $customDurationMinutes = null): void
     {
-        $this->db->table('medical_service')->insert([
+        $this->db->table('medical_service')->insert(['tenant_id' => 1,
             'medical_id'              => $medicalId,
             'service_id'              => $serviceId,
             'custom_duration_minutes' => $customDurationMinutes,
@@ -88,7 +88,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
 
     protected function seedPatient(): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'      => uniqid() . '@test.com',
@@ -97,7 +97,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
         ]);
         $userId = $this->db->insertID();
 
-        $this->db->table('patients')->insert([
+        $this->db->table('patients')->insert(['tenant_id' => 1,
             'user_id'    => $userId,
             'birth_date' => '1990-01-01',
         ]);
@@ -113,7 +113,7 @@ abstract class BookingServiceTestCase extends CIUnitTestCase
         string $horaFin,
         string $status = 'confirmed'
     ): int {
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => $serviceId,

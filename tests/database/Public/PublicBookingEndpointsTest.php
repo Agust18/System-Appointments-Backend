@@ -81,7 +81,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
 
     private function seedSchedule(int $medicalId): void
     {
-        $this->db->table('medical_schedules')->insert([
+        $this->db->table('medical_schedules')->insert(['tenant_id' => 1,
             'medical_id'  => $medicalId,
             'day_of_week' => 1,
             'start_time'  => '09:00:00',
@@ -124,7 +124,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
 
     private function seedExistingPatient(int $dni, string $email, ?string $phone): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'existente_' . uniqid(),
             'last_name'  => 'Original',
             'email'      => $email,
@@ -134,7 +134,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
             'role_id'    => Role::PATIENT,
         ]);
         $userId = (int) $this->db->insertID();
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => null]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => null]);
 
         return (int) $this->db->insertID();
     }

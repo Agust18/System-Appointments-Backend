@@ -53,7 +53,7 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
      */
     private function seedPatientUser(?int $roleId = Role::PATIENT): array
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'      => uniqid() . '@test.com',
@@ -63,14 +63,14 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         ]);
         $userId = (int) $this->db->insertID();
 
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
 
         return [(int) $this->db->insertID(), $userId];
     }
 
     private function seedSchedule(int $medicalId, int $dayOfWeek, string $start, string $end): void
     {
-        $this->db->table('medical_schedules')->insert([
+        $this->db->table('medical_schedules')->insert(['tenant_id' => 1,
             'medical_id'  => $medicalId,
             'day_of_week' => $dayOfWeek,
             'start_time'  => $start,
@@ -191,7 +191,7 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
 
         $medicalUserId = (int) $this->db->table('medicals')->where('id', $medicalId)->get()->getRow()->user_id;
         $this->db->table('users')->where('id', $medicalUserId)->update(['role_id' => Role::PATIENT]);
-        $this->db->table('patients')->insert(['user_id' => $medicalUserId, 'birth_date' => '1980-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $medicalUserId, 'birth_date' => '1980-01-01']);
         $patientId = (int) $this->db->insertID();
 
         $this->expectException(PatientCannotBeMedicalException::class);

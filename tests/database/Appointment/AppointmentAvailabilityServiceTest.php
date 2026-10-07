@@ -4,7 +4,7 @@ use App\Dto\Request\Appointment\AppointmentAvailabilityRequest;
 use App\Exception\Validation\ValidationException;
 use App\Services\Appointment\AppointmentAvailabilityService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -16,7 +16,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null; // corre TODAS las migraciones (App incluida), no solo Tests\Support
@@ -33,7 +33,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
     {
         $roleId = $this->db->table('roles')->insert(['name' => 'medical_role_' . uniqid()]) ? $this->db->insertID() : null;
 
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'medico_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
@@ -43,17 +43,17 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         ]);
         $medicalUserId = $this->db->insertID();
 
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
-        $this->db->table('medicals')->insert([
+        $this->db->table('medicals')->insert(['tenant_id' => 1,
             'user_id'      => $medicalUserId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
         ]);
         $medicalId = $this->db->insertID();
 
-        $this->db->table('services')->insert([
+        $this->db->table('services')->insert(['tenant_id' => 1,
             'name'              => 'Servicio ' . uniqid(),
             'duration_minutes'  => $durationMinutes,
             'buffer_minutes'    => $bufferMinutes,
@@ -61,7 +61,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         ]);
         $serviceId = $this->db->insertID();
 
-        $this->db->table('medical_service')->insert([
+        $this->db->table('medical_service')->insert(['tenant_id' => 1,
             'medical_id'              => $medicalId,
             'service_id'              => $serviceId,
             'custom_duration_minutes' => $customDurationMinutes,
@@ -73,7 +73,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
 
     private function seedSchedule(int $medicalId, int $dayOfWeek, string $startTime, string $endTime): void
     {
-        $this->db->table('medical_schedules')->insert([
+        $this->db->table('medical_schedules')->insert(['tenant_id' => 1,
             'medical_id'  => $medicalId,
             'day_of_week' => $dayOfWeek,
             'start_time'  => $startTime,
@@ -84,7 +84,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
 
     private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): void
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
@@ -93,13 +93,13 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         ]);
         $patientUserId = $this->db->insertID();
 
-        $this->db->table('patients')->insert([
+        $this->db->table('patients')->insert(['tenant_id' => 1,
             'user_id'    => $patientUserId,
             'birth_date' => '1990-01-01',
         ]);
         $patientId = $this->db->insertID();
 
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'fecha'      => $fecha,

@@ -2,7 +2,7 @@
 
 use App\Filters\Auth;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 use Config\Services;
 
 /**
@@ -10,7 +10,7 @@ use Config\Services;
  */
 final class AuthTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -33,7 +33,7 @@ final class AuthTest extends CIUnitTestCase
 
     private function seedUserWithToken(string $token, ?string $tokenExpiration): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name'             => 'user_' . uniqid(),
             'last_name'              => 'Apellido',
             'email'                  => uniqid() . '@test.com',

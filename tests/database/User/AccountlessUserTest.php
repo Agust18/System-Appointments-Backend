@@ -10,7 +10,7 @@ use App\Services\auth\PasswordResetTokenService;
 use App\Services\auth\ResetPasswordService;
 use App\Services\auth\UserLoginService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * Usuarios sin cuenta (users.password NULL): no pueden iniciar sesión y la
@@ -20,7 +20,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class AccountlessUserTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;

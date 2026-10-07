@@ -63,7 +63,7 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
     private function scenario(): array
     {
         [$medicalId, $serviceId] = $this->seedMedicalWithService(30);
-        $this->db->table('medical_schedules')->insert([
+        $this->db->table('medical_schedules')->insert(['tenant_id' => 1,
             'medical_id'  => $medicalId,
             'day_of_week' => 1,
             'start_time'  => '09:00:00',
@@ -100,7 +100,7 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
      */
     private function seedExistingPatient(int $dni = self::DNI, string $email = 'existente@test.com', ?string $phone = self::PHONE): array
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'existente_' . uniqid(),
             'last_name'  => 'Original',
             'email'      => $email,
@@ -111,14 +111,14 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
         ]);
         $userId = (int) $this->db->insertID();
 
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => null]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => null]);
 
         return [$userId, (int) $this->db->insertID()];
     }
 
     private function seedFutureAppointment(int $medicalId, int $serviceId, int $patientId, int $weeksAhead, string $status = 'confirmed'): void
     {
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => $serviceId,
@@ -291,7 +291,7 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
     {
         [$medicalId, $serviceId] = $this->scenario();
         [, $otherPatientId] = $this->seedExistingPatient(30999999, 'otro@test.com', '1144445555');
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $otherPatientId,
             'service_id' => $serviceId,
@@ -350,7 +350,7 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
         $this->seedFutureAppointment($medicalId, $serviceId, $patientId, 3);
         $this->seedFutureAppointment($medicalId, $serviceId, $patientId, 4, 'cancelled');
         $this->seedFutureAppointment($medicalId, $serviceId, $patientId, 5, 'completed');
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => $serviceId,

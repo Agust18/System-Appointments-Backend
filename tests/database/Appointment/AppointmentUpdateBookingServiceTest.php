@@ -206,7 +206,7 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
     {
         // service_id es nullable en la tabla (turno legacy). PrimitiveToAppointmentConverter
         // lo castea a 0 al hidratar la entidad.
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => null,

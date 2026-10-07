@@ -37,7 +37,7 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
 
     private function seedSchedule(int $medicalId, int $dayOfWeek, string $start, string $end): void
     {
-        $this->db->table('medical_schedules')->insert([
+        $this->db->table('medical_schedules')->insert(['tenant_id' => 1,
             'medical_id'  => $medicalId,
             'day_of_week' => $dayOfWeek,
             'start_time'  => $start,

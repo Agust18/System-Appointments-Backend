@@ -4,14 +4,14 @@ use App\Constants\Role;
 use App\Dto\Request\User\UserRequest;
 use App\Services\User\UserCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * @internal
  */
 final class UserCreatorServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;

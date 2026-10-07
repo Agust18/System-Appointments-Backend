@@ -10,7 +10,7 @@ use App\Exception\Email\EmailCannotBeSendedException;
 use App\Services\auth\UserLoginService;
 use App\Services\Patient\PatientPublicRegisterService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * El registro público usa la contraseña del request tanto para un usuario nuevo como
@@ -26,7 +26,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class PatientPublicRegisterServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -60,7 +60,7 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
         int $roleId = Role::PATIENT,
         bool $active = true
     ): int {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name'  => 'reserva_' . uniqid(),
             'last_name'   => 'Publica',
             'email'       => $email,
@@ -113,7 +113,7 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
     public function testAccountlessUserWithExistingPatientDoesNotDuplicatePatients(): void
     {
         $userId = $this->seedAccountless('reserva@test.com');
-        $this->db->table('patients')->insert(['user_id' => $userId]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId]);
 
         $this->registerExpectingEmailFailure($this->registerRequest('reserva@test.com'));
 
@@ -191,7 +191,7 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
 
     public function testAccountHolderIsNotTouchedAndGets409(): void
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'titular_' . uniqid(),
             'last_name'  => 'ConCuenta',
             'email'      => 'titular@test.com',

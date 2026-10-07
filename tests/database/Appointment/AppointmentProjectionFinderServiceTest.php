@@ -3,7 +3,7 @@
 use App\Exception\Appointment\AppointmentNotFoundException;
 use App\Services\Appointment\Projection\AppointmentProjectionFinderService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * Cubre el fix de AppointmentGetController::find(): antes usaba
@@ -15,7 +15,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -30,7 +30,7 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
 
     private function seedAppointment(): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'medico_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
@@ -39,17 +39,17 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
         ]);
         $medicalUserId = $this->db->insertID();
 
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
-        $this->db->table('medicals')->insert([
+        $this->db->table('medicals')->insert(['tenant_id' => 1,
             'user_id'      => $medicalUserId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
         ]);
         $medicalId = $this->db->insertID();
 
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => uniqid() . '@test.com',
@@ -58,13 +58,13 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
         ]);
         $patientUserId = $this->db->insertID();
 
-        $this->db->table('patients')->insert([
+        $this->db->table('patients')->insert(['tenant_id' => 1,
             'user_id'    => $patientUserId,
             'birth_date' => '1990-01-01',
         ]);
         $patientId = $this->db->insertID();
 
-        $this->db->table('services')->insert([
+        $this->db->table('services')->insert(['tenant_id' => 1,
             'name'              => 'Consulta ' . uniqid(),
             'duration_minutes'  => 30,
             'buffer_minutes'    => 0,
@@ -72,7 +72,7 @@ final class AppointmentProjectionFinderServiceTest extends CIUnitTestCase
         ]);
         $serviceId = $this->db->insertID();
 
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => $serviceId,

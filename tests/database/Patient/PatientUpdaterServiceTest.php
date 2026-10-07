@@ -4,7 +4,7 @@ use App\Constants\Role;
 use App\Dto\Request\Patient\PatientUpdateRequest;
 use App\Services\Patient\PatientUpdaterService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * PUT /patients/{id}: recepción puede corregir los datos de contacto del
@@ -14,7 +14,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class PatientUpdaterServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -33,7 +33,7 @@ final class PatientUpdaterServiceTest extends CIUnitTestCase
      */
     private function seedPatient(string $email, int $dni, ?string $phone = null, ?string $password = null): array
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'      => $email,
@@ -44,7 +44,7 @@ final class PatientUpdaterServiceTest extends CIUnitTestCase
         ]);
         $userId = (int) $this->db->insertID();
 
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
 
         return [$userId, (int) $this->db->insertID()];
     }

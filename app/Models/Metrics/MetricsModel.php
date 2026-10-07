@@ -2,6 +2,7 @@
 
 namespace App\Models\Metrics;
 
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
@@ -16,8 +17,8 @@ final class MetricsModel
 
     private function buildDateMedicalWhere(string $dateFrom, string $dateTo, ?int $medicalId): array
     {
-        $parameters = [$dateFrom, $dateTo];
-        $whereQuery = "WHERE A.fecha BETWEEN ? AND ? ";
+        $parameters = [TenantContext::id(), $dateFrom, $dateTo];
+        $whereQuery = "WHERE A.tenant_id = ? AND A.fecha BETWEEN ? AND ? ";
 
         if ($medicalId !== null) {
             $whereQuery .= " AND A.medical_id = ? ";
@@ -40,8 +41,8 @@ final class MetricsModel
                 SUM(CASE WHEN A.status = 'confirmed' AND CONCAT(A.fecha, ' ', A.hora) < NOW() THEN 1 ELSE 0 END) AS noshow,
                 SUM(CASE WHEN A.status = 'completed' THEN COALESCE(MS.custom_price, SRV.price, 0) ELSE 0 END) AS revenue
               FROM appointments A
-              LEFT JOIN services SRV ON SRV.id = A.service_id
-              LEFT JOIN medical_service MS ON MS.medical_id = A.medical_id AND MS.service_id = A.service_id
+              LEFT JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
+              LEFT JOIN medical_service MS ON MS.medical_id = A.medical_id AND MS.service_id = A.service_id AND MS.tenant_id = A.tenant_id
               {$whereQuery}";
 
         return $this->db->query($query, $parameters)->getRow();
@@ -54,13 +55,13 @@ final class MetricsModel
                 SUM(CASE WHEN A.status = 'completed' THEN 1 ELSE 0 END) AS completed,
                 SUM(CASE WHEN A.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
               FROM appointments A
-              INNER JOIN medicals M ON M.id = A.medical_id
-              INNER JOIN users U ON U.id = M.user_id
-              WHERE A.fecha BETWEEN ? AND ?
+              INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
+              INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+              WHERE A.tenant_id = ? AND A.fecha BETWEEN ? AND ?
               GROUP BY M.id, U.first_name, U.last_name
               ORDER BY total DESC";
 
-        return $this->db->query($query, [$dateFrom, $dateTo])->getResult();
+        return $this->db->query($query, [TenantContext::id(), $dateFrom, $dateTo])->getResult();
     }
 
     public function getMonthlyTrend(?int $medicalId, string $dateFrom, string $dateTo): array
@@ -86,7 +87,7 @@ final class MetricsModel
 
         $query = "SELECT SRV.id AS service_id, SRV.name AS service_name, COUNT(*) AS total
               FROM appointments A
-              INNER JOIN services SRV ON SRV.id = A.service_id
+              INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
               {$whereQuery}
               GROUP BY SRV.id, SRV.name
               ORDER BY total DESC
@@ -102,8 +103,8 @@ final class MetricsModel
 
         $query = "SELECT SP.id AS specialty_id, SP.name AS specialty_name, COUNT(*) AS total
               FROM appointments A
-              INNER JOIN medicals M ON M.id = A.medical_id
-              INNER JOIN specialties SP ON SP.id = M.specialty_id
+              INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
+              INNER JOIN specialties SP ON SP.id = M.specialty_id AND SP.tenant_id = M.tenant_id
               {$whereQuery}
               GROUP BY SP.id, SP.name
               ORDER BY total DESC
@@ -135,11 +136,11 @@ final class MetricsModel
                 TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medical_name,
                 SRV.name AS service_name
               FROM appointments A
-              INNER JOIN patients P ON P.id = A.patient_id
-              INNER JOIN users U_pac ON U_pac.id = P.user_id
-              INNER JOIN medicals M ON M.id = A.medical_id
-              INNER JOIN users U_med ON U_med.id = M.user_id
-              LEFT JOIN services SRV ON SRV.id = A.service_id
+              INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
+              INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
+              INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
+              INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
+              LEFT JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
               {$whereQuery}
               ORDER BY A.updated_at DESC, A.id DESC
               LIMIT 10";

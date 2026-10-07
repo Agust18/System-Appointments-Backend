@@ -36,7 +36,7 @@ final class PatientSchemaMigrationTest extends CIUnitTestCase
 
     private function insertUser(): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'usuario_' . uniqid(),
             'last_name'  => 'Prueba',
             'email'      => uniqid() . '@test.com',
@@ -65,7 +65,7 @@ final class PatientSchemaMigrationTest extends CIUnitTestCase
     public function testPatientsBirthDateIsNullable(): void
     {
         $userId = $this->insertUser();
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => null]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => null]);
 
         $this->seeInDatabase('patients', ['user_id' => $userId, 'birth_date' => null]);
     }
@@ -75,10 +75,10 @@ final class PatientSchemaMigrationTest extends CIUnitTestCase
         $this->assertTrue($this->userIdIndexIsUnique());
 
         $userId = $this->insertUser();
-        $this->db->table('patients')->insert(['user_id' => $userId]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId]);
 
         $this->expectException(DatabaseException::class);
-        $this->db->table('patients')->insert(['user_id' => $userId]);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId]);
     }
 
     public function testUpAbortsListingUsersWithMoreThanOnePatientAndChangesNothing(): void
@@ -86,9 +86,9 @@ final class PatientSchemaMigrationTest extends CIUnitTestCase
         $this->db->query('ALTER TABLE patients DROP INDEX uq_patients_user_id');
 
         $userId = $this->insertUser();
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
         $first = (int) $this->db->insertID();
-        $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => '1991-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1991-01-01']);
         $second = (int) $this->db->insertID();
 
         try {

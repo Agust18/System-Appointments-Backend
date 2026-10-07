@@ -2,7 +2,7 @@
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-    bootstrap="vendor/codeigniter4/framework/system/Test/bootstrap.php"
+    bootstrap="tests/bootstrap.php"
     backupGlobals="false"
     beStrictAboutOutputDuringTests="true"
     colors="true"
@@ -60,6 +60,7 @@
              no tocar datos de desarrollo. phpunit debe correr DENTRO del
              contenedor app (docker exec turnero_app vendor/bin/phpunit ...)
              porque el host corre PHP 8.1 y el proyecto requiere 8.2+. -->
+        <env name="tenant.fallbackSlug" value="demo"/>
         <env name="database.tests.hostname" value="db"/>
         <env name="database.tests.database" value="turnero_test"/>
         <env name="database.tests.username" value="turnero_user"/>

@@ -3,7 +3,7 @@
 use App\Exception\Validation\ValidationException;
 use CodeIgniter\Config\Factories;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use CodeIgniter\Test\Mock\MockCache;
 use CodeIgniter\Test\TestResponse;
@@ -24,7 +24,7 @@ use Config\Services;
  */
 final class PublicThrottleEndpointsTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
     use FeatureTestTrait;
 
     protected $refresh = true;

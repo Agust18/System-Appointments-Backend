@@ -77,7 +77,7 @@ final class CorsConfigTest extends CIUnitTestCase
         $config = (new Cors())->default;
 
         $this->assertSame(['GET', 'POST', 'OPTIONS'], $config['allowedMethods']);
-        $this->assertSame(['Content-Type', 'Accept'], $config['allowedHeaders']);
+        $this->assertSame(['Content-Type', 'Accept', 'X-Tenant'], $config['allowedHeaders']);
         $this->assertFalse($config['supportsCredentials']);
     }
 }

@@ -62,7 +62,7 @@ final class AppointmentDeleterServiceTest extends BookingServiceTestCase
     {
         [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
         $patientId = $this->seedPatient();
-        $this->db->table('appointments')->insert([
+        $this->db->table('appointments')->insert(['tenant_id' => 1,
             'medical_id' => $medicalId,
             'patient_id' => $patientId,
             'service_id' => $serviceId,

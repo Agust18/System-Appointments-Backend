@@ -6,14 +6,14 @@ use App\Dto\Request\Medical\MedicalRequest;
 use App\Dto\Request\User\UserRequest;
 use App\Services\Medical\MedicalCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * @internal
  */
 final class MedicalCreatorServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -42,7 +42,7 @@ final class MedicalCreatorServiceTest extends CIUnitTestCase
 
     private function medicalDataRequest(): MedicalDataRequest
     {
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
         return new MedicalDataRequest('MAT-' . uniqid(), $specialtyId);

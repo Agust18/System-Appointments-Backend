@@ -5,6 +5,7 @@ namespace App\Models\Service;
 use App\Converter\Service\PrimitiveToServiceConverter;
 use App\Dto\Request\Service\ServiceFilterRequest;
 use App\Entity\Service\Service;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
@@ -21,10 +22,11 @@ final class ServiceModel
 
     public function insert(Service $service): Service
     {
-        $query = "INSERT INTO services (name, description, duration_minutes, buffer_minutes, price, is_active, created_at, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $query = "INSERT INTO services (tenant_id, name, description, duration_minutes, buffer_minutes, price, is_active, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $this->db->query($query, [
+            TenantContext::id(),
             $service->getName(),
             $service->getDescription(),
             $service->getDurationMinutes(),
@@ -40,9 +42,9 @@ final class ServiceModel
 
     public function update(Service $service): Service
     {
-        $query = "UPDATE services 
-                  SET name = ?, description = ?, duration_minutes = ?, buffer_minutes = ?, price = ?, is_active = ?, updated_at = NOW() 
-                  WHERE id = ?";
+        $query = "UPDATE services
+                  SET name = ?, description = ?, duration_minutes = ?, buffer_minutes = ?, price = ?, is_active = ?, updated_at = NOW()
+                  WHERE id = ? AND tenant_id = ?";
 
         $this->db->query($query, [
             $service->getName(),
@@ -51,7 +53,8 @@ final class ServiceModel
             $service->getBufferMinutes(),
             $service->getPrice(),
             $service->isActive(),
-            $service->getId()
+            $service->getId(),
+            TenantContext::id()
         ]);
 
         return $this->find($service->getId());
@@ -59,8 +62,8 @@ final class ServiceModel
 
     public function find(int $id): ?Service
     {
-        $query = "SELECT * FROM services WHERE id = ?";
-        $result = $this->db->query($query, [$id]);
+        $query = "SELECT * FROM services WHERE id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -72,8 +75,8 @@ final class ServiceModel
 
      public function findByName(string $name): ?Service
     {
-        $query = "SELECT * FROM services WHERE name = ? AND is_active = 1";
-        $result = $this->db->query($query, [$name]);
+        $query = "SELECT * FROM services WHERE name = ? AND is_active = 1 AND tenant_id = ?";
+        $result = $this->db->query($query, [$name, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -85,8 +88,8 @@ final class ServiceModel
 
     public function findAllActive(): array
     {
-        $query = "SELECT * FROM services WHERE is_active = 1 ORDER BY name ASC";
-        $result = $this->db->query($query);
+        $query = "SELECT * FROM services WHERE is_active = 1 AND tenant_id = ? ORDER BY name ASC";
+        $result = $this->db->query($query, [TenantContext::id()]);
         $primitives = $result->getResult();
 
         $services = [];
@@ -129,8 +132,8 @@ final class ServiceModel
 
     private function buildWhereClause(ServiceFilterRequest $request): array
     {
-        $parameters = [];
-        $whereQuery = "WHERE 1 = 1 ";
+        $parameters = [TenantContext::id()];
+        $whereQuery = "WHERE tenant_id = ? ";
 
         if ($request->hasIsActive()) {
             $whereQuery .= " AND is_active = ? ";
@@ -150,14 +153,14 @@ final class ServiceModel
 
     public function delete(int $id): void
     {
-        $query = "UPDATE services SET is_active = 0, updated_at = NOW() WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "UPDATE services SET is_active = 0, updated_at = NOW() WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 
 
     public function hardDelete(int $id): void
     {
-        $query = "DELETE FROM services WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "DELETE FROM services WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 }

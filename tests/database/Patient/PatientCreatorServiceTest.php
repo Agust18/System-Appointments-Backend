@@ -6,14 +6,14 @@ use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
 use App\Services\Patient\PatientCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * @internal
  */
 final class PatientCreatorServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -127,7 +127,7 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
     {
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
 
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'reserva_' . uniqid(),
             'last_name'  => 'Publica',
             'email'      => $email,
@@ -142,7 +142,7 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
         $patientId = 0;
 
         if ($withPatient) {
-            $this->db->table('patients')->insert(['user_id' => $userId, 'birth_date' => null]);
+            $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => null]);
             $patientId = (int) $this->db->insertID();
         }
 
@@ -222,7 +222,7 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
     public function testStaffCreateWithDniOfAnAccountHolderStillReturns409AndChangesNothing(): void
     {
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'titular_' . uniqid(),
             'last_name'  => 'ConCuenta',
             'email'      => 'titular@test.com',
@@ -246,7 +246,7 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
     public function testStaffCreateRejectsAnEmailThatBelongsToAnotherUserAndRollsBack(): void
     {
         [$accountlessId] = $this->seedAccountlessPatient(30123456, 'reserva@test.com', '1144445555');
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'otro_' . uniqid(),
             'last_name'  => 'Usuario',
             'email'      => 'ocupado@test.com',

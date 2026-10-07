@@ -17,28 +17,36 @@ final class NormalizeUserIdentityMigrationTest extends CIUnitTestCase
     protected $namespace = null;
 
     /**
-     * Los tests que simulan un `up()` abortado dejan la base sin el índice y con
-     * DNIs duplicados; el refresh del siguiente test necesita el índice para
-     * poder revertir esta migración.
+     * Con el multitenant (AddTenantIdToUsersAndPatients) el único de DNI del esquema final es
+     * `uq_users_tenant_dni (tenant_id, dni)`; el global `uq_users_dni` solo lo crea el up() de
+     * esta migración cuando se la corre a mano en estos tests.
+     *
+     * Los tests que simulan un `up()` abortado dejan la base sin el índice por Tenant y con DNIs
+     * duplicados; el refresh del siguiente test necesita el esquema final para poder revertir
+     * las migraciones posteriores, así que se lo restaura.
      */
     protected function tearDown(): void
     {
-        if (!$this->dniIndexExists()) {
+        if ($this->indexExists('uq_users_dni')) {
+            $this->db->query('ALTER TABLE users DROP INDEX uq_users_dni');
+        }
+
+        if (!$this->indexExists('uq_users_tenant_dni')) {
             $this->db->query('DELETE FROM users');
-            $this->db->query('ALTER TABLE users ADD UNIQUE KEY uq_users_dni (dni)');
+            $this->db->query('ALTER TABLE users ADD UNIQUE KEY uq_users_tenant_dni (tenant_id, dni)');
         }
 
         parent::tearDown();
     }
 
-    private function dniIndexExists(): bool
+    private function indexExists(string $name): bool
     {
-        return $this->db->query("SHOW INDEX FROM users WHERE Key_name = 'uq_users_dni'")->getResultArray() !== [];
+        return $this->db->query('SHOW INDEX FROM users WHERE Key_name = ?', [$name])->getResultArray() !== [];
     }
 
     private function insertUser(string $email, int $dni, ?string $phone = null): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             // Nombre único: el down() de ReplaceUsernameWithFirstLastName reconstruye
             // users.username (UNIQUE) desde nombre + apellido al refrescar la base.
             'first_name' => 'usuario_' . uniqid(),
@@ -52,9 +60,17 @@ final class NormalizeUserIdentityMigrationTest extends CIUnitTestCase
         return (int) $this->db->insertID();
     }
 
+    /** Simula el estado previo a la migración: sin ningún único sobre el DNI. */
     private function dropDniIndex(): void
     {
-        $this->db->query('ALTER TABLE users DROP INDEX uq_users_dni');
+        $this->db->query('ALTER TABLE users DROP INDEX uq_users_tenant_dni');
+    }
+
+    private function tenantDniIndexIsUnique(): bool
+    {
+        $rows = $this->db->query("SHOW INDEX FROM users WHERE Key_name = 'uq_users_tenant_dni'")->getResultArray();
+
+        return $rows !== [] && (int) $rows[0]['Non_unique'] === 0;
     }
 
     private function dniIndexIsUnique(): bool
@@ -66,7 +82,7 @@ final class NormalizeUserIdentityMigrationTest extends CIUnitTestCase
 
     public function testMigratedSchemaEnforcesUniqueDni(): void
     {
-        $this->assertTrue($this->dniIndexIsUnique());
+        $this->assertTrue($this->tenantDniIndexIsUnique());
 
         $this->insertUser('a@test.com', 30123456);
         $this->expectException(\CodeIgniter\Database\Exceptions\DatabaseException::class);

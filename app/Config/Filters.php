@@ -44,6 +44,7 @@ class Filters extends BaseFilters
         'medicalViewPermission' => \App\Filters\MedicalViewPermission::class,
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
         'throttle' => \App\Filters\Throttle::class,
+        'tenant' => \App\Filters\TenantResolver::class,
         
         
 
@@ -86,6 +87,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            'tenant',
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',

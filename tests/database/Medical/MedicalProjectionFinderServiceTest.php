@@ -6,7 +6,7 @@ use App\Exception\Medical\MedicalNotFoundException;
 use App\Models\Medical\MedicalModel;
 use App\Services\Medical\Projection\MedicalProjectionFinderService;
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
  * Cubre el agregado de `email` a MedicalProjection: el converter es
@@ -19,7 +19,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
  */
 final class MedicalProjectionFinderServiceTest extends CIUnitTestCase
 {
-    use DatabaseTestTrait;
+    use FastDatabaseTestTrait;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -36,7 +36,7 @@ final class MedicalProjectionFinderServiceTest extends CIUnitTestCase
 
     private function seedMedical(string $email): int
     {
-        $this->db->table('users')->insert([
+        $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'medico_' . uniqid(),
             'last_name'  => 'Apellido',
             'email'    => $email,
@@ -45,10 +45,10 @@ final class MedicalProjectionFinderServiceTest extends CIUnitTestCase
         ]);
         $userId = $this->db->insertID();
 
-        $this->db->table('specialties')->insert(['name' => 'Especialidad ' . uniqid()]);
+        $this->db->table('specialties')->insert(['tenant_id' => 1, 'name' => 'Especialidad ' . uniqid()]);
         $specialtyId = $this->db->insertID();
 
-        $this->db->table('medicals')->insert([
+        $this->db->table('medicals')->insert(['tenant_id' => 1,
             'user_id'      => $userId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
