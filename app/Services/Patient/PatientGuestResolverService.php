@@ -13,6 +13,7 @@ use App\Exception\User\UserCannotBeCreatedException;
 use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
 use App\Support\IdentityNormalizer;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Database;
@@ -63,7 +64,7 @@ final class PatientGuestResolverService
             $this->reject('dni_blocked', $request);
         }
 
-        $lockName = sprintf('public_identity_%d', $request->getDni());
+        $lockName = sprintf('public_identity_%d_%d', TenantContext::id(), $request->getDni());
 
         // Serializa las solicitudes concurrentes del mismo DNI (get-or-create).
         if (!$this->acquireLock($lockName)) {

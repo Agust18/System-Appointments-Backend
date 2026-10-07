@@ -40,7 +40,7 @@ Existe además `suite-lenta-refactor-tests.md` (pendiente previo); conviene unif
 | 2, refuerzo de JOINs (Grupos 1 y 2) | 28 JOINs con `AND X.tenant_id = A.tenant_id` | HECHO |
 | 2, Grupo 3 | `appointments`, `user_verification_tokens`, Métricas, recordatorios, seeders | HECHO |
 | 2, cierre | **`DropTenantIdDefaults`** (quitar el `DEFAULT 1` de las 9 tablas) | HECHO (07/10/2026, sección 2) |
-| 3 | Prefijos de clave de cache y locks por Tenant (`public_identity_*`) | PENDIENTE |
+| 3 | Prefijos de clave de cache y locks por Tenant (`public_identity_*`) | HECHO (07/10/2026) |
 | 4 | Configuración por Tenant (`tenant_settings`) y módulos (`tenant_modules`, filtro `module:`) | PENDIENTE |
 | 5 | Panel SuperAdmin (`platform_admins`, rutas `/platform/*`) | PENDIENTE |
 
@@ -109,7 +109,7 @@ Agregar `'tenant_id' => 1` a cada INSERT de test que lo omita (opción A, mecán
 - **Borrado lógico vs físico:** [borrado-logico-vs-fisico.md](borrado-logico-vs-fisico.md): auditoría post-multitenant, para otra sesión.
 - **Conteo y estadísticas de turnos sin JOIN a `services`:** [count-y-stats-de-turnos-sin-join-a-services.md](count-y-stats-de-turnos-sin-join-a-services.md) (total ≠ lista; no es fuga entre Tenants).
 - **Tests de CORS dependen del `.env` local:** [tests-cors-dependen-del-env-local.md](tests-cors-dependen-del-env-local.md) (las 3 `F` conocidas).
-- **Paso 3** (prefijos de clave): `public_identity_failures_{tenantId}_…` y el lock `public_identity_{tenantId}_{dni}`. `appt_lock_{medicalId}_{fecha}` no los necesita.
+- ~~**Paso 3** (prefijos de clave)~~ **hecho (07/10/2026)**: `public_identity_failures_{tenantId}_{sha256(dni)}` y el lock `public_identity_{tenantId}_{dni}`, con tests de aislamiento en `PublicIdentityAttemptLimiterTest` y `PatientGuestResolverServiceTest`. `appt_lock_{medicalId}_{fecha}` no lo necesita (`medicalId` es global) y `Throttle` queda por IP a propósito (un cupo por Tenant le daría uno nuevo al atacante por cada subdominio).
 - **Paso 4:** `reception.email` y `reception.emailEnabled` siguen siendo globales (`.env`) en `AppointmentNotificationService`; pasan a `tenant_settings`.
 - **Filtro `Auth`:** no compara el `tenant_id` del usuario con el del header de forma directa; hoy lo cubre `UserModel::findByToken`, que filtra por Tenant. Revisar al cerrar el Paso 2.
 - **Test de punta a punta** de que los ids de médico/servicio/especialidad en el body de un turno o asignación de otro Tenant se rechazan (hoy lo cubren los Models scopeados, no hay un test integrador).

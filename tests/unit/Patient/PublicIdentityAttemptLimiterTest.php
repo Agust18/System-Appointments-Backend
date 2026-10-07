@@ -1,6 +1,8 @@
 <?php
 
+use App\Entity\Tenant\Tenant;
 use App\Services\Patient\PublicIdentityAttemptLimiter;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Cache\Handlers\DummyHandler;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\Mock\MockCache;
@@ -27,8 +29,15 @@ final class PublicIdentityAttemptLimiterTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
+        $this->actAs(1);
         $this->resetServices();
         parent::tearDown();
+    }
+
+    private function actAs(int $tenantId): void
+    {
+        $slug = $tenantId === 1 ? 'demo' : 'tenant-' . $tenantId;
+        TenantContext::set(new Tenant($tenantId, $slug, 'Tenant', 'active', null, null));
     }
 
     private function recordFailures(int $dni, int $times): void
@@ -87,6 +96,31 @@ final class PublicIdentityAttemptLimiterTest extends CIUnitTestCase
 
         $this->assertFalse($this->limiter->isBlocked(self::DNI));
         $this->assertTrue($this->limiter->isBlocked(30999999));
+    }
+
+    public function testTheSameDniHasIndependentCountersPerTenant(): void
+    {
+        $this->recordFailures(self::DNI, 5);
+        $this->assertTrue($this->limiter->isBlocked(self::DNI));
+
+        $this->actAs(2);
+        $this->assertFalse($this->limiter->isBlocked(self::DNI));
+
+        $this->recordFailures(self::DNI, 4);
+        $this->assertFalse($this->limiter->isBlocked(self::DNI));
+    }
+
+    public function testClearingInOneTenantDoesNotAffectTheOther(): void
+    {
+        $this->recordFailures(self::DNI, 5);
+        $this->actAs(2);
+        $this->recordFailures(self::DNI, 5);
+
+        $this->limiter->clear(self::DNI);
+        $this->assertFalse($this->limiter->isBlocked(self::DNI));
+
+        $this->actAs(1);
+        $this->assertTrue($this->limiter->isBlocked(self::DNI));
     }
 
     public function testItNeverBlocksWhenTheCacheDoesNotWork(): void

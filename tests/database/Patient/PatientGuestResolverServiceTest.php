@@ -2,10 +2,12 @@
 
 use App\Constants\Role;
 use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Entity\Tenant\Tenant;
 use App\Exception\Patient\PublicBookingIdentityException;
 use App\Exception\Patient\PublicIdentityLockTimeoutException;
 use App\Services\Patient\PatientGuestResolverService;
 use App\Services\Patient\PublicIdentityAttemptLimiter;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
 use CodeIgniter\Test\Mock\MockCache;
@@ -101,9 +103,14 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         return (int) $this->db->insertID();
     }
 
-    private function assertIdentityLockReleased(int $dni = self::DNI): void
+    private function lockName(int $tenantId, int $dni): string
     {
-        $row = $this->db->query('SELECT IS_FREE_LOCK(?) AS is_free', ['public_identity_' . $dni])->getRow();
+        return sprintf('public_identity_%d_%d', $tenantId, $dni);
+    }
+
+    private function assertIdentityLockReleased(int $dni = self::DNI, int $tenantId = 1): void
+    {
+        $row = $this->db->query('SELECT IS_FREE_LOCK(?) AS is_free', [$this->lockName($tenantId, $dni)])->getRow();
 
         $this->assertSame(1, (int) $row->is_free, 'El lock por DNI debe quedar liberado.');
     }
@@ -337,7 +344,7 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
     public function testBusyIdentityLockTimesOutWithoutWritingAnything(): void
     {
         $holder = Database::connect('tests', false);
-        $holder->query('SELECT GET_LOCK(?, 0)', ['public_identity_' . self::DNI]);
+        $holder->query('SELECT GET_LOCK(?, 0)', [$this->lockName(1, self::DNI)]);
 
         try {
             $this->resolver->resolve($this->request());
@@ -345,7 +352,7 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         } catch (PublicIdentityLockTimeoutException $e) {
             $this->assertSame(423, $e->getCode());
         } finally {
-            $holder->query('SELECT RELEASE_LOCK(?)', ['public_identity_' . self::DNI]);
+            $holder->query('SELECT RELEASE_LOCK(?)', [$this->lockName(1, self::DNI)]);
             $holder->close();
         }
 
@@ -463,14 +470,45 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
     public function testLockOfOneDniDoesNotBlockAnotherDni(): void
     {
         $holder = Database::connect('tests', false);
-        $holder->query('SELECT GET_LOCK(?, 0)', ['public_identity_' . self::DNI]);
+        $holder->query('SELECT GET_LOCK(?, 0)', [$this->lockName(1, self::DNI)]);
 
         try {
             $patient = $this->resolver->resolve($this->request(30555555, 'otro-dni@test.com'));
             $this->assertNotNull($patient->getId());
         } finally {
+            $holder->query('SELECT RELEASE_LOCK(?)', [$this->lockName(1, self::DNI)]);
+            $holder->close();
+        }
+    }
+
+    public function testIdentityLockOfAnotherTenantDoesNotBlockTheSameDni(): void
+    {
+        $this->db->table('tenants')->insert(['slug' => 'tenant-b', 'name' => 'Tenant B']);
+        $tenantB = (int) $this->db->insertID();
+
+        // Otra conexión retiene el lock del DNI en el Tenant 1, y también el nombre sin Tenant
+        // (legado): si el código volviera a ignorar el Tenant, este test fallaría con 423.
+        $holder = Database::connect('tests', false);
+        $holder->query('SELECT GET_LOCK(?, 0)', [$this->lockName(1, self::DNI)]);
+        $holder->query('SELECT GET_LOCK(?, 0)', ['public_identity_' . self::DNI]);
+
+        TenantContext::set(new Tenant($tenantB, 'tenant-b', 'Tenant B', 'active', null, null));
+
+        try {
+            // Mismo DNI en el Tenant 2: no debe esperar ni lanzar 423.
+            $patient = $this->resolver->resolve($this->request());
+            $this->assertNotNull($patient->getId());
+            $this->assertIdentityLockReleased(self::DNI, $tenantB);
+        } finally {
+            TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
+            $holder->query('SELECT RELEASE_LOCK(?)', [$this->lockName(1, self::DNI)]);
             $holder->query('SELECT RELEASE_LOCK(?)', ['public_identity_' . self::DNI]);
             $holder->close();
+
+            // Limpieza para que el down() del siguiente refresh no falle.
+            $this->db->query('DELETE FROM patients WHERE tenant_id <> 1');
+            $this->db->query('DELETE FROM users WHERE tenant_id <> 1');
+            $this->db->query('DELETE FROM tenants WHERE id <> 1');
         }
     }
 }

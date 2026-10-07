@@ -1,6 +1,8 @@
 <?php
 namespace App\Services\Patient;
 
+use App\Tenancy\TenantContext;
+
 /**
  * Bloqueo por DNI de la reserva pública. El teléfono es el segundo factor que acompaña
  * al DNI; sin un límite se podría adivinar probando teléfonos para un DNI conocido.
@@ -11,7 +13,8 @@ namespace App\Services\Patient;
  * incorrecto". Mientras está bloqueado no se suman fallos, así que el bloqueo vence
  * BLOCK_SECONDS después del último fallo.
  *
- * Se guarda en el cache (nunca el DNI en claro). Si el cache no funciona (handler dummy) no
+ * Se guarda en el cache (nunca el DNI en claro). La clave incluye el Tenant: el DNI solo es único
+ * por Tenant, y el bloqueo de uno no debe afectar al otro. Si el cache no funciona (handler dummy) no
  * bloquea: falla abierto; Throttle avisa en los logs.
  *
  * Costo asumido: alguien puede bloquear a propósito a un paciente real durante una hora.
@@ -44,6 +47,6 @@ final class PublicIdentityAttemptLimiter
 
     private function key(int $dni): string
     {
-        return 'public_identity_failures_' . hash('sha256', (string) $dni);
+        return 'public_identity_failures_' . TenantContext::id() . '_' . hash('sha256', (string) $dni);
     }
 }
