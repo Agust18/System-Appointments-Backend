@@ -7,3 +7,19 @@ Hoy los roles (admin, patient, medical, reception) no se siembran. Hay que inser
 - **Idempotente:** que se pueda correr varias veces sin duplicar (los ids son fijos).
 - **Tests:** los tests de base de datos siembran el rol que necesitan a mano, porque `FastDatabaseTestTrait` vacía `roles` entre tests. No dependen del seeder.
 - **Anotado el 07/10/2026** durante el Platform Admin (Paso 5 del multitenant).
+
+## Desajuste de ids detectado en `turnero_db` (07/10/2026)
+`app/Constants/Role.php` es la fuente de verdad. El RolesSeeder tiene que insertar los roles con **estos ids**:
+
+| id | Constante | Nombre |
+|---|---|---|
+| 1 | `Role::ADMIN` | admin |
+| 2 | `Role::MEDICAL` | medical |
+| 3 | `Role::PATIENT` | patient |
+| 4 | `Role::RECEPTION` | reception |
+
+Hoy `turnero_db` tiene **2 = patient y 3 = medical (invertidos)**. El código usa los ids y no los nombres, así que no rompe nada visible, pero cualquier lugar que muestre o consulte el nombre del rol, o un deploy que siembre desde otra fuente, daría el resultado contrario. `turnero_test` no está afectada: cada test siembra el rol que necesita con el id de la constante.
+
+Al corregirlo:
+- Primero revisar qué usuarios hay con `role_id` 2 y 3 en `turnero_db`: las filas de `users`, `medicals` y `patients` apuntan por id, así que **no se renombra a ciegas** (cambiar los nombres de los ids 2 y 3 es seguro; intercambiar los ids no, por la FK `users.role_id`). Lo más simple es renombrar `roles.name` para que coincida con la constante, sin mover ids.
+- El seeder debe ser idempotente: insertar o actualizar el `name` por `id`.
