@@ -8,6 +8,7 @@ use App\Email\EmailSenderService;
 use App\Entity\Tenant\Tenant;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\Tenant\TenantModel;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Tenancy\TenantContext;
 use Throwable;
 
@@ -81,12 +82,16 @@ final class AppointmentReminderService
         $sent     = 0;
         $failures = [];
 
+        // Una instancia por Tenant: el resolver guarda la fila que lee.
+        $replyTo = (new TenantEmailSettingsResolverService())->replyTo();
+
         foreach ($appointments as $projection) {
             try {
                 ($this->sender)(new EmailRequest(
                     to:      $projection->getEmail(),
                     subject: 'Recordatorio: tenés un turno mañana',
                     body:    $this->renderer->renderReminderBody($projection),
+                    replyTo: $replyTo,
                 ));
                 $sent++;
             } catch (Throwable $e) {

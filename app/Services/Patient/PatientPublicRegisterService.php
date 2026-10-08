@@ -11,6 +11,7 @@ use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
 use App\Services\auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 use CodeIgniter\Database\BaseConnection;
 
 /**
@@ -54,10 +55,12 @@ final class PatientPublicRegisterService
     private PatientCreateValidatorService $patientValidator;
     private PatientToPatientResponseConverter $converter;
     private SendVerificationEmailService $verificationEmailService;
+    private TenantEmailSettingsResolverService $settingsResolver;
     private BaseConnection $db;
 
     public function __construct()
     {
+        $this->settingsResolver = new TenantEmailSettingsResolverService();
         $this->userModel = new UserModel();
         $this->patientModel = new PatientModel();
         $this->patientCreatorService = new PatientCreatorService();
@@ -69,6 +72,9 @@ final class PatientPublicRegisterService
 
     public function register(PatientRequest $request): PatientResponse
     {
+        // Antes de escribir: ambas ramas terminan enviando el link de verificación.
+        $this->settingsResolver->assertFrontendUrlConfigured();
+
         $accountless = $this->findActivatableAccountless($request);
 
         if ($accountless === null) {

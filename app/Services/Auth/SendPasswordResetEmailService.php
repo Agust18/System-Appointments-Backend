@@ -6,25 +6,35 @@ use App\Dto\Request\Email\EmailRequest;
 use App\Email\EmailSenderService;
 use App\Email\User\UserEmailTemplateRendererPassword;
 use App\Entity\User\User;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 
 final class SendPasswordResetEmailService
 {
     private PasswordResetTokenService $tokenService;
-    private EmailSenderService $emailSender;
+    /** @var callable(EmailRequest): mixed */
+    private $sender;
     private UserEmailTemplateRendererPassword $templateRenderer;
+    private TenantEmailSettingsResolverService $settingsResolver;
 
-    public function __construct()
+    /**
+     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
+     *        por defecto envía con EmailSenderService.
+     */
+    public function __construct(?callable $sender = null)
     {
+        $this->settingsResolver = new TenantEmailSettingsResolverService();
         $this->tokenService = new PasswordResetTokenService();
-        $this->emailSender = new EmailSenderService();
+        $this->sender = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
         $this->templateRenderer = new UserEmailTemplateRendererPassword();
     }
 
     public function send(User $user): void
     {
+        // Antes del token: sin frontend_url no se genera uno que quede huérfano.
+        $frontendUrl = $this->settingsResolver->frontendUrl();
+
         $token = $this->tokenService->generateForUser($user->getId());
-        $url = rtrim(env('app.frontendUrl', 'http://localhost:5173'), '/')
-            . '/reset-password?token=' . urlencode($token->getToken());
+        $url = $frontendUrl . '/reset-password?token=' . urlencode($token->getToken());
 
         // Sin contraseña no hay nada que "restablecer": el mismo link sirve para crear la cuenta.
         if ($user->hasAccount()) {
@@ -35,10 +45,11 @@ final class SendPasswordResetEmailService
             $body = $this->templateRenderer->renderAccountActivationBody($user, $url);
         }
 
-        $this->emailSender->send(new EmailRequest(
+        ($this->sender)(new EmailRequest(
             to: $user->getEmail(),
             subject: $subject,
             body: $body,
+            replyTo: $this->settingsResolver->replyTo(),
         ));
     }
 }

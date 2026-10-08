@@ -7,10 +7,12 @@ use App\Dto\Request\User\UserRequest;
 use App\Dto\Request\Auth\UserLoginRequest;
 use App\Exception\Auth\NotVerifiedException;
 use App\Exception\Email\EmailCannotBeSendedException;
+use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
 use App\Services\auth\UserLoginService;
 use App\Services\Patient\PatientPublicRegisterService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
+use Tests\Support\Database\SeedsTenantEmailSettings;
 
 /**
  * El registro público usa la contraseña del request tanto para un usuario nuevo como
@@ -27,6 +29,7 @@ use Tests\Support\Database\FastDatabaseTestTrait;
 final class PatientPublicRegisterServiceTest extends CIUnitTestCase
 {
     use FastDatabaseTestTrait;
+    use SeedsTenantEmailSettings;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -42,6 +45,7 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
 
         $this->service = new PatientPublicRegisterService();
         $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+        $this->seedTenantEmailSettings();
     }
 
     protected function tearDown(): void
@@ -91,6 +95,39 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
         } catch (EmailCannotBeSendedException) {
             // Llegó hasta el envío del email de verificación.
         }
+    }
+
+    public function testWithoutFrontendUrlNewUserIsNotCreated(): void
+    {
+        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['frontend_url' => null]);
+
+        try {
+            $this->service->register($this->registerRequest('nuevo@test.com'));
+            $this->fail('Se esperaba TenantFrontendUrlNotConfiguredException');
+        } catch (TenantFrontendUrlNotConfiguredException $e) {
+            $this->assertSame(500, $e->getCode());
+        }
+
+        $this->seeNumRecords(0, 'users', []);
+        $this->seeNumRecords(0, 'patients', []);
+        $this->seeNumRecords(0, 'user_verification_tokens', []);
+    }
+
+    public function testWithoutFrontendUrlAccountlessUserKeepsNoPasswordAndGetsNoToken(): void
+    {
+        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['frontend_url' => null]);
+        $userId = $this->seedAccountless('reserva@test.com');
+
+        try {
+            $this->service->register($this->registerRequest('reserva@test.com'));
+            $this->fail('Se esperaba TenantFrontendUrlNotConfiguredException');
+        } catch (TenantFrontendUrlNotConfiguredException) {
+            // esperado
+        }
+
+        $this->seeInDatabase('users', ['id' => $userId, 'password' => null]);
+        $this->seeNumRecords(0, 'patients', []);
+        $this->seeNumRecords(0, 'user_verification_tokens', []);
     }
 
     public function testAccountlessUserWithSameEmailGetsThePasswordAndAVerificationEmail(): void

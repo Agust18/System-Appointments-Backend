@@ -50,6 +50,11 @@ final readonly class EmailModel
 
             $mail->addAddress($request->getTo());
 
+            $replyTo = $request->getReplyTo();
+            if ($replyTo !== null && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+                $mail->addReplyTo($replyTo);
+            }
+
             if (!empty($request->getBcc())) {
                 foreach($request->getBcc() as $bcc) {
                     $mail->addBCC($bcc);

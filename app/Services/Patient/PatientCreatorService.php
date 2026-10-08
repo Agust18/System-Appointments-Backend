@@ -16,6 +16,7 @@ use App\Models\User\UserModel;
 use App\Services\auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Patient\Validations\PatientUpdateValidatorService;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Services\User\UserCreatorService;
 use App\Services\User\UserFinderService;
 use App\Services\User\Validations\UserUpdateValidatorService;
@@ -32,10 +33,12 @@ final class PatientCreatorService
     private UserCreatorService $userCreatorService;
     private UserFinderService $userFinderService;
     private SendVerificationEmailService $emailVerificationService;
+    private TenantEmailSettingsResolverService $settingsResolver;
     private BaseConnection $db;
 
     public function __construct()
     {
+        $this->settingsResolver = new TenantEmailSettingsResolverService();
         $this->patientModel = new PatientModel();
         $this->userModel = new UserModel();
         $this->converter = new PatientToPatientResponseConverter();
@@ -57,6 +60,12 @@ final class PatientCreatorService
         }
         if ($requestedRole !== Role::PATIENT) {
             throw new RoleMismatchException();
+        }
+
+        // Antes de escribir: sin frontend_url el email de verificación no se puede armar y
+        // el usuario quedaría creado sin poder verificarse.
+        if (!$isVerified) {
+            $this->settingsResolver->assertFrontendUrlConfigured();
         }
 
         $this->db->transBegin();

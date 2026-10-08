@@ -113,6 +113,24 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         $this->assertSame(['paciente-a@test.com', 'paciente-b@test.com'], $this->sentTo);
     }
 
+    public function testEachTenantRemindersCarryItsOwnReplyTo(): void
+    {
+        $tenantB = $this->createTenant('tenant-b');
+        $this->seedTenantWithAppointment($tenantB, 'b');
+        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['reply_to_email' => 'a@clinica.test']);
+        $this->db->table('tenant_settings')->insert(['tenant_id' => $tenantB, 'name' => 'B', 'reception_email' => 'recepcion-b@clinica.test']);
+
+        $replyTo = [];
+        $this->service(function (EmailRequest $request) use (&$replyTo): void {
+            $replyTo[$request->getTo()] = $request->getReplyTo();
+        })->sendToAllActiveTenants();
+
+        $this->assertSame([
+            'paciente-a@test.com' => 'a@clinica.test',
+            'paciente-b@test.com' => 'recepcion-b@clinica.test',
+        ], $replyTo);
+    }
+
     public function testSuspendedTenantsAreSkipped(): void
     {
         $this->seedTenantWithAppointment($this->createTenant('suspendido', TenantStatus::SUSPENDED), 's');

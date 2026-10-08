@@ -1,6 +1,6 @@
 # FRONTEND_URL por Tenant en los emails de verificación y de reset
 
-- **Estado:** pendiente (Paso 4 del multitenant). **Es un bug de producción, no de desarrollo.**
+- **Estado:** RESUELTO (08/10/2026, Paso 4.2). Los links usan `tenant_settings.frontend_url` (`TenantEmailSettingsResolverService`), sin respaldo en el `.env`: sin él, 500 antes de generar el token y antes de crear usuario en el registro. Pendiente menor: los avisos de turno y recordatorios no arman URLs absolutas (revisado). El texto de abajo es el historial.
 - **Repo:** backend (y frontend, que debe leer el Tenant del subdominio)
 - **Esfuerzo:** medio
 - **Fecha:** 06/10/2026

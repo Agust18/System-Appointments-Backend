@@ -18,38 +18,20 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
     /** @var list<EmailRequest> */
     private array $sent = [];
 
-    private array $previousEnv = [];
-
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->sent = [];
-        foreach (['reception.email', 'reception.emailEnabled'] as $key) {
-            $this->previousEnv[$key] = [$_ENV[$key] ?? null, $_SERVER[$key] ?? null];
-            unset($_ENV[$key], $_SERVER[$key]);
-        }
     }
 
-    protected function tearDown(): void
+    private function configureReception(?string $email, bool $enabled = true, ?string $replyTo = null, int $tenantId = 1): void
     {
-        foreach ($this->previousEnv as $key => [$env, $server]) {
-            unset($_ENV[$key], $_SERVER[$key]);
-            if ($env !== null) {
-                $_ENV[$key] = $env;
-            }
-            if ($server !== null) {
-                $_SERVER[$key] = $server;
-            }
-        }
-
-        parent::tearDown();
-    }
-
-    private function setEnv(string $key, string $value): void
-    {
-        $_ENV[$key]    = $value;
-        $_SERVER[$key] = $value;
+        $this->db->table('tenant_settings')->where('tenant_id', $tenantId)->update([
+            'reception_email'         => $email,
+            'reception_email_enabled' => $enabled ? 1 : 0,
+            'reply_to_email'          => $replyTo,
+        ]);
     }
 
     private function service(?callable $sender = null): AppointmentNotificationService
@@ -81,7 +63,7 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
 
     public function testPublicCreateNotifiesPatientAndReception(): void
     {
-        $this->setEnv('reception.email', self::RECEPTION);
+        $this->configureReception(self::RECEPTION);
         $id = $this->seedAppointmentForPatient();
 
         $this->service()->notifyOnPublicCreate($id);
@@ -104,8 +86,7 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
 
     public function testPublicCreateWithReceptionDisabledOnlyNotifiesPatient(): void
     {
-        $this->setEnv('reception.email', self::RECEPTION);
-        $this->setEnv('reception.emailEnabled', 'false');
+        $this->configureReception(self::RECEPTION, false);
         $id = $this->seedAppointmentForPatient();
 
         $this->service()->notifyOnPublicCreate($id);
@@ -113,9 +94,42 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
         $this->assertSame(['Tu turno fue creado y confirmado'], $this->subjects());
     }
 
+    public function testReceptionIsReadFromItsOwnTenantSettings(): void
+    {
+        $this->db->table('tenants')->insert(['slug' => 'otro', 'name' => 'Otro', 'status' => 'active']);
+        $otherId = $this->db->insertID();
+        $this->db->table('tenant_settings')->insert(['tenant_id' => $otherId, 'name' => 'Otro', 'reception_email' => 'otra@clinica.test']);
+        $this->configureReception(self::RECEPTION);
+        $id = $this->seedAppointmentForPatient();
+
+        $this->service()->notifyOnPublicCreate($id);
+
+        $this->assertSame(self::RECEPTION, $this->sent[1]->getTo());
+        $this->db->query('DELETE FROM tenant_settings WHERE tenant_id = ?', [$otherId]);
+        $this->db->query('DELETE FROM tenants WHERE id = ?', [$otherId]);
+    }
+
+    public function testEveryEmailCarriesTheTenantReplyToFallingBackToReception(): void
+    {
+        $this->configureReception(self::RECEPTION, true, 'respuestas@clinica.test');
+        $id = $this->seedAppointmentForPatient();
+        $this->service()->notifyOnPublicCreate($id);
+        $this->assertSame(['respuestas@clinica.test', 'respuestas@clinica.test'], array_map(static fn (EmailRequest $r) => $r->getReplyTo(), $this->sent));
+
+        $this->sent = [];
+        $this->configureReception(self::RECEPTION);
+        $this->service()->notifyOnCreate($id);
+        $this->assertSame([self::RECEPTION], array_map(static fn (EmailRequest $r) => $r->getReplyTo(), $this->sent));
+
+        $this->sent = [];
+        $this->configureReception(null);
+        $this->service()->notifyOnCreate($id);
+        $this->assertSame([null], array_map(static fn (EmailRequest $r) => $r->getReplyTo(), $this->sent));
+    }
+
     public function testPublicCreateIgnoresNonConfirmedAppointments(): void
     {
-        $this->setEnv('reception.email', self::RECEPTION);
+        $this->configureReception(self::RECEPTION);
         $id = $this->seedAppointmentForPatient('pending');
 
         $this->service()->notifyOnPublicCreate($id);
@@ -125,7 +139,7 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
 
     public function testFailureSendingToPatientDoesNotPreventReceptionEmail(): void
     {
-        $this->setEnv('reception.email', self::RECEPTION);
+        $this->configureReception(self::RECEPTION);
         $id = $this->seedAppointmentForPatient();
         $attempts = [];
 
@@ -141,7 +155,7 @@ final class AppointmentNotificationServiceTest extends BookingServiceTestCase
 
     public function testStandardCreateKeepsOriginalBehaviourWithoutReceptionEmail(): void
     {
-        $this->setEnv('reception.email', self::RECEPTION);
+        $this->configureReception(self::RECEPTION);
         $id = $this->seedAppointmentForPatient();
 
         $this->service()->notifyOnCreate($id);

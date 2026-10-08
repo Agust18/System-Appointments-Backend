@@ -40,6 +40,16 @@ porque nadie validó los datos ingresados. Los usuarios creados por
 admin/recepción (tanto `Patient` como `Medical`) ya fueron validados por el
 consultorio, así que nacen verificados y no requieren el paso extra.
 
+## Configuración por Tenant (`TenantEmailSettingsResolverService`)
+
+`app/Services/Tenant/TenantEmailSettingsResolverService` es el único lugar que lee `tenant_settings` para emails (Tenant del `TenantContext`; una instancia por Tenant). Los Services no leen `env()` para esto.
+
+- **`frontendUrl()`**: `frontend_url` del Tenant + `/verify-email?token=` o `/reset-password?token=`. **Sin respaldo en el `.env`**: si falta, `TenantFrontendUrlNotConfiguredException` (500) y se resuelve **antes** de generar el token (no queda huérfano). `PatientCreatorService::create()` (solo `!$isVerified`) y `PatientPublicRegisterService::register()` llaman antes a `assertFrontendUrlConfigured()`, así que sin `frontend_url` responden 500 sin crear usuario ni paciente.
+- **`replyTo()`**: `reply_to_email` → `reception_email` → ninguno (sin header; el cliente responde al From = `EMAIL_FROM`). Va en **todos** los emails del Tenant (verificación, reset, avisos de turno, recordatorios). `reception_email` cuenta aunque el aviso a recepción esté desactivado. `EmailRequest::$replyTo` / `EmailModel::addReplyTo()`; un valor inválido se ignora.
+- El SMTP y el From siguen siendo únicos de la plataforma (`EMAIL_*`).
+- Un Tenant nuevo nace con `frontend_url` NULL: hay que cargarlo con `PUT /platform/tenants/{id}/settings` antes de que sus usuarios se registren o pidan reset.
+- Tests: los que llegan a esos envíos siembran la config con `Tests\Support\Database\SeedsTenantEmailSettings`.
+
 ## Avisos de turnos (`AppointmentNotificationService`)
 
 | Método | Quién lo llama | Emails |
@@ -51,9 +61,9 @@ Un turno público se identifica por el servicio que lo crea, no por un campo ni 
 (un turno de admin también puede nacer `confirmed`). El email al paciente va al email
 **guardado** en su usuario, no al que se tipeó en el formulario. Flujo completo en `public-booking.md`.
 
-Config de recepción en el `.env`:
-- `reception.email`: destinatario. Si falta, no se envía y se loguea un `warning`.
-- `reception.emailEnabled`: `false` desactiva el aviso (por defecto `true`).
+Config de recepción en `tenant_settings` (por Tenant, ya no en el `.env`), vía `TenantEmailSettingsResolverService`:
+- `reception_email`: destinatario. Si falta, no se envía y se loguea un `warning`.
+- `reception_email_enabled`: `false` desactiva el aviso (por defecto `true`).
 
 Cada envío pasa por `sendSafely()`: un fallo se loguea y no corta la reserva ni el otro email.
 El constructor acepta un `?callable $sender` como punto de observación en tests (por defecto usa `EmailSenderService`).

@@ -6,30 +6,41 @@ use App\Dto\Request\Email\EmailRequest;
 use App\Email\EmailSenderService;
 use App\Email\User\UserEmailTemplateRenderer;
 use App\Entity\User\User;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 
 final class SendVerificationEmailService
 {
     private EmailVerificationTokenService $tokenService;
-    private EmailSenderService $emailSender;
+    /** @var callable(EmailRequest): mixed */
+    private $sender;
     private UserEmailTemplateRenderer $templateRenderer;
+    private TenantEmailSettingsResolverService $settingsResolver;
 
-    public function __construct()
+    /**
+     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
+     *        por defecto envía con EmailSenderService.
+     */
+    public function __construct(?callable $sender = null)
     {
+        $this->settingsResolver = new TenantEmailSettingsResolverService();
         $this->tokenService = new EmailVerificationTokenService();
-        $this->emailSender = new EmailSenderService();
+        $this->sender = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
         $this->templateRenderer = new UserEmailTemplateRenderer();
     }
 
     public function send(User $user): void
     {
-        $token = $this->tokenService->generateForUser($user->getId());
-        $url = rtrim(env('app.frontendUrl', 'http://localhost:5173'), '/')
-            . '/verify-email?token=' . urlencode($token->getToken());
+        // Antes del token: sin frontend_url no se genera uno que quede huérfano.
+        $frontendUrl = $this->settingsResolver->frontendUrl();
 
-        $this->emailSender->send(new EmailRequest(
+        $token = $this->tokenService->generateForUser($user->getId());
+        $url = $frontendUrl . '/verify-email?token=' . urlencode($token->getToken());
+
+        ($this->sender)(new EmailRequest(
             to: $user->getEmail(),
             subject: 'Verificá tu cuenta',
             body: $this->templateRenderer->renderVerificationBody($user, $url),
+            replyTo: $this->settingsResolver->replyTo(),
         ));
     }
 }

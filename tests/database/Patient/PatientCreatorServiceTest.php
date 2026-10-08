@@ -4,9 +4,11 @@ use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
+use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
 use App\Services\Patient\PatientCreatorService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
+use Tests\Support\Database\SeedsTenantEmailSettings;
 
 /**
  * @internal
@@ -14,6 +16,7 @@ use Tests\Support\Database\FastDatabaseTestTrait;
 final class PatientCreatorServiceTest extends CIUnitTestCase
 {
     use FastDatabaseTestTrait;
+    use SeedsTenantEmailSettings;
 
     protected $refresh = true;
     protected $namespace = null;
@@ -23,7 +26,35 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seedTenantEmailSettings();
         $this->service = new PatientCreatorService();
+    }
+
+    public function testPublicCreateWithoutFrontendUrlFailsWith500AndWritesNothing(): void
+    {
+        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['frontend_url' => null]);
+
+        try {
+            $this->service->create(new PatientRequest($this->userRequest(Role::PATIENT), $this->patientDataRequest()), false);
+            $this->fail('Se esperaba TenantFrontendUrlNotConfiguredException');
+        } catch (TenantFrontendUrlNotConfiguredException $e) {
+            $this->assertSame(500, $e->getCode());
+        }
+
+        $this->seeNumRecords(0, 'users', []);
+        $this->seeNumRecords(0, 'patients', []);
+        $this->seeNumRecords(0, 'user_verification_tokens', []);
+    }
+
+    public function testStaffCreateDoesNotNeedFrontendUrl(): void
+    {
+        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['frontend_url' => null]);
+        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+
+        $response = $this->service->create(new PatientRequest($this->userRequest(Role::PATIENT), $this->patientDataRequest()), true);
+
+        $this->assertNotNull($response->userId);
+        $this->seeNumRecords(1, 'users', []);
     }
 
     private function userRequest(?int $roleId): UserRequest

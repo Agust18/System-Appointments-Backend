@@ -9,11 +9,13 @@ use App\Email\EmailSenderService;
 use App\Entity\Appointment\Appointment;
 use App\Entity\Appointment\Projection\AppointmentProjection;
 use App\Models\Appointment\AppointmentModel;
+use App\Services\Tenant\TenantEmailSettingsResolverService;
 
 final class AppointmentNotificationService
 {
     private AppointmentModel $appointmentModel;
     private AppointmentEmailTemplateRenderer $renderer;
+    private TenantEmailSettingsResolverService $settingsResolver;
     /** @var callable(EmailRequest): mixed */
     private $sender;
 
@@ -25,7 +27,8 @@ final class AppointmentNotificationService
     {
         $this->appointmentModel = new AppointmentModel();
         $this->renderer         = new AppointmentEmailTemplateRenderer();
-        $this->sender           = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
+        $this->settingsResolver = new TenantEmailSettingsResolverService();
+        $this->sender          = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
     }
 
     public function notifyOnCreate(int $appointmentId): void
@@ -36,7 +39,7 @@ final class AppointmentNotificationService
         }
 
         $body = $this->renderer->renderConfirmedBody($projection);
-        $this->sendSafely(new EmailRequest(
+        $this->sendSafely($this->buildRequest(
             to:      $projection->getEmail(),
             subject: 'Tu turno fue confirmado',
             body:    $body,
@@ -54,7 +57,7 @@ final class AppointmentNotificationService
             return;
         }
 
-        $this->sendSafely(new EmailRequest(
+        $this->sendSafely($this->buildRequest(
             to:      $projection->getEmail(),
             subject: 'Tu turno fue creado y confirmado',
             body:    $this->renderer->renderConfirmedBody($projection),
@@ -65,18 +68,17 @@ final class AppointmentNotificationService
 
     private function notifyReception(AppointmentProjection $projection): void
     {
-        $enabled = filter_var(env('reception.emailEnabled', true), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
-        if (!$enabled) {
+        if (!$this->settingsResolver->isReceptionEmailEnabled()) {
             return;
         }
 
-        $receptionEmail = trim((string) env('reception.email', ''));
-        if ($receptionEmail === '') {
+        $receptionEmail = $this->settingsResolver->receptionEmail();
+        if ($receptionEmail === null) {
             log_message('warning', 'reception.email no está configurado: no se avisó a recepción del turno ' . $projection->getId() . '.');
             return;
         }
 
-        $this->sendSafely(new EmailRequest(
+        $this->sendSafely($this->buildRequest(
             to:      $receptionEmail,
             subject: 'Nuevo turno agendado',
             body:    $this->renderer->renderReceptionNewAppointmentBody($projection),
@@ -94,7 +96,7 @@ final class AppointmentNotificationService
                 return;
             }
             $body = $this->renderer->renderCancelledBody($projection);
-            $this->sendSafely(new EmailRequest(
+            $this->sendSafely($this->buildRequest(
                 to:      $projection->getEmail(),
                 subject: 'Tu turno fue cancelado',
                 body:    $body,
@@ -108,7 +110,7 @@ final class AppointmentNotificationService
                 return;
             }
             $body = $this->renderer->renderConfirmedBody($projection);
-            $this->sendSafely(new EmailRequest(
+            $this->sendSafely($this->buildRequest(
                 to:      $projection->getEmail(),
                 subject: 'Tu turno fue confirmado',
                 body:    $body,
@@ -126,12 +128,17 @@ final class AppointmentNotificationService
                 return;
             }
             $body = $this->renderer->renderRescheduledBody($projection);
-            $this->sendSafely(new EmailRequest(
+            $this->sendSafely($this->buildRequest(
                 to:      $projection->getEmail(),
                 subject: 'Tu turno fue reprogramado',
                 body:    $body,
             ));
         }
+    }
+
+    private function buildRequest(string $to, string $subject, string $body): EmailRequest
+    {
+        return new EmailRequest(to: $to, subject: $subject, body: $body, replyTo: $this->settingsResolver->replyTo());
     }
 
     /**
