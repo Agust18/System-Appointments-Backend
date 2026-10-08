@@ -32,6 +32,16 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 
+// Configuración pública del Tenant (nombre; luego branding y módulos) para la pantalla de login, por eso
+// SIN 'auth' (excepción acordada a la regla de las rutas de Tenant). Solo devuelve campos seguros para publicar.
+// Igual que /public/*: 'cors' antes que 'throttle' y OPTIONS para el preflight.
+$routes->group('tenant', static function ($routes) use ($publicRead) {
+    $routes->options('(:any)', static function () {
+    }, ['filter' => 'cors']);
+
+    $routes->get('config', 'Tenant\TenantConfigGetController::find', $publicRead);
+});
+
 // Panel de plataforma (SuperAdmin, sin Tenant). El filtro global 'tenant' NO corre acá (ver Filters.php).
 // 'platformAdminOnly' REEMPLAZA a 'auth': valida el token contra platform_admin_tokens, no contra users.
 // 'cors:platform' usa el perfil Config\Cors::$platform (PUT y Authorization) y va antes que el resto, para
@@ -49,6 +59,10 @@ $routes->group('platform', static function ($routes) use ($platformLogin, $platf
     $routes->get('tenants', 'Platform\TenantsGetController::search', $platformPrivate);
     $routes->post('tenants', 'Platform\TenantPostController::create', $platformPrivate);
     $routes->put('tenants/(:num)', 'Platform\TenantPutController::do/$1', $platformPrivate);
+
+    // Configuración de cada Tenant (emails, URL del frontend). Solo la edita el panel: no hay PUT /tenant/config.
+    $routes->get('tenants/(:num)/settings', 'Platform\TenantSettingsGetController::find/$1', $platformPrivate);
+    $routes->put('tenants/(:num)/settings', 'Platform\TenantSettingsPutController::do/$1', $platformPrivate);
 });
 
 //Users

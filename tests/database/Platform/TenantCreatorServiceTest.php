@@ -162,6 +162,23 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->assertSame($tenants, $this->countRows('tenants'));
         $this->assertNull((new TenantModel())->findBySlug('clinica-sur'));
         $this->assertSame(0, $this->countRows('users'));
+        // La fila de settings se inserta antes que el ADMIN: el rollback también la deshace (solo queda la de demo).
+        $this->assertSame(1, $this->countRows('tenant_settings'));
+    }
+
+    public function testCreatesTheSettingsRowWithDefaults(): void
+    {
+        $this->seedAdminRole();
+
+        $response = (new TenantCreatorService())->create($this->request());
+
+        $row = $this->db->query('SELECT * FROM tenant_settings WHERE tenant_id = ?', [$response->id])->getRow();
+        $this->assertNotNull($row);
+        $this->assertSame('Clínica Sur', $row->name);
+        $this->assertNull($row->reply_to_email);
+        $this->assertNull($row->frontend_url);
+        $this->assertNull($row->reception_email);
+        $this->assertSame('1', (string) $row->reception_email_enabled);
     }
 
     public function testContextIsRestoredEvenWhenCreationFails(): void

@@ -72,7 +72,8 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Los tests usan FastDatabaseTestTrait para no rehacer migraciones.
 - No consultar tablas con `tenant_id` sin filtro (excepto en tests de aislamiento).
 - `/platform/*` (SuperAdmin) **no tiene Tenant**: el filtro global `tenant` está exceptuado en `Filters.php` y se autentica con `platformAdminOnly`, que reemplaza a `auth`. Un token de usuario no entra ahí y uno de plataforma no entra a las rutas de Tenant. Las tablas `platform_admins` y `platform_admin_tokens` son globales.
-- Toda ruta nueva de Tenant debe llevar `auth`; `PlatformRoutesTest` falla si queda una sin `auth` o sin `tenant`.
+- Toda ruta nueva de Tenant debe llevar `auth`; `PlatformRoutesTest` falla si queda una sin `auth` o sin `tenant`. Excepción acordada: `GET /tenant/config` (pública para el login; `cors` + `throttle:60,60`; solo devuelve `slug` y `name`, nunca emails ni `frontend_url`).
+- Configuración por Tenant: tabla `tenant_settings` (1:1, PK `tenant_id`), `TenantSettingsModel` lee con `TenantContext`. `TenantCreatorService` crea la fila en la misma transacción del alta.
 
 
 ---

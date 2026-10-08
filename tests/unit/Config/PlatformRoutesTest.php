@@ -38,6 +38,8 @@ final class PlatformRoutesTest extends CIUnitTestCase
             'listar'                => ['GET', 'platform/tenants'],
             'crear'                 => ['POST', 'platform/tenants'],
             'suspender / reactivar' => ['PUT', 'platform/tenants/7'],
+            'leer settings'         => ['GET', 'platform/tenants/7/settings'],
+            'editar settings'       => ['PUT', 'platform/tenants/7/settings'],
         ];
     }
 
@@ -102,10 +104,31 @@ final class PlatformRoutesTest extends CIUnitTestCase
         $this->assertContains('tenant', $this->before('GET', 'public/specialties'));
     }
 
+    public function testTenantConfigIsPublicButCorsAndThrottledAndHasTenant(): void
+    {
+        $before = $this->before('GET', 'tenant/config');
+
+        $this->assertContains('tenant', $before);
+        $this->assertNotContains('auth', $before);
+        $this->assertNotContains('platformAdminOnly', $before);
+        $this->assertContains('cors', $before);
+        $this->assertContains('throttle:60,60', $before);
+        $this->assertLessThan(array_search('throttle:60,60', $before, true), array_search('cors', $before, true));
+    }
+
+    public function testTheTenantCannotEditItsOwnConfig(): void
+    {
+        // La configuración la carga solo el panel (/platform/tenants/{id}/settings): GET es la única ruta de tenant/config.
+        foreach (['POST', 'PUT', 'DELETE', 'PATCH'] as $method) {
+            $this->assertSame(['<unknown>'], $this->before($method, 'tenant/config'), "{$method} tenant/config no debe existir");
+        }
+    }
+
     public function testNoTenantRouteWasLeftWithoutItsAuthFilter(): void
     {
         // Todo lo que no es /public, /platform ni un flujo de acceso (login, registro, verificación y reset) debe pasar por 'auth'.
-        $open = ['/', 'login', 'patients/register', 'verify-email', 'resend-verification', 'forgot-password', 'reset-password'];
+        // 'tenant/config' es pública a propósito (la lee el login); su exención se revisa en testTenantConfigIsPublicButCorsAndThrottled.
+        $open = ['/', 'login', 'patients/register', 'verify-email', 'resend-verification', 'forgot-password', 'reset-password', 'tenant/config'];
         $checked = 0;
 
         foreach (['GET', 'POST', 'PUT', 'DELETE'] as $verb) {

@@ -55,6 +55,7 @@ trait FastDatabaseTestTrait
                 }
             }
             $this->db->query("INSERT INTO tenants (id, slug, name, status) VALUES (1, 'demo', 'Demo', 'active')");
+            $this->db->query("INSERT INTO tenant_settings (tenant_id, name) VALUES (1, 'Demo')");
         } finally {
             $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
         }

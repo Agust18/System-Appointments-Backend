@@ -41,7 +41,7 @@ Existe además `suite-lenta-refactor-tests.md` (pendiente previo); conviene unif
 | 2, Grupo 3 | `appointments`, `user_verification_tokens`, Métricas, recordatorios, seeders | HECHO |
 | 2, cierre | **`DropTenantIdDefaults`** (quitar el `DEFAULT 1` de las 9 tablas) | HECHO (07/10/2026, sección 2) |
 | 3 | Prefijos de clave de cache y locks por Tenant (`public_identity_*`) | HECHO (07/10/2026) |
-| 4 | Configuración por Tenant (`tenant_settings`) y módulos (`tenant_modules`, filtro `module:`) | PENDIENTE |
+| 4 | Configuración por Tenant (`tenant_settings`) y módulos (`tenant_modules`, filtro `module:`) | EN CURSO. 4.1 HECHO (08/10/2026): tabla `tenant_settings` (migración `2026-10-07-110000`, con backfill), creada en el alta del Tenant, `GET /tenant/config` público (`{slug, name}`). 4.1b HECHO: `GET/PUT /platform/tenants/{id}/settings` (platformAdminOnly; el cliente no edita su config). Siguen: 2 emails desde settings (Reply-To: `reply_to_email` → `reception_email` → `EMAIL_FROM`), 3 email al primer ADMIN, 4 módulos, 5 branding |
 | 5 | Panel SuperAdmin mínimo (`platform_admins`, `platform_admin_tokens`, `/platform/*`: login, listar, crear y suspender Tenants) | HECHO (07/10/2026, ver `.claude/rules/platform-admin.md`). Falta: módulos y configuración por Tenant (Paso 4) y el email al primer ADMIN |
 
 Numeración: el **Paso 3 son los prefijos de clave**; el **panel de administración es el Paso 5**.
@@ -115,6 +115,8 @@ Agregar `'tenant_id' => 1` a cada INSERT de test que lo omita (opción A, mecán
 - **Test de punta a punta** de que los ids de médico/servicio/especialidad en el body de un turno o asignación de otro Tenant se rechazan (hoy lo cubren los Models scopeados, no hay un test integrador).
 - **Seeders del dashboard** (excluidos de git en `.git/info/exclude`, solo locales): los cambios y `DashboardSeedersTenantTest` (que se saltea si el seeder no existe) viven solo en esta copia. El seeder imprime "Sembrado OK" aunque los INSERT fallen en silencio dentro de la transacción (previo al multitenant).
 - **`AppointmentModel::update()`** declara `Appointment` pero devuelve `find()` (nullable): actualizar un turno ajeno lanza `TypeError` en vez de null; hoy los Services cortan antes con 404.
+
+- **Limitaciones de `tenant_settings` (08/10/2026):** (1) un Tenant creado con `INSERT` directo en `tenants`, sin pasar por `TenantCreatorService`, no tiene fila de settings y `GET /tenant/config` responde 500 (`TenantSettingsNotFoundException`); el alta y el backfill de la migración siempre la crean. (2) `tenant_settings.name` (visible) y `tenants.name` (interno del panel) son dos nombres a propósito y no se sincronizan; si hiciera falta, la sincronización iría en `PUT /platform/tenants/{id}`.
 
 ## 6. Estado del repositorio
 - **Nada está commiteado.** Hay ~55 cambios entre modificados y sin versionar (lista con `git status`).

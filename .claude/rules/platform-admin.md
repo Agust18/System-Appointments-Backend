@@ -12,7 +12,11 @@ Código: `app/Controllers/Platform/`, `app/Services/Platform/` (+ `Tenant/`), `a
 | `GET /platform/tenants` | `cors:platform`, `platformAdminOnly` | `{data, total}`; filtros `search` (nombre o slug), `status`, `page`, `size` |
 | `POST /platform/tenants` | idem | `201`. Crea el Tenant **y su primer ADMIN** en una transacción |
 | `PUT /platform/tenants/{id}` | idem | Cambia `name` y/o `status` (`active`/`suspended`). Suspender y reactivar son el mismo PUT |
+| `GET /platform/tenants/{id}/settings` | idem | Configuración completa del Tenant (`tenant_settings`): `name` visible, `replyToEmail`, `frontendUrl`, `receptionEmail`, `receptionEmailEnabled`. `404` si el Tenant no existe |
+| `PUT /platform/tenants/{id}/settings` | idem | Edita esa configuración. Campo ausente = sin cambio; `null`/`""` limpia `replyToEmail`, `frontendUrl` y `receptionEmail` (`name` y `receptionEmailEnabled` no se limpian). Body sin campos = `422`. Funciona con Tenants suspendidos |
 | `OPTIONS /platform/*` | `cors:platform` | Preflight |
+
+**El cliente no edita su configuración**: no existe `PUT /tenant/config`; solo `GET /tenant/config` (público, `{slug, name}`). `frontendUrl` se valida con `App\Tenancy\FrontendUrl`: solo origen `https://host[:puerto]` (`http` fuera de producción), sin userinfo, path, query ni fragment; se guarda con el host en minúsculas y sin `/` final. `TenantSettingsModel::findByTenantId()/update()` reciben el id explícito (el panel no tiene `TenantContext`) y filtran por `tenant_id`. Pendiente: restringir el host al dominio de la plataforma si el cliente llegara a editar su config.
 
 No hay `DELETE` ni `PATCH`: los datos de un Tenant se conservan. El `slug` **no se modifica** (es el subdominio y el valor de `X-Tenant`).
 
@@ -45,6 +49,7 @@ Body: `slug`, `name`, `adminFirstName`, `adminLastName`, `adminEmail`, `adminDni
 
 1. Pre-valida fuera de la transacción: slug con formato de subdominio (`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`, máx. 63), no reservado (`TenantCreateValidatorService::RESERVED_SLUGS`: `422`) y no repetido (`409`).
 2. Una sola transacción (`UserCreatorService` no abre otra: no se anidan): inserta el Tenant, verifica el resultado (no null y `transStatus()`), `TenantContext::set($nuevo)` y crea el ADMIN con `isVerified = true`.
+   Entre el Tenant y el ADMIN se inserta su fila de `tenant_settings` (`TenantSettings::defaultsFor`: `name` = nombre del Tenant, el resto NULL).
 3. Ante cualquier error: `transRollback()`. En el `finally` restaura el `TenantContext` previo (`clear()` si estaba vacío).
 4. **No se envía ningún email** (llega con el Paso 4, cuando `FRONTEND_URL` sea por Tenant). Requiere que exista el rol `admin` en `roles` (ver `bitacora/pendiente/roles-seeder.md`).
 
