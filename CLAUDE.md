@@ -62,6 +62,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Sistema de Email → `.claude/rules/email.md`
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
 - Reserva pública (`/public/*`), identidad sin cuenta, throttle → `.claude/rules/public-booking.md`
+- Panel de plataforma (`/platform/*`), `platform_admins`, suspender Tenants → `.claude/rules/platform-admin.md`
 - Multitenant: glosario en `bitacora/glosario.md`, decisiones en `bitacora/adr/`, plan en `bitacora/pendiente/multitenant-plan.md`.
 
 ## Multitenant (implementado)
@@ -70,6 +71,8 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Los Models ya lo hacen. Si agregás una query nueva, incluí el filtro.
 - Los tests usan FastDatabaseTestTrait para no rehacer migraciones.
 - No consultar tablas con `tenant_id` sin filtro (excepto en tests de aislamiento).
+- `/platform/*` (SuperAdmin) **no tiene Tenant**: el filtro global `tenant` está exceptuado en `Filters.php` y se autentica con `platformAdminOnly`, que reemplaza a `auth`. Un token de usuario no entra ahí y uno de plataforma no entra a las rutas de Tenant. Las tablas `platform_admins` y `platform_admin_tokens` son globales.
+- Toda ruta nueva de Tenant debe llevar `auth`; `PlatformRoutesTest` falla si queda una sin `auth` o sin `tenant`.
 
 
 ---

@@ -90,7 +90,7 @@ Decisión del 06/10/2026: mientras tanto `appointments` y `user_verification_tok
 - `GET /tenant/config` para el frontend.
 - `max_active_future_appointments` reemplaza la constante `MAX_ACTIVE_FUTURE_APPOINTMENTS`.
 
-### Paso 5: panel SuperAdmin
+### Paso 5: panel SuperAdmin (mínimo HECHO el 07/10/2026: login, listar, crear y suspender Tenants; ver `.claude/rules/platform-admin.md`. Faltan módulos/configuración y el email al ADMIN)
 - Migración `platform_admins`, login propio, filtro `platformAdminOnly`.
 - `POST/GET/PUT /platform/tenants`, y rutas para módulos y configuración.
 - Alta de Tenant: crea el Tenant y el primer ADMIN, y le manda el email para elegir contraseña (reusando el flujo de reset-password).

@@ -42,7 +42,7 @@ Existe además `suite-lenta-refactor-tests.md` (pendiente previo); conviene unif
 | 2, cierre | **`DropTenantIdDefaults`** (quitar el `DEFAULT 1` de las 9 tablas) | HECHO (07/10/2026, sección 2) |
 | 3 | Prefijos de clave de cache y locks por Tenant (`public_identity_*`) | HECHO (07/10/2026) |
 | 4 | Configuración por Tenant (`tenant_settings`) y módulos (`tenant_modules`, filtro `module:`) | PENDIENTE |
-| 5 | Panel SuperAdmin (`platform_admins`, rutas `/platform/*`) | PENDIENTE |
+| 5 | Panel SuperAdmin mínimo (`platform_admins`, `platform_admin_tokens`, `/platform/*`: login, listar, crear y suspender Tenants) | HECHO (07/10/2026, ver `.claude/rules/platform-admin.md`). Falta: módulos y configuración por Tenant (Paso 4) y el email al primer ADMIN |
 
 Numeración: el **Paso 3 son los prefijos de clave**; el **panel de administración es el Paso 5**.
 
@@ -172,3 +172,14 @@ Correrlos **de a uno por vez** (comparten `turnero_test`), dentro del contenedor
 **Sigue sin verificarse:** nada de lo anterior corrió con el `DEFAULT 1` quitado; eso es el Paso 2.
 
 **Qué NO se hizo todavía (Paso 2 de `DropTenantIdDefaults`):** la migración y su test. No existen aún; no se escribió ningún archivo de migración para evitar que el refresh de la base de test la aplique.
+
+## Platform Admin mínimo (07/10/2026)
+Hecho: tablas `platform_admins` y `platform_admin_tokens`, login, `platformAdminOnly`, excepción de `tenant` en `/platform/*`, perfil CORS `platform`, `GET/POST/PUT /platform/tenants` (alta con su primer ADMIN en una transacción; suspender/reactivar con PUT) y el comando `platform:create-admin`. Detalle y decisiones en `.claude/rules/platform-admin.md` y `adr/004-platform-admin-token-propio-y-401-uniforme.md`.
+
+Pendiente de este bloque:
+- **Email al primer ADMIN** del Tenant nuevo: hoy nace verificado con una contraseña temporal que se comunica por fuera. Va con el Paso 4 (`FRONTEND_URL` por Tenant, ver `frontend-url-por-tenant.md`).
+- **RolesSeeder:** [roles-seeder.md](roles-seeder.md). El alta de un Tenant falla (y hace rollback) si no existe el rol `admin`.
+- **Módulos y configuración por Tenant** (`tenant_modules`, `tenant_settings`): Paso 4.
+- **CORS del panel en otro dominio:** si el panel no comparte los orígenes de `/public/*`, `Cors::$platform` necesita su propia lista.
+- **CORS en rutas de Tenant:** [cors-en-rutas-privadas.md](cors-en-rutas-privadas.md) sigue vigente.
+- **Primer `platform_admin` en producción:** lo crea una persona con `php spark platform:create-admin` en el deploy.

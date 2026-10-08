@@ -25,6 +25,8 @@ que los Filters cortan la cadena con Response, no con excepciones).
 | `medicalViewPermission` | Admin/recepción sin restricción; paciente puede ver cualquier médico por `/medicals/{id}` pero **no** por `/medicals/user/{userId}` (esa ruta es solo para que el médico consulte su propio perfil — asimetría intencional); médico solo ve su propio perfil por cualquiera de las dos rutas |
 | `patientViewPermission` | Admin/recepción sin restricción; paciente solo ve su propio perfil; médico ve pacientes con los que tuvo al menos un turno, vía `PermissionsService::canViewPatient()` → `AppointmentModel::hasRelationWithPatient()` (query `EXISTS`, no trae todos los turnos) |
 
+| `platformAdminOnly` | **Solo `/platform/*`; reemplaza a `auth`** (no se encadena con él). Valida el token contra `platform_admin_tokens`: `401` si falta, es inválido, venció o es de un usuario de Tenant; `403` si el `platform_admin` está desactivado. Guarda solo `platformAdminId` en sesión. Detalle en `platform-admin.md` |
+
 Los Filters que verifican ownership instancian Models directamente
 (permitido y documentado en la arquitectura).
 
