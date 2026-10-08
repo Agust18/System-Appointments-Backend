@@ -45,6 +45,7 @@ class Filters extends BaseFilters
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
         'throttle' => \App\Filters\Throttle::class,
         'tenant' => \App\Filters\TenantResolver::class,
+        'platformAdminOnly' => \App\Filters\PlatformAdminOnly::class,
         
         
 
@@ -87,7 +88,9 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'tenant',
+            // /platform/* no tiene Tenant (SuperAdmin, ADR 003): sin esta excepción respondería 400
+            // en producción y cargaría 'demo' en desarrollo. 'platform/*' no cubre 'platform' a secas.
+            'tenant' => ['except' => ['platform', 'platform/*']],
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',

@@ -32,6 +32,25 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 
+// Panel de plataforma (SuperAdmin, sin Tenant). El filtro global 'tenant' NO corre acá (ver Filters.php).
+// 'platformAdminOnly' REEMPLAZA a 'auth': valida el token contra platform_admin_tokens, no contra users.
+// 'cors:platform' usa el perfil Config\Cors::$platform (PUT y Authorization) y va antes que el resto, para
+// que también el 401/403/429 salgan con los headers CORS. El login no lleva token: se limita por IP.
+// No hay DELETE: los datos de un Tenant se conservan (se suspende con PUT).
+$platformLogin = ['filter' => ['cors:platform', 'throttle:10,60']];
+$platformPrivate = ['filter' => ['cors:platform', 'platformAdminOnly']];
+
+$routes->group('platform', static function ($routes) use ($platformLogin, $platformPrivate) {
+    $routes->options('(:any)', static function () {
+    }, ['filter' => 'cors:platform']);
+
+    $routes->post('login', 'Platform\PlatformLoginController::login', $platformLogin);
+
+    $routes->get('tenants', 'Platform\TenantsGetController::search', $platformPrivate);
+    $routes->post('tenants', 'Platform\TenantPostController::create', $platformPrivate);
+    $routes->put('tenants/(:num)', 'Platform\TenantPutController::do/$1', $platformPrivate);
+});
+
 //Users
 $routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'adminOnly']]);
 $routes->get("users/(:num)", 'User\UserGetController::find/$1', ['filter' => ['auth', 'adminOnly']]);

@@ -104,6 +104,32 @@ class Cors extends BaseConfig
     ];
 
     /**
+     * Perfil del panel de plataforma (/platform/*): se usa con el filtro `cors:platform`.
+     * Mismos orígenes que /public/* (se copian en el constructor). A diferencia de `default`,
+     * admite PUT (suspender/reactivar tenants) y el header Authorization; no lleva X-Tenant
+     * porque /platform/* no tiene Tenant. Sin orígenes configurados no se envía ningún header.
+     *
+     * @var array{
+     *      allowedOrigins: list<string>,
+     *      allowedOriginsPatterns: list<string>,
+     *      supportsCredentials: bool,
+     *      allowedHeaders: list<string>,
+     *      exposedHeaders: list<string>,
+     *      allowedMethods: list<string>,
+     *      maxAge: int,
+     *  }
+     */
+    public array $platform = [
+        'allowedOrigins' => [],
+        'allowedOriginsPatterns' => [],
+        'supportsCredentials' => false,
+        'allowedHeaders' => ['Content-Type', 'Accept', 'Authorization'],
+        'exposedHeaders' => [],
+        'allowedMethods' => ['GET', 'POST', 'PUT', 'OPTIONS'],
+        'maxAge' => 7200,
+    ];
+
+    /**
      * Los orígenes se configuran por entorno, separados por coma (el filtro 'cors' solo se
      * aplica a /public/*, ver Routes.php). Sin ninguno configurado no se envía ningún header
      * CORS. BaseConfig no puede sobrescribir arrays vacíos desde el .env, por eso se parsea acá.
@@ -120,6 +146,9 @@ class Cors extends BaseConfig
 
         $this->default['allowedOrigins'] = $this->listFromEnv('cors.allowedOrigins');
         $this->default['allowedOriginsPatterns'] = $this->listFromEnv('cors.allowedOriginsPatterns');
+
+        $this->platform['allowedOrigins'] = $this->default['allowedOrigins'];
+        $this->platform['allowedOriginsPatterns'] = $this->default['allowedOriginsPatterns'];
     }
 
     /**
