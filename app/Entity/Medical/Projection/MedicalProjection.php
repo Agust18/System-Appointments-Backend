@@ -13,14 +13,17 @@ final class MedicalProjection
 
         // Proyecciones (nombres para mostrar)
         private string $medicoNombre,
+        private ?string $email,
+        private ?string $phone,
         private string $especialidadNombre,
 
         // Datos del médico
         private string $tuition,
-        private ?string $phone,
-        private bool $isActive,
         private ?DateTime $createdAt,
-        private ?DateTime $updatedAt
+        private ?DateTime $updatedAt,
+
+        // Estado del usuario del médico (única fuente de verdad: users.is_active)
+        private bool $userIsActive = true
     ) {
     }
 
@@ -43,6 +46,10 @@ final class MedicalProjection
     {
         return $this->medicoNombre;
     }
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
     public function getEspecialidadNombre(): string
     {
         return $this->especialidadNombre;
@@ -53,13 +60,10 @@ final class MedicalProjection
     {
         return $this->tuition;
     }
+   
     public function getPhone(): ?string
     {
         return $this->phone;
-    }
-    public function isActive(): bool
-    {
-        return $this->isActive;
     }
     public function getCreatedAt(): ?DateTime
     {
@@ -68,5 +72,9 @@ final class MedicalProjection
     public function getUpdatedAt(): ?DateTime
     {
         return $this->updatedAt;
+    }
+    public function isUserActive(): bool
+    {
+        return $this->userIsActive;
     }
 }

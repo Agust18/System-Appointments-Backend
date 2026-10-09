@@ -5,7 +5,7 @@ use App\Services\MedicalSchedule\Projection\MedicalScheduleProjectionFinderServi
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalScheduleGetController extends ResourceController
+final class MedicalScheduleGetController extends ResourceController
 {
     private MedicalScheduleProjectionFinderService $finderService;
 

@@ -3,7 +3,8 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ResendVerificationEmailRequest;
-use App\Services\User\ResendVerificationEmailService;
+use App\Services\auth\ResendVerificationEmailService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
@@ -20,7 +21,7 @@ final class ResendVerificationPostController extends ResourceController
     {
         $request = $this->getRequest();
         
-        // Pasamos la instancia del DTO completa
+       
         $this->service->resend($request);
 
         return $this->response->setJSON([
@@ -30,7 +31,9 @@ final class ResendVerificationPostController extends ResourceController
 
     private function getRequest(): ResendVerificationEmailRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, ResendVerificationEmailRequest::rules(), ResendVerificationEmailRequest::messages());
 
         $parameters = (object) $parameters;
 

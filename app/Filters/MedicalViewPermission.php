@@ -3,6 +3,7 @@
 namespace App\Filters;
 
 use App\Constants\Role;
+use App\Filters\Support\ResolvesEntityByRouteSegment;
 use App\Models\Medical\MedicalModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
@@ -10,39 +11,24 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class MedicalViewPermission implements FilterInterface
 {
+    use ResolvesEntityByRouteSegment;
+
     public function before(RequestInterface $request, $arguments = null)
     {
         $roleId = session()->get('roleId');
         $userId = session()->get('userId');
         $response = \Config\Services::response();
         $medicalModel = new MedicalModel();
-        $segments = $request->getUri()->getSegments();
 
         if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
             return $request;
         }
 
-        if (($segments[1] ?? null) === 'user') {
-            $targetUserId = (int) ($segments[2] ?? 0);
-            $medical = $medicalModel->findByUserId($targetUserId);
-
-            if (!$medical) {
-                return $response->setStatusCode(404)->setJSON([
-                    'message' => 'Médico no encontrado'
-                ]);
-            }
-
-            if ($roleId === Role::MEDICAL && $targetUserId === $userId) {
-                return $request;
-            }
-
-            return $response->setStatusCode(403)->setJSON([
-                'message' => 'No tenés permiso para consultar este médico por usuario'
-            ]);
-        }
-
-        $medicalId = (int) ($segments[1] ?? 0);
-        $medical = $medicalModel->find($medicalId);
+        [$medical, $byUserId] = $this->resolveEntityByRouteSegment(
+            $request,
+            fn (int $targetUserId) => $medicalModel->findByUserId($targetUserId),
+            fn (int $medicalId) => $medicalModel->find($medicalId)
+        );
 
         if (!$medical) {
             return $response->setStatusCode(404)->setJSON([
@@ -50,7 +36,8 @@ class MedicalViewPermission implements FilterInterface
             ]);
         }
 
-        if ($roleId === Role::PATIENT) {
+        // /medicals/user/{userId} es solo para que el propio médico consulte su perfil.
+        if ($roleId === Role::PATIENT && !$byUserId) {
             return $request;
         }
 
@@ -59,7 +46,9 @@ class MedicalViewPermission implements FilterInterface
         }
 
         return $response->setStatusCode(403)->setJSON([
-            'message' => 'No tenés permiso para consultar este médico'
+            'message' => $byUserId
+                ? 'No tenés permiso para consultar este médico por usuario'
+                : 'No tenés permiso para consultar este médico'
         ]);
     }
 

@@ -8,7 +8,7 @@ final class UserEmailTemplateRenderer
 {
     public function renderVerificationBody(User $user, string $verificationUrl): string
     {
-        $username = htmlspecialchars($user->getUsername(), ENT_QUOTES, 'UTF-8');
+        $firstName = htmlspecialchars($user->getFirstName(), ENT_QUOTES, 'UTF-8');
         $url = htmlspecialchars($verificationUrl, ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
@@ -19,7 +19,7 @@ final class UserEmailTemplateRenderer
             <title>Verificá tu cuenta</title>
         </head>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1>Hola, {$username}</h1>
+            <h1>Hola, {$firstName}</h1>
             <p>Gracias por registrarte. Para activar tu cuenta, hacé clic en el siguiente link:</p>
             <p style="text-align: center; margin: 30px 0;">
                 <a href="{$url}"

@@ -4,116 +4,44 @@ namespace App\Services\Appointment;
 use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Entity\Appointment\Appointment;
 use App\Models\Appointment\AppointmentModel;
-use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
-use CodeIgniter\Database\BaseConnection;
-use Config\Database;
 use DateTime;
-use Exception;
 
 final class AppointmentBookingService
 {
-    private BaseConnection $db;
     private AppointmentModel $appointmentModel;
-    private ServiceModel $serviceModel;
-    private MedicalServiceModel $medicalServiceModel;
+    private AppointmentSlotLockService $slotLockService;
 
     public function __construct()
     {
-        $this->db = Database::connect();
         $this->appointmentModel = new AppointmentModel();
-        $this->serviceModel = new ServiceModel();
-        $this->medicalServiceModel = new MedicalServiceModel();
+        $this->slotLockService = new AppointmentSlotLockService();
     }
 
     public function book(AppointmentRequest $request): Appointment
     {
-        $lockName = sprintf('appt_lock_%d_%s', $request->getMedicalId(), $request->getFecha());
-        
-        // 1. Mutex de aplicación a nivel base de datos (timeout 10s)
-        $lockAcquired = $this->acquireLock($lockName, 10);
-        if (!$lockAcquired) {
-            throw new Exception('El sistema está ocupado procesando otra reserva para este profesional. Por favor, intente nuevamente en unos segundos.');
-        }
+        return $this->slotLockService->run(
+            $request->getMedicalId(),
+            $request->getFecha(),
+            $request->getHora(),
+            $request->getServiceId(),
+            null,
+            function (DateTime $horaInicio, DateTime $horaFin) use ($request): Appointment {
+                $appointment = new Appointment(
+                    null,
+                    $request->getMedicalId(),
+                    $request->getPatientId(),
+                    $request->getServiceId(),
+                    new DateTime($request->getFecha()),
+                    $horaInicio,
+                    $horaFin,
+                    $request->getNota(),
+                    $request->getStatus(),
+                    new DateTime(),
+                    new DateTime()
+                );
 
-        try {
-            $this->db->transBegin();
-
-            // recalcula duración y bloque total con servicio/override vigentes
-            $service = $this->serviceModel->find($request->getServiceId());
-            if (!$service || !$service->isActive()) {
-                throw new Exception('El servicio seleccionado no está disponible.');
+                return $this->appointmentModel->insert($appointment);
             }
-
-            $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService(
-                $request->getMedicalId(),
-                $request->getServiceId()
-            );
-            if (!$medicalService) {
-                throw new Exception('El profesional no ofrece este servicio actualmente.');
-            }
-
-            $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)
-                ? $medicalService->getCustomDurationMinutes()
-                : $service->getDurationMinutes();
-
-            $totalBlockMinutes = $effectiveDuration + $service->getBufferMinutes();
-
-            //calcular horas de inicio y fin del turno
-            $horaInicioFormatted = substr($request->getHora(), 0, 5) . ':00';
-            $horaInicioDt = new DateTime("{$request->getFecha()} {$horaInicioFormatted}");
-            $horaFinDt = (clone $horaInicioDt)->modify("+{$totalBlockMinutes} minutes");
-            $horaFinFormatted = $horaFinDt->format('H:i:s');
-
-            //verificación final de solapamiento (intersección contra turnos activos)
-            $hasOverlap = $this->appointmentModel->hasOverlap(
-                $request->getMedicalId(),
-                $request->getFecha(),
-                $horaInicioFormatted,
-                $horaFinFormatted
-            );
-
-            if ($hasOverlap) {
-                throw new Exception('El horario seleccionado ya no se encuentra disponible. Por favor, elija otro horario.');
-            }
-
-            // Instanciar e insertar entidad completa
-            $appointment = new Appointment(
-                null,
-                $request->getMedicalId(),
-                $request->getPatientId(),
-                $request->getServiceId(),
-                new DateTime($request->getFecha()),
-                $horaInicioDt,
-                $horaFinDt,
-                $request->getNota(),
-                $request->getStatus(),
-                new DateTime(),
-                new DateTime()
-            );
-            $createdAppointment = $this->appointmentModel->insert($appointment);
-            $this->db->transCommit();
-            return $createdAppointment;
-
-        } catch (Exception $e) {
-            //rollback incondicional si la transacción quedó abierta
-            $this->db->transRollback();
-            throw $e;
-        } finally {
-            //liberar lock siempre, garantizado en el bloque finally
-            $this->releaseLock($lockName);
-        }
-    }
-
-    private function acquireLock(string $lockName, int $timeoutSeconds): bool
-    {
-        $result = $this->db->query("SELECT GET_LOCK(?, ?) as is_locked", [$lockName, $timeoutSeconds]);
-        $row = $result->getRow();
-        return $row && (int)$row->is_locked === 1;
-    }
-
-    private function releaseLock(string $lockName): void
-    {
-        $this->db->query("SELECT RELEASE_LOCK(?) as is_released", [$lockName]);
+        );
     }
 }

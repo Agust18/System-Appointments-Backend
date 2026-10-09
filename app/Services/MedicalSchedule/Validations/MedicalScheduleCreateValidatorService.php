@@ -3,7 +3,6 @@
 namespace App\Services\MedicalSchedule\Validations;
 
 use App\Dto\Request\MedicalSchedule\MedicalScheduleRequest;
-use App\Exception\MedicalSchedule\InvalidDayOfWeekException;
 use App\Exception\MedicalSchedule\InvalidScheduleTimeException;
 use App\Exception\MedicalSchedule\MedicalNotActiveException;
 use App\Exception\MedicalSchedule\ScheduleAlreadyExistsException;
@@ -30,15 +29,14 @@ final class MedicalScheduleCreateValidatorService
         $medical = $this->medicalFinderService->find($request->getMedicalId());
 
         $dayOfWeek = $request->getDayOfWeek();
-        if ($dayOfWeek < 1 || $dayOfWeek > 7) {
-            throw new InvalidDayOfWeekException($dayOfWeek);
-        }
 
         if ($request->getStartTime() >= $request->getEndTime()) {
             throw new InvalidScheduleTimeException();
         }
 
-        if (!$medical->getIsActive()) {
+        $user = $this->userFinderService->find($medical->getUserId());
+
+        if (!$user->getIsActive()) {
             throw new MedicalNotActiveException($request->getMedicalId());
         }
 
@@ -57,8 +55,7 @@ final class MedicalScheduleCreateValidatorService
                 throw new ScheduleAlreadyExistsException();
             }
 
-            $user = $this->userFinderService->find($medical->getUserId());
-            throw new ScheduleOverlapException($user->getUsername(), $dayOfWeek);
+            throw new ScheduleOverlapException($user->getFullName(), $dayOfWeek);
         }
     }
 }

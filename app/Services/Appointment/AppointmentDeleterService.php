@@ -1,30 +1,28 @@
 <?php
 namespace App\Services\Appointment;
 
-use App\exception\Appointment\AppointmentNotFoundException;
+
 use App\Models\Appointment\AppointmentModel;
-use DateTime;
 use App\Services\Appointment\Validations\AppointmentDeleteValidatorService;
+use App\Services\Appointment\AppointmentFinderService;
 
 final class AppointmentDeleterService
 {
     private AppointmentModel $appointmentModel;
     private AppointmentDeleteValidatorService $validator;
+    private AppointmentFinderService $finder;
     public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
-        $this->validator        = new AppointmentDeleteValidatorService();
+        $this->validator       = new AppointmentDeleteValidatorService();
+        $this->finder = new AppointmentFinderService();
     }
 
     public function delete(int $id): void
     {
-        $appointment = $this->appointmentModel->find($id);
+        $appointment = $this->finder->find($id);
 
-        if (!$appointment) {
-            throw new AppointmentNotFoundException($id);
-        }
-
-        $this->validator->validate($id,$appointment);
+        $this->validator->validate($appointment);
         
         $this->appointmentModel->delete($id);
 

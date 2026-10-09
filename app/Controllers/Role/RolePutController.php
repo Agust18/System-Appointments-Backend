@@ -3,10 +3,11 @@ namespace App\Controllers\Role;
 
 use App\Dto\Request\Role\RoleUpdateRequest;
 use App\Services\Role\RoleUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RolePutController extends ResourceController
+final class RolePutController extends ResourceController
 {
     private RoleUpdaterService $roleUpdaterService;
 
@@ -24,8 +25,12 @@ class RolePutController extends ResourceController
 
     private function getRequest(): RoleUpdateRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, RoleUpdateRequest::rules(), RoleUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new RoleUpdateRequest(
             $parameters->name ?? null
         );

@@ -18,13 +18,14 @@ final class AppointmentProjection
         private string $pacienteNombre,
         private string $servicioNombre,
 
-
+        private string $paciente_email,
         // Datos del turno
         private DateTime $fecha,
         private DateTime $hora,
         private ?string $nota,
         private string $status,
 
+        private ?string $paciente_telefono = null,
     ) {}
 
     // Getters para IDs
@@ -52,6 +53,11 @@ final class AppointmentProjection
         return $this->pacienteNombre;
     }
 
+    public function getEmail():string
+    {
+        return $this->paciente_email;
+    }
+
 
     // Getters para datos del turno
     public function getFecha(): DateTime
@@ -75,6 +81,11 @@ final class AppointmentProjection
     {
         return $this->serviceId;
     }
+    public function getTelefono(): ?string
+    {
+        return $this->paciente_telefono;
+    }
+
     public function getServicioNombre(): string
     {
         return $this->servicioNombre;

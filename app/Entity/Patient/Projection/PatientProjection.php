@@ -10,7 +10,9 @@ final class PatientProjection
         private int $id,
         private int $userId,
         private string $pacienteNombre,
+        private ?string $phone,
         private ?string $dni,
+        private ?string $email,
         private ?DateTime $birthDate,
         private bool $isActive,
         private ?DateTime $createdAt,
@@ -32,6 +34,15 @@ final class PatientProjection
     public function getDni(): ?string
     {
         return $this->dni;
+    }
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
     }
 
     public function getBirthDate(): ?DateTime

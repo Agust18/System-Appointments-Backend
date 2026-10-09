@@ -5,6 +5,7 @@ namespace App\Models\UserToken;
 use App\Converter\UserToken\PrimitiveToUserTokenConverter;
 
 use App\Entity\UserToken\UserToken;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
@@ -24,12 +25,13 @@ final class UserTokenModel
     {
         $query = "
             INSERT INTO user_verification_tokens (
-                user_id, token, type, expires_at, created_at
+                tenant_id, user_id, token, type, expires_at, created_at
             )
-            VALUES (?, ?, ?, ?, NOW())
+            VALUES (?, ?, ?, ?, ?, NOW())
         ";
 
         $this->db->query($query, [
+            TenantContext::id(),
             $token->getUserId(),
             $token->getToken(),
             $token->getType(),
@@ -51,8 +53,8 @@ final class UserTokenModel
 
     public function findByToken(string $token): ?UserToken
     {
-        $query = "SELECT * FROM user_verification_tokens WHERE token = ?";
-        $result = $this->db->query($query, [$token]);
+        $query = "SELECT * FROM user_verification_tokens WHERE token = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$token, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -65,15 +67,16 @@ final class UserTokenModel
     public function findActiveByUserAndType(int $userId, string $type): ?UserToken
     {
         $query = "
-            SELECT * FROM user_verification_tokens 
-            WHERE user_id = ? 
-              AND type = ? 
-              AND used_at IS NULL 
+            SELECT * FROM user_verification_tokens
+            WHERE user_id = ?
+              AND type = ?
+              AND tenant_id = ?
+              AND used_at IS NULL
               AND expires_at > NOW()
-            ORDER BY id DESC 
+            ORDER BY id DESC
             LIMIT 1
         ";
-        $result = $this->db->query($query, [$userId, $type]);
+        $result = $this->db->query($query, [$userId, $type, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -85,20 +88,24 @@ final class UserTokenModel
 
     public function markAsUsed(int $id): void
     {
-        $query = "UPDATE user_verification_tokens SET used_at = NOW() WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "UPDATE user_verification_tokens SET used_at = NOW() WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 
     public function deleteByUserAndType(int $userId, string $type): void
     {
-        $query = "DELETE FROM user_verification_tokens WHERE user_id = ? AND type = ?";
-        $this->db->query($query, [$userId, $type]);
+        $query = "DELETE FROM user_verification_tokens WHERE user_id = ? AND type = ? AND tenant_id = ?";
+        $this->db->query($query, [$userId, $type, TenantContext::id()]);
     }
 
+    /**
+     * Borra los tokens vencidos del Tenant del contexto. Un proceso de limpieza que cubra a todos
+     * los Tenants debe recorrerlos y fijar el contexto de cada uno (como el de recordatorios).
+     */
     public function deleteExpired(): int
     {
-        $query = "DELETE FROM user_verification_tokens WHERE expires_at < NOW()";
-        $this->db->query($query);
+        $query = "DELETE FROM user_verification_tokens WHERE expires_at < NOW() AND tenant_id = ?";
+        $this->db->query($query, [TenantContext::id()]);
         return $this->db->affectedRows();
     }
 }

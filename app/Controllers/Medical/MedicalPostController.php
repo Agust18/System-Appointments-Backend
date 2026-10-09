@@ -1,12 +1,16 @@
 <?php
 namespace App\Controllers\Medical;
 
+use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Dto\Request\Medical\MedicalRequest;
+use App\Dto\Request\User\UserRequest;
 use App\Services\Medical\MedicalCreatorService;
+use App\Support\IdentityNormalizer;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class MedicalPostController extends ResourceController
+final class MedicalPostController extends ResourceController
 {
     private MedicalCreatorService $medicalCreatorService;
 
@@ -17,22 +21,40 @@ class MedicalPostController extends ResourceController
 
     public function create(): ResponseInterface
     {
-        $medicalRequest = $this->getRequest();
-        $medicalResponse = $this->medicalCreatorService->create($medicalRequest);
-        
-        return $this->response->setJSON($medicalResponse);
+        $request = $this->getRequest();
+        $response = $this->medicalCreatorService->create($request,true);
+
+        return $this->response->setJSON($response);
     }
 
     private function getRequest(): MedicalRequest
     {
-        $parameters = $this->request->getJSON();
-    
-        return new MedicalRequest(
-            $parameters->userId,
-            $parameters->tuition,
-            $parameters->specialtyId,
-            $parameters->phone ?? null,
-            $parameters->isActive ?? true
+        $parameters = $this->request->getJSON(true) ?? [];
+        $parameters['user'] = IdentityNormalizer::normalizeInput($parameters['user'] ?? []);
+
+        RequestValidator::validate($parameters['user'] ?? [], UserRequest::rules(), UserRequest::messages());
+        RequestValidator::validate($parameters['medical'] ?? [], MedicalDataRequest::rules(), MedicalDataRequest::messages());
+
+        $parameters = (object) $parameters;
+        $parameters->user = (object) $parameters->user;
+        $parameters->medical = (object) $parameters->medical;
+
+        $userRequest = new UserRequest(
+            $parameters->user->firstName,
+            $parameters->user->lastName,
+            $parameters->user->email,
+            $parameters->user->phone ?? null,
+            $parameters->user->password,
+            $parameters->user->dni,
+            $parameters->user->isActive ?? true,
+            $parameters->user->roleId ?? null
         );
+
+        $medicalDataRequest = new MedicalDataRequest(
+            tuition: $parameters->medical->tuition,
+            specialtyId: $parameters->medical->specialtyId
+        );
+
+        return new MedicalRequest($userRequest, $medicalDataRequest);
     }
 }

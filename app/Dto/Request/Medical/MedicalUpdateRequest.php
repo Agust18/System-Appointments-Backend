@@ -5,9 +5,7 @@ final readonly class MedicalUpdateRequest
 {
     public function __construct(
         private ?string $tuition = null,
-        private ?int $specialtyId = null,
-        private ?string $phone = null,
-        private ?bool $isActive = null
+        private ?int $specialtyId = null
     ) {}
 
     public function getTuition(): ?string
@@ -20,13 +18,23 @@ final readonly class MedicalUpdateRequest
         return $this->specialtyId;
     }
 
-    public function getPhone(): ?string
+    public static function rules(): array
     {
-        return $this->phone;
+        return [
+            'tuition'     => 'permit_empty|max_length[50]',
+            'specialtyId' => 'permit_empty|is_natural_no_zero',
+        ];
     }
 
-    public function getIsActive(): ?bool
+    public static function messages(): array
     {
-        return $this->isActive;
+        return [
+            'tuition' => [
+                'max_length' => 'La matrícula es muy larga.',
+            ],
+            'specialtyId' => [
+                'is_natural_no_zero' => 'Elegí una especialidad válida.',
+            ],
+        ];
     }
 }

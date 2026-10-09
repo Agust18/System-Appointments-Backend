@@ -4,8 +4,8 @@ namespace App\Services\Medical;
 use App\Converter\Medical\MedicalToMedicalResponseConverter;
 use App\Dto\Response\Medical\MedicalResponse;
 use App\Entity\Medical\Medical;
-use App\exception\Medical\MedicalNotFoundException;
-use App\exception\Medical\MedicalNotFoundExceptionByUserException;
+use App\Exception\Medical\MedicalNotFoundException;
+use App\Exception\Medical\MedicalNotFoundExceptionByUserException;
 use App\Models\Medical\MedicalModel;
 
 final class MedicalFinderService

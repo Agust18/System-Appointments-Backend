@@ -3,35 +3,33 @@
 namespace App\Filters;
 
 use App\Constants\Role;
-use App\Models\Appointment\AppointmentModel;
+use App\Filters\Support\ResolvesEntityByRouteSegment;
 use App\Models\Patient\PatientModel;
+use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class PatientViewPermission implements FilterInterface
 {
+    use ResolvesEntityByRouteSegment;
+
     public function before(RequestInterface $request, $arguments = null)
     {
         $roleId = session()->get('roleId');
         $userId = session()->get('userId');
         $response = \Config\Services::response();
+        $patientModel = new PatientModel();
 
         if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
             return $request;
         }
 
-        $patientModel = new PatientModel();
-        $segments = $request->getUri()->getSegments();
-        $patient = null;
-
-        if (($segments[1] ?? null) === 'user') {
-            $targetUserId = (int) ($segments[2] ?? 0);
-            $patient = $patientModel->findByUserId($targetUserId);
-        } else {
-            $patientId = (int) ($segments[1] ?? 0);
-            $patient = $patientModel->find($patientId);
-        }
+        [$patient] = $this->resolveEntityByRouteSegment(
+            $request,
+            fn (int $targetUserId) => $patientModel->findByUserId($targetUserId),
+            fn (int $patientId) => $patientModel->find($patientId)
+        );
 
         if (!$patient) {
             return $response->setStatusCode(404)->setJSON([
@@ -39,18 +37,8 @@ class PatientViewPermission implements FilterInterface
             ]);
         }
 
-        if ($roleId === Role::PATIENT && $patient->getUserId() === $userId) {
+        if ((new PermissionsService())->canViewPatient($roleId, $userId, $patient->getId())) {
             return $request;
-        }
-
-        if ($roleId === Role::MEDICAL) {
-            $appointments = (new AppointmentModel())->findByMedicalUserId($userId);
-
-            foreach ($appointments as $appointment) {
-                if ($appointment->getPatientId() === $patient->getId()) {
-                    return $request;
-                }
-            }
         }
 
         return $response->setStatusCode(403)->setJSON([

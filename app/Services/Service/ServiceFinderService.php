@@ -7,7 +7,6 @@ use App\Dto\Response\Service\ServiceResponse;
 use App\Entity\Service\Service;
 use App\Exception\Service\ServiceNotFoundException;
 use App\Models\Service\ServiceModel;
-use Exception;
 
 final class ServiceFinderService
 {
@@ -25,7 +24,7 @@ final class ServiceFinderService
         $service = $this->serviceModel->find($id);
 
         if (!$service) {
-            throw new Exception('Servicio no encontrado');
+            throw new ServiceNotFoundException($id);
         }
 
         return $service;

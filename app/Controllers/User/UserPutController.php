@@ -5,10 +5,12 @@ namespace App\Controllers\User;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Dto\Request\User\UserRequest;
 use App\Services\User\UserUpdaterService;
+use App\Support\IdentityNormalizer;
+use App\Validation\RequestValidator;
 use CodeIgniter\RESTful\ResourceController;
 use App\Dto\Request\User\UserUpdaterRequest;
 
-class UserPutController extends ResourceController
+final class UserPutController extends ResourceController
 {
     private UserUpdaterService $userUpdaterService;
 
@@ -27,12 +29,17 @@ class UserPutController extends ResourceController
 
     public function getRequest(): UserUpdaterRequest
     {
-        $request = $this->request->getJSON();
+        $request = IdentityNormalizer::normalizeInput($this->request->getJSON(true) ?? []);
 
-        
+        RequestValidator::validate($request, UserUpdaterRequest::rules(), UserUpdaterRequest::messages());
+
+        $request = (object) $request;
+
     return new UserUpdaterRequest(
-        $request->username ?? null,
+        $request->firstName ?? null,
+        $request->lastName ?? null,
         $request->email ?? null,
+        $request->phone ?? null,
         $request->password ?? null,
         $request->dni ?? null,
         $request->isActive ?? null,

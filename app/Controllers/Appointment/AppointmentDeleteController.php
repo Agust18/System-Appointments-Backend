@@ -6,7 +6,7 @@ use App\Services\Appointment\AppointmentDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class AppointmentDeleteController extends ResourceController
+final class AppointmentDeleteController extends ResourceController
 {
     private AppointmentDeleterService $appointmentDeleterService;
 

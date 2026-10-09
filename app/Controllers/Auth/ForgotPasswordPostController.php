@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ForgotPasswordRequest;
-use App\Services\User\ForgotPasswordService;
+use App\Services\auth\ForgotPasswordService;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
@@ -28,7 +28,9 @@ final class ForgotPasswordPostController extends ResourceController
 
     private function getRequest(): ForgotPasswordRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, ForgotPasswordRequest::rules(), ForgotPasswordRequest::messages());
 
         $parameters = (object) $parameters;
 

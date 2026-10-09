@@ -12,6 +12,13 @@ final class RequestValidator
         $validation->reset();
         $validation->setRules($rules, $messages);
 
+        // Las reglas estrictas de CI4 rechazan bool nativo (JSON true/false); se validan como 0/1.
+        foreach ($parameters as $field => $value) {
+            if (is_bool($value)) {
+                $parameters[$field] = (int) $value;
+            }
+        }
+
         if ($validation->run($parameters)) {
             return;
         }

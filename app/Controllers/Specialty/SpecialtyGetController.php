@@ -5,7 +5,7 @@ use App\Services\Specialty\SpecialtyFinderService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class SpecialtyGetController extends ResourceController
+final class SpecialtyGetController extends ResourceController
 {
     private SpecialtyFinderService $specialtyFinderService;
 

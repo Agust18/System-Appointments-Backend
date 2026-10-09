@@ -183,6 +183,35 @@ class App extends BaseConfig
     public array $proxyIPs = [];
 
     /**
+     * Los proxies de confianza se configuran por entorno (BaseConfig no puede sobrescribir arrays
+     * desde el .env). Los usa getIPAddress(), y con él el throttle por IP de /public/*:
+     *
+     *   app.trustedProxies = 127.0.0.1,172.16.0.0/12   (IPs o CIDR, separados por coma)
+     *   app.proxyHeader    = X-Forwarded-For           (opcional; p. ej. CF-Connecting-IP con Cloudflare)
+     *
+     * Vacío = se usa REMOTE_ADDR: correcto en desarrollo y si el backend se expone directo.
+     *
+     * Detrás de un proxy es OBLIGATORIO configurarlo: sin él todos los usuarios comparten la IP del
+     * proxy (y el límite de reservas pasa a ser de todos juntos). Y el proxy tiene que SOBRESCRIBIR
+     * el header, no agregarle: CodeIgniter toma la primera IP de la lista, que un cliente puede falsear.
+     * En nginx: proxy_set_header X-Forwarded-For $remote_addr;
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        $header = trim((string) env('app.proxyHeader', ''));
+        $header = $header === '' ? 'X-Forwarded-For' : $header;
+
+        $proxies = array_filter(
+            array_map('trim', explode(',', (string) env('app.trustedProxies', ''))),
+            static fn (string $proxy): bool => $proxy !== ''
+        );
+
+        $this->proxyIPs = array_fill_keys(array_values($proxies), $header);
+    }
+
+    /**
      * --------------------------------------------------------------------------
      * Content Security Policy
      * --------------------------------------------------------------------------

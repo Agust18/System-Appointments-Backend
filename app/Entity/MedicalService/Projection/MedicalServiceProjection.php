@@ -12,7 +12,6 @@ final class MedicalServiceProjection
         private int $baseDurationMinutes,
         private int $bufferMinutes,
         private float $basePrice,
-        private int $slotStepMinutes,
         private ?float $customPrice,
         private ?int $customDurationMinutes,
         private int $effectiveDurationMinutes,
@@ -59,11 +58,6 @@ final class MedicalServiceProjection
     public function getBasePrice(): float
     {
         return $this->basePrice;
-    }
-
-    public function getSlotStepMinutes(): int
-    {
-        return $this->slotStepMinutes;
     }
 
     public function getCustomPrice(): ?float

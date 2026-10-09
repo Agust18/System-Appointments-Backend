@@ -10,10 +10,12 @@ final class User
 {
     public function __construct(
         private ?int $id,
-        private string $username,
+        private string $firstName,
+        private string $lastName,
         private string $email,
-        private string $password,
-        private ?int $dni,
+        private ?string $phone,
+        private ?string $password,
+        private int $dni,
         private bool $isActive,
         private bool $isVerified,
         private ?string $token,
@@ -28,8 +30,10 @@ final class User
 
     public function modify(UserUpdaterRequest $request): void
     {
-        $this->username = $request->getUsername() ?? $this->username;
+        $this->firstName = $request->getFirstName() ?? $this->firstName;
+        $this->lastName = $request->getLastName() ?? $this->lastName;
         $this->email = $request->getEmail() ?? $this->email;
+        $this->phone = $request->getPhone() ?? $this->phone;
         $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
         $this->dni = $request->getDni() ?? $this->dni;
         $this->isActive = $request->getIsActive() ?? $this->isActive;
@@ -41,15 +45,45 @@ final class User
         return $this->tokenExpirationDate;
     }
 
+   
+    public function hasAccount(): bool
+    {
+        return $this->password !== null;
+    }
+
     public function verifyPassword(string $password): bool
     {
+        if (!$this->hasAccount()) {
+            return false;
+        }
+
         return password_verify($password, $this->password);
+    }
+
+    /*Recepción completa los datos de un usuario sin cuenta que ya existía
+     (p. ej. creado por reserva pública). Nunca se usa sobre una cuenta real.
+     */
+    public function completeAsAccountless(UserUpdaterRequest $request): void
+    {
+        $this->firstName = $request->getFirstName() ?? $this->firstName;
+        $this->lastName = $request->getLastName() ?? $this->lastName;
+        $this->email = $request->getEmail() ?? $this->email;
+        $this->phone = $request->getPhone() ?? $this->phone;
+        $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
+        $this->isVerified = true;
+    }
+
+    /*
+      Registro público sobre un usuario sin cuenta: fija la contraseña pero deja
+      el usuario sin verificar (no puede iniciar sesión hasta verificar su email).
+     */
+    public function setPasswordFromRegistration(string $password): void
+    {
+        $this->password = password_hash($password, PASSWORD_BCRYPT);
     }
 
     public function generateToken(): void
     {
-        //recomendacion  bin2hex(random_bytes(32));  
-        // $this->token = bin2hex(random_bytes(32));   // 64 caracteres aleatorios
         $this->token = md5($this->email . rand(1000, 9999) . date("YmdHis"));
         $this->tokenExpirationDate = new DateTime("+24 hours");
     }
@@ -58,20 +92,36 @@ final class User
     {
         return $this->id;
     }
-    public function getUsername(): string
+    public function getFirstName(): string
     {
-        return $this->username;
+        return $this->firstName;
+    }
+
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function getFullName(): string
+    {
+        return trim("{$this->firstName} {$this->lastName}");
     }
 
     public function getEmail(): string
     {
         return $this->email;
     }
-    public function getPassword(): string
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+   
+    public function getPassword(): ?string
     {
         return $this->password;
     }
-    public function getDni(): ?int
+    public function getDni(): int
     {
         return $this->dni;
     }
@@ -115,9 +165,11 @@ final class User
     {
         return new User(
             null,
-            $request->getUserName(),
+            $request->getFirstName(),
+            $request->getLastName(),
             $request->getEmail(),
-            password_hash($request->getPassword(), PASSWORD_BCRYPT),
+            $request->getPhone(),
+            $request->getPassword() !== null ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : null,
             $request->getDni(),
             $request->getIsActive(),
             false,
@@ -128,4 +180,33 @@ final class User
             null
         );
     }
+
+   
+    public static function createWithoutAccount(
+        string $firstName,
+        string $lastName,
+        string $email,
+        ?string $phone,
+        int $dni,
+        int $roleId
+    ): User {
+        return new User(
+            null,
+            $firstName,
+            $lastName,
+            $email,
+            $phone,
+            null,
+            $dni,
+            true,
+            false,
+            null,
+            null,
+            $roleId,
+            null,
+            null
+        );
+    }
+
+    
 }

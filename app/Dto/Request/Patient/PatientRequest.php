@@ -1,29 +1,22 @@
 <?php
 namespace App\Dto\Request\Patient;
 
-use DateTime;
+use App\Dto\Request\User\UserRequest;
 
 final readonly class PatientRequest
 {
     public function __construct(
-        private int $userId,
-        private string $birthDate,
-       
+        private UserRequest $userRequest,
+        private PatientDataRequest $patientDataRequest,
     ) {}
 
-    public function getUserId(): int
+    public function getUserRequest(): UserRequest
     {
-        return $this->userId;
+        return $this->userRequest;
     }
 
-    public function getBirthDate(): string
+    public function getPatientDataRequest(): PatientDataRequest
     {
-        return $this->birthDate;
+        return $this->patientDataRequest;
     }
-    
-
-   
-
-      
-    
 }

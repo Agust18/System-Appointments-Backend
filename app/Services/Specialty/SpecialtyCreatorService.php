@@ -5,7 +5,7 @@ use App\Converter\Specialty\SpecialtyToSpecialtyResponseConverter;
 use App\Dto\Request\Specialty\SpecialtyRequest;
 use App\Dto\Response\Specialty\SpecialtyResponse;
 use App\Entity\Specialty\Specialty;
-use App\exception\Specialty\SpecialtyAlreadyExistsException;
+use App\Exception\Specialty\SpecialtyAlreadyExistsException;
 use App\Models\Specialty\SpecialtyModel;
 use App\Services\Specialty\Validations\SpecialtiesCreateValidatorService;
 

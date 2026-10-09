@@ -23,9 +23,7 @@ final class UserDeleterService
     public function delete(int $id): void
     {
         $user = $this->userFinderService->find($id);
-        if (!$user) {
-            throw new UserNotFoundException($id);
-        }
+        
 
         $this->validator->validate($id,$user);
 

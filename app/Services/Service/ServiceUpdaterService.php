@@ -5,25 +5,23 @@ use App\Converter\Service\ServiceToServiceResponseConverter;
 use App\Dto\Request\Service\ServiceUpdateRequest;
 use App\Dto\Response\Service\ServiceResponse;
 use App\Models\Service\ServiceModel;
-use Exception;
 
 final class ServiceUpdaterService
 {
     private ServiceModel $serviceModel;
     private ServiceToServiceResponseConverter $converter;
+    private ServiceFinderService $serviceFinderService;
 
     public function __construct()
     {
         $this->serviceModel = new ServiceModel();
         $this->converter = new ServiceToServiceResponseConverter();
+        $this->serviceFinderService = new ServiceFinderService();
     }
 
     public function update(ServiceUpdateRequest $request, int $id): ServiceResponse
     {
-        $service = $this->serviceModel->find($id);
-        if (!$service) {
-            throw new Exception('Servicio no encontrado');
-        }
+        $service = $this->serviceFinderService->find($id);
 
         $service->modify($request);
         $updatedService = $this->serviceModel->update($service);

@@ -3,10 +3,11 @@ namespace App\Controllers\Specialty;
 
 use App\Dto\Request\Specialty\SpecialtyUpdateRequest;
 use App\Services\Specialty\SpecialtyUpdaterService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class SpecialtyPutController extends ResourceController
+final class SpecialtyPutController extends ResourceController
 {
     private SpecialtyUpdaterService $specialtyUpdaterService;
 
@@ -24,8 +25,12 @@ class SpecialtyPutController extends ResourceController
 
     private function getRequest(): SpecialtyUpdateRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, SpecialtyUpdateRequest::rules(), SpecialtyUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new SpecialtyUpdateRequest(
             $parameters->name ?? null,
             $parameters->description ?? null,

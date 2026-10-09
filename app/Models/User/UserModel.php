@@ -7,6 +7,8 @@ use Config\Database;
 use App\Entity\User\User;
 use App\Converter\User\PrimitiveToUserConverte;
 use App\Dto\Request\User\UserFilterRequest;
+use App\Exception\User\UserCannotBeCreatedException;
+use App\Tenancy\TenantContext;
 use DateTime;
 
 final class UserModel
@@ -23,20 +25,26 @@ final class UserModel
     {
         $query = "
         INSERT INTO users (
-            username,
+            tenant_id,
+            first_name,
+            last_name,
             email,
+            phone,
             password,
             dni,
             is_active,
             is_verified,
             role_id
         )
-        VALUES (?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
     ";
 
         $this->db->query($query, [
-            $user->getUsername(),
+            TenantContext::id(),
+            $user->getFirstName(),
+            $user->getLastName(),
             $user->getEmail(),
+            $user->getPhone(),
             $user->getPassword(),
             $user->getDni(),
             $user->getIsActive(),
@@ -46,30 +54,29 @@ final class UserModel
 
         $id = $this->db->insertID();
 
-        return new User(
-            $id,
-            $user->getUsername(),
-            $user->getEmail(),
-            $user->getPassword(),
-            $user->getDni(),
-            $user->getIsActive(),
-            $user->getIsVerified(),
-            null,
-            null,
-            $user->getRoleId(),
-            null,
-            null
-        );
+        if (!$id) {
+            throw new UserCannotBeCreatedException();
+        }
+
+        $newUser = $this->find($id);
+
+        if ($newUser === null) {
+            throw new UserCannotBeCreatedException();
+        }
+
+        return $newUser;
     }
 
     public function update(User $user): User
     {
-        $query = "UPDATE users SET username = ?, email = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?,updated_at = NOW(), ";
+        $query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, password = ?, dni = ?, is_active = ?, is_verified = ?, role_id = ?,updated_at = NOW(), ";
         $query .= "token = ?, token_expiration_date = ? ";
-        $query .= "WHERE id = ?";
+        $query .= "WHERE id = ? AND tenant_id = ?";
         $this->db->query($query, [
-            $user->getUsername(),
+            $user->getFirstName(),
+            $user->getLastName(),
             $user->getEmail(),
+            $user->getPhone(),
             $user->getPassword(),
             $user->getDni(),
             $user->getIsActive(),
@@ -77,15 +84,16 @@ final class UserModel
             $user->getRoleId(),
             $user->getToken(),
             $user->getTokenExpirationDate()?->format("Y-m-d H:i:s"),
-            $user->getId()
+            $user->getId(),
+            TenantContext::id()
         ]);
         return $user;
     }
 
     public function find(int $id): ?User
     {
-        $query = "SELECT U.id, U.username, U.email,U.password,U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U where U.id = ?";
-        $result = $this->db->query($query, [$id]);
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email,U.phone, U.password,U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U where U.id = ? AND U.tenant_id = ?";
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (is_null($primitive)) {
@@ -99,8 +107,8 @@ final class UserModel
 
     public function findByEmail(string $email): ?User
     {
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.email = ? ";
-        $result = $this->db->query($query, [$email]);
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.phone, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.email = ? AND U.tenant_id = ? ";
+        $result = $this->db->query($query, [$email, TenantContext::id()]);
 
         $primitive = $result->getRow();
 
@@ -119,10 +127,10 @@ final class UserModel
         $now = new DateTime();
         $dateNow = $now->format("Y-m-d H:i:s");
 
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni,U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at ";
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.phone, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date,role_id,created_at, updated_at ";
         $query .= "FROM users U ";
-        $query .= "WHERE U.token = ? AND U.token_expiration_date >= ?";
-        $result = $this->db->query($query, [$token, $dateNow]);
+        $query .= "WHERE U.token = ? AND U.token_expiration_date >= ? AND U.tenant_id = ?";
+        $result = $this->db->query($query, [$token, $dateNow, TenantContext::id()]);
 
         $primitive = $result->getRow();
 
@@ -140,13 +148,13 @@ final class UserModel
      */
     public function search(UserFilterRequest $request): array
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
-        $selectQuery = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date, U.role_id, created_at, updated_at ";
+        $selectQuery = "SELECT U.id, U.first_name, U.last_name, U.email, U.phone, U.password, U.dni, U.is_active,U.is_verified, U.token, U.token_expiration_date, U.role_id, created_at, updated_at ";
 
         $fromQuery = "FROM users U ";
 
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE U.tenant_id = ? ";
 
         if ($request->hasEmail()) {
             $whereQuery .= " AND U.email LIKE ? ";
@@ -154,7 +162,7 @@ final class UserModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -190,11 +198,11 @@ final class UserModel
 
     public function countByFilter(UserFilterRequest $request): int
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
         $fromQuery = "FROM users U ";
 
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE U.tenant_id = ? ";
 
         if ($request->hasEmail()) {
             $whereQuery .= " AND U.email LIKE ? ";
@@ -202,7 +210,7 @@ final class UserModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR U.dni LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -225,27 +233,27 @@ final class UserModel
 
     public function delete(int $id): void
     {
-        $query = "DELETE FROM users WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "DELETE FROM users WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 
     public function markAsVerified(int $userId): void
     {
-        $query = "UPDATE users SET is_verified = 1, updated_at = NOW() WHERE id = ?";
-        $this->db->query($query, [$userId]);
+        $query = "UPDATE users SET is_verified = 1, updated_at = NOW() WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$userId, TenantContext::id()]);
     }
 
     public function countByRoleId(int $roleId): int
     {
-        $query = "SELECT COUNT(*) as total FROM users WHERE role_id = ?";
-        $result = $this->db->query($query, [$roleId]);
+        $query = "SELECT COUNT(*) as total FROM users WHERE role_id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$roleId, TenantContext::id()]);
         return (int) ($result->getRow()->total ?? 0);
     }
 
     public function findByDni(string $dni): ?User
     {
-        $query = "SELECT U.id, U.username, U.email, U.password, U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.dni = ? ";
-        $result = $this->db->query($query, [$dni]);
+        $query = "SELECT U.id, U.first_name, U.last_name, U.email, U.phone, U.password, U.dni, U.is_active,U.is_verified,U.token, U.token_expiration_date,role_id,created_at, updated_at FROM users U WHERE U.dni = ? AND U.tenant_id = ? ";
+        $result = $this->db->query($query, [$dni, TenantContext::id()]);
 
         $primitive = $result->getRow();
 
@@ -260,8 +268,8 @@ final class UserModel
 
     public function updatePassword(int $userId, string $hashedPassword): void
     {
-        $query = "UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?";
-        $this->db->query($query, [$hashedPassword, $userId]);
+        $query = "UPDATE users SET password = ?, updated_at = NOW() WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$hashedPassword, $userId, TenantContext::id()]);
     }
 
 

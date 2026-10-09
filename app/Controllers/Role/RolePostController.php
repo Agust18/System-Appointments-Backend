@@ -3,10 +3,11 @@ namespace App\Controllers\Role;
 
 use App\Dto\Request\Role\RoleRequest;
 use App\Services\Role\RoleCreatorService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class RolePostController extends ResourceController
+final class RolePostController extends ResourceController
 {
     private RoleCreatorService $roleCreatorService;
 
@@ -24,8 +25,12 @@ class RolePostController extends ResourceController
 
     private function getRequest(): RoleRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, RoleRequest::rules(), RoleRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new RoleRequest(
             $parameters->name
         );

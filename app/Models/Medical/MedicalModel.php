@@ -7,6 +7,7 @@ use App\Converter\Medical\Projection\PrimitiveToMedicalProjectionConverter;
 use App\Dto\Request\Medical\MedicalFilterRequest;
 use App\Entity\Medical\Medical;
 use App\Entity\Medical\Projection\MedicalProjection;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 
@@ -24,13 +25,12 @@ final class MedicalModel
     }
     public function insert(Medical $medical): Medical
     {
-        $query = "INSERT INTO medicals (user_id, tuition, specialty_id, phone, is_active) values (?,?,?,?,?)";
+        $query = "INSERT INTO medicals (tenant_id, user_id, tuition, specialty_id) values (?,?,?,?)";
         $this->db->query($query, [
+            TenantContext::id(),
             $medical->getUserId(),
             $medical->getTuition(),
-            $medical->getSpecialtyId(),
-            $medical->getPhone(),
-            $medical->getIsActive()
+            $medical->getSpecialtyId()
         ]);
         $id = $this->db->insertID();
         return new Medical(
@@ -38,8 +38,6 @@ final class MedicalModel
             $medical->getUserId(),
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
-            $medical->getIsActive(),
             null,
             null
         );
@@ -47,22 +45,21 @@ final class MedicalModel
 
     public function update(Medical $medical): Medical
     {
-        $query = "UPDATE medicals SET tuition = ?, specialty_id = ?, phone = ?, is_active = ? ";
-        $query .= "WHERE id = ?";
+        $query = "UPDATE medicals SET tuition = ?, specialty_id = ? ";
+        $query .= "WHERE id = ? AND tenant_id = ?";
         $this->db->query($query, [
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getPhone(),
-            $medical->getIsActive(),
-            $medical->getId()
+            $medical->getId(),
+            TenantContext::id()
         ]);
         return $this->find($medical->getId());
     }
 
     public function find(int $id): ?Medical
     {
-        $query = "SELECT * FROM medicals WHERE id = ?";
-        $result = $this->db->query($query, [$id]);
+        $query = "SELECT * FROM medicals WHERE id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -74,16 +71,19 @@ final class MedicalModel
 
     public function findProjection(int $id): ?MedicalProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 M.*,
-                U.username as medico_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
+                U.email,
+                U.phone,
+                U.is_active AS user_is_active,
                 S.name as especialidad_nombre
               FROM medicals M
-              INNER JOIN users U ON U.id = M.user_id
-              INNER JOIN specialties S ON S.id = M.specialty_id
-              WHERE M.id = ?";
+              INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+              INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
+              WHERE M.id = ? AND M.tenant_id = ?";
 
-        $result = $this->db->query($query, [$id]);
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -97,16 +97,19 @@ final class MedicalModel
 
     public function findByUserIdProjection(int $userId): ?MedicalProjection
     {
-        $query = "SELECT 
+        $query = "SELECT
                 M.*,
-                U.username as medico_nombre,
+                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
+                U.email,
+                U.phone,
+                U.is_active AS user_is_active,
                 S.name as especialidad_nombre
               FROM medicals M
-              INNER JOIN users U ON U.id = M.user_id
-              INNER JOIN specialties S ON S.id = M.specialty_id
-              WHERE M.user_id = ?";
+              INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+              INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
+              WHERE M.user_id = ? AND M.tenant_id = ?";
 
-        $result = $this->db->query($query, [$userId]);
+        $result = $this->db->query($query, [$userId, TenantContext::id()]);
         $data = $result->getRow();
         if (!$data) {
             return null;
@@ -126,17 +129,18 @@ final class MedicalModel
                     M.user_id,
                     M.specialty_id,
                     M.tuition,
-                    M.phone,
-                    M.is_active,
                     M.created_at,
                     M.updated_at,
-                    U.username AS medico_nombre,
+                    TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medico_nombre,
+                    U.email,
+                    U.phone,
+                    U.is_active AS user_is_active,
                     S.name AS especialidad_nombre
                   FROM medicals M
-                  INNER JOIN users U ON U.id = M.user_id
-                  INNER JOIN specialties S ON S.id = M.specialty_id
+                  INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+                  INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
                   {$whereQuery}
-                  ORDER BY U.username ASC
+                  ORDER BY U.first_name ASC, U.last_name ASC
                   LIMIT ?, ?";
 
         $parameters[] = $request->getPagination()->getOffset();
@@ -158,8 +162,8 @@ final class MedicalModel
 
         $query = "SELECT COUNT(*) AS total
                   FROM medicals M
-                  INNER JOIN users U ON U.id = M.user_id
-                  INNER JOIN specialties S ON S.id = M.specialty_id
+                  INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+                  INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
                   {$whereQuery}";
 
         $result = $this->db->query($query, $parameters);
@@ -168,8 +172,8 @@ final class MedicalModel
 
     private function buildAvailableWhereClause(MedicalFilterRequest $request): array
     {
-        $whereQuery = 'WHERE M.is_active = 1 AND U.is_active = 1';
-        $parameters = [];
+        $whereQuery = 'WHERE M.tenant_id = ? AND U.is_active = 1';
+        $parameters = [TenantContext::id()];
 
         if ($request->hasSpecialtyId()) {
             $whereQuery .= ' AND M.specialty_id = ?';
@@ -177,7 +181,7 @@ final class MedicalModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= ' AND (U.username LIKE ? OR S.name LIKE ?)';
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ?)";
             $like = '%' . $request->getSearch() . '%';
             $parameters[] = $like;
             $parameters[] = $like;
@@ -188,20 +192,15 @@ final class MedicalModel
 
     public function search(MedicalFilterRequest $request): array
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
-        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.phone, M.is_active, M.created_at, M.updated_at ";
+        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.created_at, M.updated_at ";
         $fromQuery = "FROM medicals M ";
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE M.tenant_id = ? ";
 
         if ($request->hasSpecialtyId()) {
             $whereQuery .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
-        }
-
-        if ($request->hasIsActive()) {
-            $whereQuery .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive();
         }
 
         $orderQuery = "ORDER BY M.id ASC ";
@@ -226,47 +225,43 @@ final class MedicalModel
     public function searchProjection(MedicalFilterRequest $request): array
     {
 
-        $parameters = [];
-        $selectQuery = "SELECT 
-                        M.id, 
-                        M.user_id, 
-                        M.tuition, 
-                        M.specialty_id, 
-                        M.phone, 
-                        M.is_active, 
-                        M.created_at, 
+        $parameters = [TenantContext::id()];
+        $selectQuery = "SELECT
+                        M.id,
+                        M.user_id,
+                        M.tuition,
+                        M.specialty_id,
+                        M.created_at,
                         M.updated_at,
-                        
-                        U.username as medico_nombre,
+
+                        TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
+                        U.email,
+                        U.phone,
+                        U.is_active AS user_is_active,
                         S.name as especialidad_nombre
                     ";
 
-        $fromQuery = "FROM medicals M 
-                  INNER JOIN users U ON U.id = M.user_id
-                  INNER JOIN specialties S ON S.id = M.specialty_id
+        $fromQuery = "FROM medicals M
+                  INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+                  INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
                   ";
 
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE M.tenant_id = ? ";
 
         if ($request->hasSpecialtyId()) {
             $whereQuery .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
         }
 
-        if ($request->hasIsActive()) {
-            $whereQuery .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive();
-        }
-
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
             $parameters[] = $like;
         }
 
-        $orderQuery = "ORDER BY U.username ASC ";
+        $orderQuery = "ORDER BY U.first_name ASC, U.last_name ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
         $parameters[] = $request->getPagination()->getOffset();
@@ -287,26 +282,21 @@ final class MedicalModel
 
     public function countProjection(MedicalFilterRequest $request): int
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
-        $query = "SELECT COUNT(*) as total 
-              FROM medicals M 
-              INNER JOIN users U ON U.id = M.user_id
-              INNER JOIN specialties S ON S.id = M.specialty_id
-              WHERE 1 = 1 ";
+        $query = "SELECT COUNT(*) as total
+              FROM medicals M
+              INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+              INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
+              WHERE M.tenant_id = ? ";
 
         if ($request->hasSpecialtyId()) {
             $query .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
         }
 
-        if ($request->hasIsActive()) {
-            $query .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive() ? 1 : 0;
-        }
-
         if ($request->hasSearch()) {
-            $query .= " AND (U.username LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
+            $query .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR S.name LIKE ? OR M.tuition LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -320,14 +310,14 @@ final class MedicalModel
 
     public function delete(int $id): void
     {
-        $query = "DELETE FROM medicals WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "DELETE FROM medicals WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 
     public function findByUserId(int $userId): ?Medical
     {
-        $query = "SELECT * FROM medicals WHERE user_id = ?";
-        $result = $this->db->query($query, [$userId]);
+        $query = "SELECT * FROM medicals WHERE user_id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$userId, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -339,8 +329,8 @@ final class MedicalModel
 
     public function findByTuition(string $tuition): ?Medical
     {
-        $query = "SELECT * FROM medicals WHERE tuition = ?";
-        $result = $this->db->query($query, [$tuition]);
+        $query = "SELECT * FROM medicals WHERE tuition = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$tuition, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -352,8 +342,8 @@ final class MedicalModel
 
     public function findBySpecialtyId(int $specialtyId): array
     {
-        $query = "SELECT * FROM medicals WHERE specialty_id = ?";
-        $result = $this->db->query($query, [$specialtyId]);
+        $query = "SELECT * FROM medicals WHERE specialty_id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$specialtyId, TenantContext::id()]);
         $primitives = $result->getResult();
         $entities = [];
 
@@ -366,8 +356,8 @@ final class MedicalModel
 
     public function countBySpecialtyId(int $specialtyId): int
     {
-        $query = "SELECT COUNT(*) as total FROM medicals WHERE specialty_id = ?";
-        $result = $this->db->query($query, [$specialtyId]);
+        $query = "SELECT COUNT(*) as total FROM medicals WHERE specialty_id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$specialtyId, TenantContext::id()]);
         return (int) $result->getRow()->total;
     }
 }

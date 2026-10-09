@@ -1,7 +1,7 @@
 <?php
 namespace App\Entity\Patient;
 
-use App\Dto\Request\Patient\PatientRequest;
+use App\Dto\Request\Patient\PatientDataRequest;
 use App\Dto\Request\Patient\PatientUpdateRequest;
 use DateTime;
 
@@ -10,18 +10,10 @@ final class Patient
     public function __construct(
         private ?int $id,
         private int $userId,
-        private DateTime $birthDate,
+        private ?DateTime $birthDate,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {
-    }
-
-    public function update(PatientRequest $request): void
-    {
-        $this->birthDate = new DateTime($request->getBirthDate());
-        $this->updatedAt = new DateTime();
-
-
     }
 
     public function modify(PatientUpdateRequest $request): void
@@ -42,7 +34,7 @@ final class Patient
         return $this->userId;
     }
 
-    public function getBirthDate(): DateTime
+    public function getBirthDate(): ?DateTime
     {
         return $this->birthDate;
     }
@@ -58,12 +50,12 @@ final class Patient
     }
 
     
-    public static function fromRequest(PatientRequest $request): Patient
+    public static function fromRequest(int $userId, PatientDataRequest $request): Patient
     {
         return new Patient(
             null,
-            $request->getUserId(),
-            new DateTime($request->getBirthDate()),
+            $userId,
+            $request->getBirthDate() ? new DateTime($request->getBirthDate()) : null,
             new DateTime(),
             new DateTime()
         );

@@ -17,6 +17,7 @@ final class AppointmentUpdaterService
 
     private AppointmentUpdateBookingService $book;
     private AppointmentFinderService $appointmentFinderService;
+    private AppointmentNotificationService $notificationService;
 
     public function __construct()
     {
@@ -25,6 +26,7 @@ final class AppointmentUpdaterService
         $this->validator = new AppointmentUpdateValidatorService();
         $this->appointmentFinderService = new AppointmentFinderService();
         $this->book = new AppointmentUpdateBookingService();
+        $this->notificationService = new AppointmentNotificationService();
     }
 
     public function update(AppointmentUpdateRequest $request, int $id): AppointmentResponse
@@ -36,6 +38,8 @@ final class AppointmentUpdaterService
 
         //reserva atómica: lock + transacción + recálculo + solapamiento + modify + update
         $updatedAppointment = $this->book->update($appointment, $request, $id);
+
+        $this->notificationService->notifyOnUpdate($appointment, $request, $id);
 
         return $this->converter->convert($updatedAppointment);
     }

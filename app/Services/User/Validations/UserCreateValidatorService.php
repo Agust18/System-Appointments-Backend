@@ -5,7 +5,6 @@ namespace App\Services\User\Validations;
 
 use App\Dto\Request\User\UserRequest;
 use App\Exception\Role\RoleNotFoundException;
-use App\Exception\User\InvalidPasswordException;
 use App\Exception\User\DniAlreadyRegisteredException;
 use App\Exception\User\EmailAlreadyRegisteredException;
 use App\Models\User\UserModel;
@@ -34,6 +33,7 @@ final class UserCreateValidatorService
         if ($existeDni) {
             throw new DniAlreadyRegisteredException();
         }
+       
 
         if ($request->getRoleId()) {
             $role = $this->roleFinderService->find($request->getRoleId());

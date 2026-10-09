@@ -3,28 +3,18 @@ namespace App\Services\Appointment;
 
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
-use App\Exception\Appointment\AppointmentAlreadyExistsException;
 use App\Models\Appointment\AppointmentModel;
-use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
-use CodeIgniter\Database\BaseConnection;
-use Config\Database;
 use DateTime;
-use Exception;
 
 final class AppointmentUpdateBookingService
 {
-    private BaseConnection $db;
     private AppointmentModel $appointmentModel;
-    private ServiceModel $serviceModel;
-    private MedicalServiceModel $medicalServiceModel;
+    private AppointmentSlotLockService $slotLockService;
 
     public function __construct()
     {
-        $this->db = Database::connect();
         $this->appointmentModel = new AppointmentModel();
-        $this->serviceModel = new ServiceModel();
-        $this->medicalServiceModel = new MedicalServiceModel();
+        $this->slotLockService = new AppointmentSlotLockService();
     }
 
     public function update(Appointment $appointment, AppointmentUpdateRequest $request, int $id): Appointment
@@ -35,80 +25,19 @@ final class AppointmentUpdateBookingService
         $finalFecha = $request->getFecha() ?? $appointment->getFecha()->format('Y-m-d');
         $finalHora = $request->getHora() ?? $appointment->getHora()->format('H:i:s');
 
-        if ($finalServiceId === null) {
-            throw new Exception('Este turno no tiene un servicio asociado; debe indicar serviceId para poder editarlo.');
-        }
+        // Recalcula bloque y verifica solapamiento excluyendo el propio turno que se edita.
+        return $this->slotLockService->run(
+            $finalMedicalId,
+            $finalFecha,
+            $finalHora,
+            $finalServiceId,
+            $id,
+            function (DateTime $horaInicio, DateTime $horaFin) use ($appointment, $request): Appointment {
+                $appointment->modify($request);
+                $appointment->setHoraFin($horaFin);
 
-        $lockName = sprintf('appt_lock_%d_%s', $finalMedicalId, $finalFecha);
-
-        $lockAcquired = $this->acquireLock($lockName, 10);
-        if (!$lockAcquired) {
-            throw new Exception('El sistema está ocupado procesando otra reserva para este profesional. Por favor, intente nuevamente en unos segundos.');
-        }
-
-        try {
-            $this->db->transBegin();
-
-            // Recalcular duración/buffer con el servicio y override vigentes.
-            $service = $this->serviceModel->find($finalServiceId);
-            if (!$service || !$service->isActive()) {
-                throw new Exception('El servicio seleccionado no está disponible.');
+                return $this->appointmentModel->update($appointment);
             }
-
-            $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($finalMedicalId, $finalServiceId);
-            if (!$medicalService) {
-                throw new Exception('El profesional no ofrece este servicio actualmente.');
-            }
-
-            $effectiveDuration = ($medicalService->getCustomDurationMinutes() !== null)
-                ? $medicalService->getCustomDurationMinutes()
-                : $service->getDurationMinutes();
-
-            $totalBlockMinutes = $effectiveDuration + $service->getBufferMinutes();
-
-            $horaInicioFormatted = substr($finalHora, 0, 5) . ':00';
-            $horaInicioDt = new DateTime("{$finalFecha} {$horaInicioFormatted}");
-            $horaFinDt = (clone $horaInicioDt)->modify("+{$totalBlockMinutes} minutes");
-            $horaFinFormatted = $horaFinDt->format('H:i:s');
-
-            // Verificación de solapamiento, excluyendo el propio turno que se edita.
-            $hasOverlap = $this->appointmentModel->hasOverlap(
-                $finalMedicalId,
-                $finalFecha,
-                $horaInicioFormatted,
-                $horaFinFormatted,
-                $id
-            );
-
-            if ($hasOverlap) {
-                throw new AppointmentAlreadyExistsException;
-            }
-
-            $appointment->modify($request);
-            $appointment->setHoraFin($horaFinDt);
-
-            $updatedAppointment = $this->appointmentModel->update($appointment);
-
-            $this->db->transCommit();
-
-            return $updatedAppointment;
-        } catch (Exception $e) {
-            $this->db->transRollback();
-            throw $e;
-        } finally {
-            $this->releaseLock($lockName);
-        }
-    }
-
-    private function acquireLock(string $lockName, int $timeoutSeconds): bool
-    {
-        $result = $this->db->query("SELECT GET_LOCK(?, ?) as is_locked", [$lockName, $timeoutSeconds]);
-        $row = $result->getRow();
-        return $row && (int) $row->is_locked === 1;
-    }
-
-    private function releaseLock(string $lockName): void
-    {
-        $this->db->query("SELECT RELEASE_LOCK(?) as is_released", [$lockName]);
+        );
     }
 }

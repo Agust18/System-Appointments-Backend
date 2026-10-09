@@ -3,12 +3,14 @@
 namespace App\Controllers\User;
 
 use App\Dto\Request\User\UserRequest;
+use App\Support\IdentityNormalizer;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Services\User\UserCreatorService;
 
 
-class UserPostController extends ResourceController
+final class UserPostController extends ResourceController
 {
     private UserCreatorService  $userCreatorService;
 
@@ -28,11 +30,17 @@ class UserPostController extends ResourceController
 
     private function getRequest(): UserRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = IdentityNormalizer::normalizeInput($this->request->getJSON(true) ?? []);
+
+        RequestValidator::validate($parameters, UserRequest::rules(), UserRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new UserRequest(
-            $parameters->username,
+            $parameters->firstName,
+            $parameters->lastName,
             $parameters->email,
+            $parameters->phone ?? null,
             $parameters->password,
             $parameters->dni,
             $parameters->isActive ?? true,

@@ -55,16 +55,17 @@ final class ApiExceptionHandler extends BaseExceptionHandler implements Exceptio
     {
         $config = config(CorsConfig::class)->default;
 
-        $allowedOrigins = $config['allowedOrigins'] ?? [];
-        $originCount     = count($allowedOrigins);
+        $origin = method_exists($request, 'hasHeader') && $request->hasHeader('Origin')
+            ? $request->getHeaderLine('Origin')
+            : null;
 
-        if ($originCount === 1 && empty($config['allowedOriginsPatterns'])) {
-            header('Access-Control-Allow-Origin: ' . $allowedOrigins[0]);
-        } elseif ($originCount > 1 && method_exists($request, 'hasHeader') && $request->hasHeader('Origin')) {
-            $origin = $request->getHeaderLine('Origin');
+        $allowedOrigin = self::allowedOriginFor($config, $origin);
 
-            if (in_array($origin, $allowedOrigins, true)) {
-                header('Access-Control-Allow-Origin: ' . $origin);
+        if ($allowedOrigin !== null) {
+            header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+
+            // La respuesta depende del Origin del request salvo con un único origen fijo.
+            if (! $this->hasSingleFixedOrigin($config)) {
                 header('Vary: Origin');
             }
         }
@@ -72,5 +73,43 @@ final class ApiExceptionHandler extends BaseExceptionHandler implements Exceptio
         if (! empty($config['supportsCredentials'])) {
             header('Access-Control-Allow-Credentials: true');
         }
+    }
+
+    /**
+     * Origen que corresponde devolver en Access-Control-Allow-Origin, o null si ninguno.
+     * Misma regla que CodeIgniter\HTTP\Cors: un único origen sin patrones se devuelve
+     * siempre; con varios o con patrones, solo si el Origin del request coincide.
+     *
+     * @param array{allowedOrigins?: list<string>, allowedOriginsPatterns?: list<string>} $config
+     */
+    public static function allowedOriginFor(array $config, ?string $origin): ?string
+    {
+        $allowedOrigins = $config['allowedOrigins'] ?? [];
+        $patterns       = $config['allowedOriginsPatterns'] ?? [];
+
+        if (count($allowedOrigins) === 1 && $patterns === []) {
+            return $allowedOrigins[0];
+        }
+
+        if ($origin === null) {
+            return null;
+        }
+
+        if (in_array($origin, $allowedOrigins, true)) {
+            return $origin;
+        }
+
+        foreach ($patterns as $pattern) {
+            if (preg_match('#\A' . $pattern . '\z#', $origin) === 1) {
+                return $origin;
+            }
+        }
+
+        return null;
+    }
+
+    private function hasSingleFixedOrigin(array $config): bool
+    {
+        return count($config['allowedOrigins'] ?? []) === 1 && ($config['allowedOriginsPatterns'] ?? []) === [];
     }
 }

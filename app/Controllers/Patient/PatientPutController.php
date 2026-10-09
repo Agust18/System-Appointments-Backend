@@ -3,10 +3,12 @@ namespace App\Controllers\Patient;
 
 use App\Dto\Request\Patient\PatientUpdateRequest;
 use App\Services\Patient\PatientUpdaterService;
+use App\Support\IdentityNormalizer;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class PatientPutController extends ResourceController
+final class PatientPutController extends ResourceController
 {
     private PatientUpdaterService $patientUpdaterService;
 
@@ -24,11 +26,18 @@ class PatientPutController extends ResourceController
 
     private function getRequest(): PatientUpdateRequest
     {
-        $parameters = $this->request->getJSON();
-        
+        $parameters = IdentityNormalizer::normalizeInput($this->request->getJSON(true) ?? []);
+
+        RequestValidator::validate($parameters, PatientUpdateRequest::rules(), PatientUpdateRequest::messages());
+
+        $parameters = (object) $parameters;
+
         return new PatientUpdateRequest(
             $parameters->birthDate ?? null,
-              
+            $parameters->firstName ?? null,
+            $parameters->lastName ?? null,
+            $parameters->phone ?? null,
+            $parameters->email ?? null,
         );
     }
 }

@@ -36,4 +36,30 @@ final readonly class ServiceFilterRequest
     {
         return $this->isActive;
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function rules(): array
+    {
+        return array_merge(PaginationRequest::rules(), [
+            'search'   => 'permit_empty|string|max_length[100]',
+            'isActive' => 'permit_empty|in_list[0,1,true,false]',
+        ]);
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public static function messages(): array
+    {
+        return array_merge(PaginationRequest::messages(), [
+            'search' => [
+                'max_length' => 'La búsqueda no puede superar los 100 caracteres.',
+            ],
+            'isActive' => [
+                'in_list' => 'El estado no es válido.',
+            ],
+        ]);
+    }
 }

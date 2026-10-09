@@ -22,7 +22,7 @@ final class PatientDeleterService
 
     public function delete(int $id): void
     {
-        $patient = $this->patientFinderService->find($id);
+        $this->patientFinderService->find($id);
 
         $appointments = $this->appointmentModel->findByPatientId($id);
 

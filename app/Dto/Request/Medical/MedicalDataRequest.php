@@ -5,9 +5,7 @@ final readonly class MedicalDataRequest
 {
     public function __construct(
        private string $tuition,
-       private int $specialtyId,
-       private ?string $phone = null,
-       private bool $isActive = true
+       private int $specialtyId
     ) {
     }
 
@@ -19,12 +17,28 @@ final readonly class MedicalDataRequest
     {
         return $this->specialtyId;
     }
-    public function getPhone(): ?string
+
+    public static function rules(): array
     {
-        return $this->phone;
+        return [
+            'tuition'     => 'required|max_length[50]',
+            'specialtyId' => 'required|is_natural_no_zero',
+           
+        ];
     }
-    public function getIsActive(): bool
+
+    public static function messages(): array
     {
-        return $this->isActive;
+        return [
+            'tuition' => [
+                'required'   => 'Ingresá la matrícula.',
+                'max_length' => 'La matrícula es muy larga.',
+            ],
+            'specialtyId' => [
+                'required'           => 'Elegí una especialidad.',
+                'is_natural_no_zero' => 'Elegí una especialidad válida.',
+            ],
+            
+        ];
     }
 }

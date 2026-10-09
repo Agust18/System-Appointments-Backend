@@ -7,8 +7,6 @@ final readonly class MedicalResponse
         public int $id,
         public int $userId,
         public string $tuition,
-        public int $specialtyId,
-        public ?string $phone,
-        public bool $isActive
+        public int $specialtyId
     ) {}
 }

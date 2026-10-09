@@ -9,9 +9,11 @@ final class PrimitiveToUserConverte
     {
         return new User(
             $primitive->id,
-            $primitive->username,
+            $primitive->first_name,
+            $primitive->last_name,
             $primitive->email,
-            $primitive->password,
+            $primitive->phone ?? null,
+            $primitive->password ?? null,
             $primitive->dni,
             (bool) $primitive->is_active,
             (bool) $primitive->is_verified,

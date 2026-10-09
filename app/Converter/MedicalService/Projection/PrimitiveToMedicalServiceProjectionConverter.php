@@ -16,7 +16,6 @@ final class PrimitiveToMedicalServiceProjectionConverter
             $primitive->base_duration_minutes,
             $primitive->buffer_minutes,
             $primitive->base_price,
-            $primitive->slot_step_minutes,
             $primitive->custom_price !== null ? (float)$primitive->custom_price : null,
             $primitive->custom_duration_minutes !== null ? (int)$primitive->custom_duration_minutes : null,
             $primitive->effective_duration_minutes,

@@ -11,13 +11,16 @@ final readonly class MedicalProjectionResponse
         
         // Proyecciones (nombres para mostrar)
         public string $medicoNombre,
+        public ?string $email,
+        public ?string $phone,
         public string $especialidadNombre,
         
         // Datos del médico
         public string $tuition,
-        public ?string $phone,
-        public bool $isActive,
         public ?string $createdAt,
-        public ?string $updatedAt
+        public ?string $updatedAt,
+
+        // Estado del usuario del médico (users.is_active)
+        public bool $userIsActive = true
     ) {}
 }

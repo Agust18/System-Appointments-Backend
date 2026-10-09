@@ -6,7 +6,7 @@ use App\Services\Service\ServiceDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class ServiceDeleteController extends ResourceController
+final class ServiceDeleteController extends ResourceController
 {
     private ServiceDeleterService $serviceDeleterService;
 

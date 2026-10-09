@@ -4,8 +4,7 @@ namespace App\Filters;
 
 use App\Constants\Role;
 use App\Models\Appointment\AppointmentModel;
-use App\Models\Medical\MedicalModel;
-use App\Models\Patient\PatientModel;
+use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -31,20 +30,8 @@ class AppointmentViewPermission implements FilterInterface
             ]);
         }
 
-        if ($roleId === Role::PATIENT) {
-            $patient = (new PatientModel())->findByUserId($userId);
-
-            if ($patient && $appointment->getPatientId() === $patient->getId()) {
-                return $request;
-            }
-        }
-
-        if ($roleId === Role::MEDICAL) {
-            $medical = (new MedicalModel())->findByUserId($userId);
-
-            if ($medical && $appointment->getMedicalId() === $medical->getId()) {
-                return $request;
-            }
+        if ((new PermissionsService())->canViewAppointment($roleId, $userId, $appointment)) {
+            return $request;
         }
 
         return $response->setStatusCode(403)->setJSON([

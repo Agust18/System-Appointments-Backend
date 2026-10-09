@@ -3,10 +3,11 @@ namespace App\Controllers\Service;
 
 use App\Dto\Request\Service\ServiceRequest;
 use App\Services\Service\ServiceCreatorService;
+use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class ServicePostController extends ResourceController
+final class ServicePostController extends ResourceController
 {
     private ServiceCreatorService $serviceCreatorService;
 
@@ -25,7 +26,11 @@ class ServicePostController extends ResourceController
 
     private function getRequest(): ServiceRequest
     {
-        $parameters = $this->request->getJSON();
+        $parameters = $this->request->getJSON(true) ?? [];
+
+        RequestValidator::validate($parameters, ServiceRequest::rules(), ServiceRequest::messages());
+
+        $parameters = (object) $parameters;
 
         return new ServiceRequest(
 
@@ -34,7 +39,6 @@ class ServicePostController extends ResourceController
             $parameters->durationMinutes,
             $parameters->bufferMinutes ?? 0,
             $parameters->price ?? 0.0,
-            $parameters->slotStepMinutes ?? 15,
             $parameters->isActive ?? true
         );
     }

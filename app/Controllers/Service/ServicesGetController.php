@@ -4,6 +4,7 @@ namespace App\Controllers\Service;
 use App\Dto\Request\PaginationRequest;
 use App\Dto\Request\Service\ServiceFilterRequest;
 use App\Services\Service\ServicesSearcherService;
+use App\Validation\RequestValidator;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -26,6 +27,8 @@ final class ServicesGetController extends ResourceController
 
     private function getRequest(): ServiceFilterRequest
     {
+        RequestValidator::validate($this->request->getGet(), ServiceFilterRequest::rules(), ServiceFilterRequest::messages());
+
         $page = $this->request->getGet('page');
         $size = $this->request->getGet('size');
         $search = $this->request->getGet('search');
@@ -37,7 +40,7 @@ final class ServicesGetController extends ResourceController
                 $size ? (int)$size : 10,
             ),
             $search ?? null,
-            $isActive !== null ? (bool)$isActive : null,
+            ($isActive !== null && $isActive !== '') ? filter_var($isActive, FILTER_VALIDATE_BOOLEAN) : null,
         );
     }
 }

@@ -37,12 +37,15 @@ class Filters extends BaseFilters
         'auth' => \App\Filters\Auth::class,
         'adminOnly' => \App\Filters\AdminOnly::class,
         'adminOrReception' => \App\Filters\AdminOrReception::class,
+        'adminReceptionOrMedical' => \App\Filters\AdminReceptionOrMedical::class,
         'appointmentPermission' => \App\Filters\AppointmentPermission::class,
         'appointmentViewPermission' => \App\Filters\AppointmentViewPermission::class,
         'patientViewPermission' => \App\Filters\PatientViewPermission::class,
         'medicalViewPermission' => \App\Filters\MedicalViewPermission::class,
-        'receptionUserCreate' => \App\Filters\ReceptionUserCreate::class,
         'appointmentCreatePermission' => \App\Filters\AppointmentCreatePermission::class,
+        'throttle' => \App\Filters\Throttle::class,
+        'tenant' => \App\Filters\TenantResolver::class,
+        'platformAdminOnly' => \App\Filters\PlatformAdminOnly::class,
         
         
 
@@ -85,6 +88,9 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            // /platform/* no tiene Tenant (SuperAdmin, ADR 003): sin esta excepción respondería 400
+            // en producción y cargaría 'demo' en desarrollo. 'platform/*' no cubre 'platform' a secas.
+            'tenant' => ['except' => ['platform', 'platform/*']],
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',

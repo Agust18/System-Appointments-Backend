@@ -6,7 +6,7 @@ use App\Services\Specialty\SpecialtyDeleterService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-class SpecialtyDeleteController extends ResourceController
+final class SpecialtyDeleteController extends ResourceController
 {
     private SpecialtyDeleterService $specialtyDeleterService;
 

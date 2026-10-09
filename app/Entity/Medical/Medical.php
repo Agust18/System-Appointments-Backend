@@ -1,7 +1,7 @@
 <?php
 namespace App\Entity\Medical;
 
-use App\Dto\Request\Medical\MedicalRequest;
+use App\Dto\Request\Medical\MedicalDataRequest;
 use App\Dto\Request\Medical\MedicalUpdateRequest;
 use DateTime;
 
@@ -12,8 +12,6 @@ final class Medical
         private int $userId,
         private string $tuition,
         private int $specialtyId,
-        private ?string $phone,
-        private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {
@@ -25,8 +23,6 @@ final class Medical
     {
         $this->tuition = $request->getTuition() ?? $this->tuition;
         $this->specialtyId = $request->getSpecialtyId() ?? $this->specialtyId;
-        $this->phone = $request->getPhone() ?? $this->phone;
-        $this->isActive = $request->getIsActive() ?? $this->isActive;
     }
 
     public function getId(): ?int
@@ -49,20 +45,6 @@ final class Medical
         return $this->specialtyId;
     }
 
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
-
-    public function getIsActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function modifyIsActive(bool $isActive): void
-    {
-        $this->isActive = $isActive;
-    }
 
     public function getCreatedAt(): ?DateTime
     {
@@ -74,15 +56,13 @@ final class Medical
         return $this->updatedAt;
     }
 
-    public static function convertFromRequest(MedicalRequest $request): Medical
+    public static function convertFromRequest(int $userId, MedicalDataRequest $request): Medical
     {
         return new Medical(
             null,
-            $request->getUserId(),
+            $userId,
             $request->getTuition(),
             $request->getSpecialtyId(),
-            $request->getPhone(),
-            $request->getIsActive(),
             null,
             null
         );

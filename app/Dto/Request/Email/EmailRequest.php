@@ -10,6 +10,7 @@ final readonly class EmailRequest
         private string $body,
         private array $attachments = [],
         private array $bcc = [],
+        private ?string $replyTo = null,
     ) {
     }
 
@@ -36,5 +37,10 @@ final readonly class EmailRequest
     public function getBcc(): array
     {
         return $this->bcc;
+    }
+
+    public function getReplyTo(): ?string
+    {
+        return $this->replyTo;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models\Specialty;
 
 use App\Converter\Specialty\PrimitiveToSpecialtyConverter;
 use App\Dto\Request\Specialty\SpecialtyFilterRequest;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use App\Entity\Specialty\Specialty;
@@ -20,9 +21,10 @@ final class SpecialtyModel
 
     public function insert(Specialty $specialty): Specialty
     {
-        $query = "INSERT INTO specialties (name, description, created_at, updated_at) values (?,?,?,?)";
+        $query = "INSERT INTO specialties (tenant_id, name, description, created_at, updated_at) values (?,?,?,?,?)";
 
         $this->db->query($query, [
+            TenantContext::id(),
             $specialty->getName(),
             $specialty->getDescription(),
             $specialty->getCreatedAt()->format('Y-m-d H:i:s'),
@@ -43,13 +45,14 @@ final class SpecialtyModel
     public function update(Specialty $specialty): Specialty
     {
         $query = "UPDATE specialties SET name = ?, description = ?, updated_at = ? ";
-        $query .= "WHERE id = ?";
+        $query .= "WHERE id = ? AND tenant_id = ?";
 
         $this->db->query($query, [
             $specialty->getName(),
             $specialty->getDescription(),
             $specialty->getUpdatedAt()->format('Y-m-d H:i:s'),
-            $specialty->getId()
+            $specialty->getId(),
+            TenantContext::id()
         ]);
 
         return $this->find($specialty->getId());
@@ -57,8 +60,8 @@ final class SpecialtyModel
 
     public function find(int $id): ?Specialty
     {
-        $query = "SELECT * FROM specialties WHERE id = ?";
-        $result = $this->db->query($query, [$id]);
+        $query = "SELECT * FROM specialties WHERE id = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$id, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -70,8 +73,8 @@ final class SpecialtyModel
 
     public function findByName(string $name): ?Specialty
     {
-        $query = "SELECT * FROM specialties WHERE name = ?";
-        $result = $this->db->query($query, [$name]);
+        $query = "SELECT * FROM specialties WHERE name = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$name, TenantContext::id()]);
         $primitive = $result->getRow();
 
         if (!$primitive) {
@@ -84,11 +87,11 @@ final class SpecialtyModel
 
     public function search(SpecialtyFilterRequest $request): array
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
         $selectQuery = "SELECT S.id, S.name, S.description, S.created_at, S.updated_at ";
         $fromQuery = "FROM specialties S ";
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE S.tenant_id = ? ";
 
         if ($request->hasSearch()) {
             $whereQuery .= " AND (S.name LIKE ? OR S.description LIKE ?) ";
@@ -118,11 +121,11 @@ final class SpecialtyModel
 
     public function count(SpecialtyFilterRequest $request): int
     {
-        $parameters = [];
+        $parameters = [TenantContext::id()];
 
         $selectQuery = "SELECT COUNT(*) as total ";
         $fromQuery = "FROM specialties S ";
-        $whereQuery = "WHERE 1 = 1 ";
+        $whereQuery = "WHERE S.tenant_id = ? ";
 
         if ($request->hasSearch()) {
             $whereQuery .= " AND (S.name LIKE ? OR S.description LIKE ?) ";
@@ -141,7 +144,7 @@ final class SpecialtyModel
 
     public function delete(int $id): void
     {
-        $query = "DELETE FROM specialties WHERE id = ?";
-        $this->db->query($query, [$id]);
+        $query = "DELETE FROM specialties WHERE id = ? AND tenant_id = ?";
+        $this->db->query($query, [$id, TenantContext::id()]);
     }
 }

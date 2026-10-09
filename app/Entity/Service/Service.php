@@ -14,7 +14,6 @@ final class Service
         private int $durationMinutes,
         private int $bufferMinutes,
         private float $price,
-        private int $slotStepMinutes,
         private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
@@ -37,9 +36,6 @@ final class Service
         }
         if ($request->getPrice() !== null) {
             $this->price = $request->getPrice();
-        }
-        if ($request->getSlotStepMinutes() !== null) {
-            $this->slotStepMinutes = $request->getSlotStepMinutes();
         }
         if ($request->getIsActive() !== null) {
             $this->isActive = $request->getIsActive();
@@ -77,11 +73,6 @@ final class Service
         return $this->price;
     }
 
-    public function getSlotStepMinutes(): int
-    {
-        return $this->slotStepMinutes;
-    }
-
     public function isActive(): bool
     {
         return $this->isActive;
@@ -106,7 +97,6 @@ final class Service
             $request->getDurationMinutes(),
             $request->getBufferMinutes(),
             $request->getPrice(),
-            $request->getSlotStepMinutes(),
             $request->getIsActive(),
             new DateTime(),
             new DateTime()
