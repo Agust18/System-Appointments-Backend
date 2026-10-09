@@ -33,7 +33,6 @@ final class MedicalAvailableGetController extends ResourceController
                 $size ? (int) $size : 10,
             ),
             ($specialtyId !== null && $specialtyId !== '') ? (int) $specialtyId : null,
-            true,
             $search ?: null
         );
 

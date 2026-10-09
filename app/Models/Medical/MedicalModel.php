@@ -25,13 +25,12 @@ final class MedicalModel
     }
     public function insert(Medical $medical): Medical
     {
-        $query = "INSERT INTO medicals (tenant_id, user_id, tuition, specialty_id, is_active) values (?,?,?,?,?)";
+        $query = "INSERT INTO medicals (tenant_id, user_id, tuition, specialty_id) values (?,?,?,?)";
         $this->db->query($query, [
             TenantContext::id(),
             $medical->getUserId(),
             $medical->getTuition(),
-            $medical->getSpecialtyId(),
-            $medical->getIsActive()
+            $medical->getSpecialtyId()
         ]);
         $id = $this->db->insertID();
         return new Medical(
@@ -39,7 +38,6 @@ final class MedicalModel
             $medical->getUserId(),
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getIsActive(),
             null,
             null
         );
@@ -47,12 +45,11 @@ final class MedicalModel
 
     public function update(Medical $medical): Medical
     {
-        $query = "UPDATE medicals SET tuition = ?, specialty_id = ?, is_active = ? ";
+        $query = "UPDATE medicals SET tuition = ?, specialty_id = ? ";
         $query .= "WHERE id = ? AND tenant_id = ?";
         $this->db->query($query, [
             $medical->getTuition(),
             $medical->getSpecialtyId(),
-            $medical->getIsActive(),
             $medical->getId(),
             TenantContext::id()
         ]);
@@ -130,7 +127,6 @@ final class MedicalModel
                     M.user_id,
                     M.specialty_id,
                     M.tuition,
-                    M.is_active,
                     M.created_at,
                     M.updated_at,
                     TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medico_nombre,
@@ -173,7 +169,7 @@ final class MedicalModel
 
     private function buildAvailableWhereClause(MedicalFilterRequest $request): array
     {
-        $whereQuery = 'WHERE M.tenant_id = ? AND M.is_active = 1 AND U.is_active = 1';
+        $whereQuery = 'WHERE M.tenant_id = ? AND U.is_active = 1';
         $parameters = [TenantContext::id()];
 
         if ($request->hasSpecialtyId()) {
@@ -195,18 +191,13 @@ final class MedicalModel
     {
         $parameters = [TenantContext::id()];
 
-        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.is_active, M.created_at, M.updated_at ";
+        $selectQuery = "SELECT M.id, M.user_id, M.tuition, M.specialty_id, M.created_at, M.updated_at ";
         $fromQuery = "FROM medicals M ";
         $whereQuery = "WHERE M.tenant_id = ? ";
 
         if ($request->hasSpecialtyId()) {
             $whereQuery .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
-        }
-
-        if ($request->hasIsActive()) {
-            $whereQuery .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive();
         }
 
         $orderQuery = "ORDER BY M.id ASC ";
@@ -237,7 +228,6 @@ final class MedicalModel
                         M.user_id,
                         M.tuition,
                         M.specialty_id,
-                        M.is_active,
                         M.created_at,
                         M.updated_at,
 
@@ -257,11 +247,6 @@ final class MedicalModel
         if ($request->hasSpecialtyId()) {
             $whereQuery .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
-        }
-
-        if ($request->hasIsActive()) {
-            $whereQuery .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive();
         }
 
         if ($request->hasSearch()) {
@@ -304,11 +289,6 @@ final class MedicalModel
         if ($request->hasSpecialtyId()) {
             $query .= " AND M.specialty_id = ? ";
             $parameters[] = $request->getSpecialtyId();
-        }
-
-        if ($request->hasIsActive()) {
-            $query .= " AND M.is_active = ? ";
-            $parameters[] = $request->getIsActive() ? 1 : 0;
         }
 
         if ($request->hasSearch()) {

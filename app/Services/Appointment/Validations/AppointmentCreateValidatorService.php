@@ -6,6 +6,7 @@ use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Exception\Appointment\CannotCreateAppointmentForOtherPatientException;
 use App\Exception\Appointment\InvalidInitialStatusException;
 use App\Exception\Appointment\MedicalCannotCreateAppointmentException;
+use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\PatientCannotBeMedicalException;
 use App\Exception\Patient\UserNotPatientException;
 use App\Services\Medical\MedicalFinderService;
@@ -48,6 +49,10 @@ final class AppointmentCreateValidatorService
         $medical = $this->medicalFinderService->find($request->getMedicalId());
 
         $user = $this->userFinderService->find($medical->getUserId());
+
+        if (!$user->getIsActive()) {
+            throw new MedicalNotAvailableException();
+        }
 
         $doctorName = $user ? $user->getFullName() : 'Profesional';
 

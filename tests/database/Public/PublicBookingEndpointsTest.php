@@ -170,9 +170,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
     public function testMedicalsListsOnlyActiveOnesWithMinimalFields(): void
     {
         $active = $this->seedMedical();
-        $inactiveMedical = $this->seedMedical();
         $inactiveUser = $this->seedMedical();
-        $this->db->table('medicals')->where('id', $inactiveMedical)->update(['is_active' => 0]);
         $userId = (int) $this->db->table('medicals')->where('id', $inactiveUser)->get()->getRow()->user_id;
         $this->db->table('users')->where('id', $userId)->update(['is_active' => 0]);
 
@@ -182,7 +180,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
         $json = $this->decode($result);
         $this->assertSame(1, $json['total']);
         $this->assertSame($active, $json['data'][0]['id']);
-        $this->assertSame(['id', 'medicoNombre', 'especialidadNombre', 'isActive'], array_keys($json['data'][0]));
+        $this->assertSame(['id', 'medicoNombre', 'especialidadNombre'], array_keys($json['data'][0]));
         $this->assertStringNotContainsString('@test.com', $result->getJSON());
         $this->assertStringNotContainsString('MAT-', $result->getJSON());
     }
@@ -250,7 +248,8 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
     public function testMedicalServicesOfAnInactiveMedicalAreRejectedWith409(): void
     {
         [$medicalId] = $this->seedMedicalWithService(30);
-        $this->db->table('medicals')->where('id', $medicalId)->update(['is_active' => 0]);
+        $userId = (int) $this->db->table('medicals')->where('id', $medicalId)->get()->getRow()->user_id;
+        $this->db->table('users')->where('id', $userId)->update(['is_active' => 0]);
 
         try {
             $this->get("public/medicals/{$medicalId}/services");

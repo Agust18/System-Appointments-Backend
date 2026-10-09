@@ -28,7 +28,6 @@ final class PublicMedicalsGetController extends ResourceController
         $request = new MedicalFilterRequest(
             new PaginationRequest(1, PublicCatalog::MAX_ITEMS),
             ($specialtyId !== null && $specialtyId !== '') ? (int) $specialtyId : null,
-            true,
             null
         );
 

@@ -8,8 +8,7 @@ final readonly class MedicalFilterRequest
     public function __construct(
         private PaginationRequest $pagination,
         private ?int $specialtyId = null,
-        private ?bool $isActive = null,
-        private ?string $search = null  
+        private ?string $search = null
     ) {}
 
     public function getPagination(): PaginationRequest
@@ -27,17 +26,6 @@ final readonly class MedicalFilterRequest
         return !empty($this->specialtyId);
     }
 
-    public function getIsActive(): ?bool
-    {
-        return $this->isActive;
-    }
-
-    public function hasIsActive(): bool
-    {
-        return $this->isActive !== null;
-    }
-
- 
     public function getSearch(): ?string
     {
         return $this->search;
@@ -55,7 +43,6 @@ final readonly class MedicalFilterRequest
     {
         return array_merge(PaginationRequest::rules(), [
             'specialtyId' => 'permit_empty|is_natural_no_zero',
-            'isActive'    => 'permit_empty|in_list[0,1,true,false]',
             'search'      => 'permit_empty|string|max_length[100]',
         ]);
     }
@@ -68,9 +55,6 @@ final readonly class MedicalFilterRequest
         return array_merge(PaginationRequest::messages(), [
             'specialtyId' => [
                 'is_natural_no_zero' => 'El ID de la especialidad debe ser un número entero mayor que cero.',
-            ],
-            'isActive' => [
-                'in_list' => 'El estado no es válido.',
             ],
             'search' => [
                 'max_length' => 'La búsqueda no puede superar los 100 caracteres.',

@@ -14,6 +14,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ## ✅ Hecho (18)
 
+- [Auditar el doble isActive: se eliminó `medicals.is_active`](hecho/auditar-doble-isactive.md)
 - [B2 — Auditoría de transStart() vs transBegin()](hecho/b2-auditoria-transbegin.md)
 - [R6 — Booking atómico extraído a AppointmentSlotLockService](hecho/r6-booking-atomico-extraido.md)
 - [DELETE /appointments/{id} devolvía 500](hecho/fix-delete-appointments-500.md)
@@ -47,7 +48,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
 - [R5 — Extraer isDayOff() a MedicalDaysOffService](pendiente/r5-extraer-isdayoff.md)
-- [Auditar el doble isActive (users + medicals)](pendiente/auditar-doble-isactive.md)
 - [Migración al RequestValidator](pendiente/migracion-al-request-validator.md)
 - [Micro-deuda: guard de AppointmentUpdateBookingService](pendiente/micro-deuda-guard-update-booking.md)
 - [Alertas del sistema (post-MVP)](pendiente/alertas-del-sistema.md)

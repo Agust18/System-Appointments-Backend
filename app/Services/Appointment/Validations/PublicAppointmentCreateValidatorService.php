@@ -29,8 +29,7 @@ final class PublicAppointmentCreateValidatorService
         $medical = $this->medicalFinderService->find($request->getMedicalId());
         $doctor = $this->userFinderService->find($medical->getUserId());
 
-        // Doble isActive: tanto el médico como su usuario deben estar activos.
-        if (!$medical->getIsActive() || !$doctor->getIsActive()) {
+        if (!$doctor->getIsActive()) {
             throw new MedicalNotAvailableException();
         }
 

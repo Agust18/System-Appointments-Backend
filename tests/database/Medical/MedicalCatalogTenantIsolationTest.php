@@ -239,7 +239,7 @@ final class MedicalCatalogTenantIsolationTest extends CIUnitTestCase
 
         $specialty = (new SpecialtyModel())->insert(new Specialty(null, 'Cardiologia', null, new DateTime(), new DateTime()));
         $service = (new ServiceModel())->insert(new Service(null, 'Estudio', null, 20, 5, 50.0, true, null, null));
-        $medical = (new MedicalModel())->insert(new Medical(null, $this->b['user'], 'MAT-NUEVA', $specialty->getId(), true, null, null));
+        $medical = (new MedicalModel())->insert(new Medical(null, $this->b['user'], 'MAT-NUEVA', $specialty->getId(), null, null));
         $schedule = (new MedicalScheduleModel())->insert(new MedicalSchedule(null, $medical->getId(), 2, '09:00:00', '13:00:00', true, null, null));
         (new MedicalServiceModel())->insertOrUpdate(new MedicalService(null, $medical->getId(), $service->getId(), null, null, true, null, null));
 

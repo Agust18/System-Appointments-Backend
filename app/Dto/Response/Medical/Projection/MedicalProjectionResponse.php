@@ -17,7 +17,6 @@ final readonly class MedicalProjectionResponse
         
         // Datos del médico
         public string $tuition,
-        public bool $isActive,
         public ?string $createdAt,
         public ?string $updatedAt
     ) {}

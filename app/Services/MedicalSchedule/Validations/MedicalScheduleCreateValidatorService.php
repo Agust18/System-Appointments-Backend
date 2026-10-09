@@ -34,7 +34,9 @@ final class MedicalScheduleCreateValidatorService
             throw new InvalidScheduleTimeException();
         }
 
-        if (!$medical->getIsActive()) {
+        $user = $this->userFinderService->find($medical->getUserId());
+
+        if (!$user->getIsActive()) {
             throw new MedicalNotActiveException($request->getMedicalId());
         }
 
@@ -53,7 +55,6 @@ final class MedicalScheduleCreateValidatorService
                 throw new ScheduleAlreadyExistsException();
             }
 
-            $user = $this->userFinderService->find($medical->getUserId());
             throw new ScheduleOverlapException($user->getFullName(), $dayOfWeek);
         }
     }

@@ -8,6 +8,7 @@ use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
 use App\Exception\Appointment\InvalidInitialStatusException;
 use App\Exception\Appointment\MedicalCannotCreateAppointmentException;
+use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
 use App\Exception\Appointment\PatientCannotBeMedicalException;
 use App\Exception\Appointment\ServiceNotAvailableException;
@@ -170,6 +171,22 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
 
         $this->expectException(CannotCreateAppointmentForOtherPatientException::class);
         $this->validator->validate($this->request($medicalId, $otherPatientId, $serviceId, '09:00', 'pending'));
+    }
+
+    // --------------------------------------------------------------- médico
+
+    public function testMedicalWithInactiveUserIsRejectedWith409(): void
+    {
+        [$medicalId, $serviceId, $patientId] = $this->validScenario();
+        $medicalUserId = (int) $this->db->table('medicals')->where('id', $medicalId)->get()->getRow()->user_id;
+        $this->db->table('users')->where('id', $medicalUserId)->update(['is_active' => 0]);
+
+        try {
+            $this->validator->validate($this->request($medicalId, $patientId, $serviceId));
+            $this->fail('Se esperaba MedicalNotAvailableException');
+        } catch (MedicalNotAvailableException $e) {
+            $this->assertSame(409, $e->getCode());
+        }
     }
 
     // ------------------------------------------------------------- paciente

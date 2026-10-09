@@ -52,7 +52,6 @@ final class MedicalProjectionFinderServiceTest extends CIUnitTestCase
             'user_id'      => $userId,
             'tuition'      => 'MAT-' . uniqid(),
             'specialty_id' => $specialtyId,
-            'is_active'    => 1,
         ]);
 
         return $this->db->insertID();

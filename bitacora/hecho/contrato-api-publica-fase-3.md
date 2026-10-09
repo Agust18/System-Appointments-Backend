@@ -15,7 +15,7 @@ Sin header `Authorization`. Todo bajo `/public`. Los errores son `{ "error": "..
 | Método y ruta | Devuelve |
 |---|---|
 | `GET /public/specialties` | `{ data: [{ id, name, description, createdAt, updatedAt }], total }` |
-| `GET /public/medicals/available?specialtyId=` | `{ data: [{ id, medicoNombre, especialidadNombre, isActive }], total }`. Solo médicos activos. |
+| `GET /public/medicals/available?specialtyId=` | `{ data: [{ id, medicoNombre, especialidadNombre }], total }`. Solo médicos con usuario activo (`medicals.is_active` se eliminó). |
 | `GET /public/medicals/{id}/services` | `[{ serviceId, name, description, durationMinutes, price }]` (duración y precio efectivos del médico). `409` si el médico está inactivo, `404` si no existe. |
 | `GET /public/services` | `{ data: [{ id, name, description, durationMinutes, price }], total }`. Solo servicios activos. |
 | `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` | Un día: slots `[{ start_time, end_time, block_end_time }]`. Igual que la ruta autenticada. |

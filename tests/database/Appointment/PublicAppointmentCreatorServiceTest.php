@@ -271,7 +271,8 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
     public function testInactiveMedicalFailsBeforeCreatingAnyUserOrPatient(): void
     {
         [$medicalId, $serviceId] = $this->scenario();
-        $this->db->table('medicals')->where('id', $medicalId)->update(['is_active' => 0]);
+        $medicalUserId = (int) $this->db->table('medicals')->where('id', $medicalId)->get()->getRow()->user_id;
+        $this->db->table('users')->where('id', $medicalUserId)->update(['is_active' => 0]);
         $usersBefore = $this->countUsers();
 
         try {

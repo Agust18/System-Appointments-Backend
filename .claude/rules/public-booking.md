@@ -14,7 +14,7 @@ Sin header `Authorization`. Todos pasan por `cors` y después por `throttle` (el
 |---|---|---|
 | `GET /public/specialties` | 60/min | Especialidades |
 | `GET /public/services` | 60/min | Servicios activos |
-| `GET /public/medicals/available?specialtyId=` | 60/min | Médicos con `medicals.is_active = 1` **y** `users.is_active = 1` |
+| `GET /public/medicals/available?specialtyId=` | 60/min | Médicos con `users.is_active = 1` (`medicals` no tiene `is_active`) |
 | `GET /public/medicals/{id}/services` | 60/min | Servicios del médico (duración y precio efectivos) |
 | `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Reusa `AppointmentAvailabilityGetController` |
 | `POST /public/appointments` | 5/min | `201` con `PublicAppointmentResponse` (`id, fecha, hora, medicoNombre, servicioNombre, status`) |
@@ -26,7 +26,7 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 
 `PublicAppointmentPostController` normaliza el input (`IdentityNormalizer`), valida `PublicAppointmentRequest` y llama a `PublicAppointmentCreatorService::create()`. Cualquier `status` o `patientId` del body se ignora.
 
-1. **Validar el turno** (`PublicAppointmentCreateValidatorService`): médico existente, médico **y** su usuario activos (doble `isActive`), fecha no pasada, servicio activo y ofrecido por el médico, y que el bloque completo quepa en un rango horario del día. Corre antes de tocar `users`/`patients`: si falla no se escribe nada.
+1. **Validar el turno** (`PublicAppointmentCreateValidatorService`): médico existente, usuario del médico activo (único `is_active`; `medicals.is_active` se eliminó), fecha no pasada, servicio activo y ofrecido por el médico, y que el bloque completo quepa en un rango horario del día. Corre antes de tocar `users`/`patients`: si falla no se escribe nada.
 2. **Resolver la identidad** (`PatientGuestResolverService::resolve()`): bloqueo por DNI, `GET_LOCK('public_identity_{tenantId}_{dni}')` y transacción propia. Casos A–E abajo.
 3. **Tope de turnos**: máximo 3 turnos futuros `pending`/`confirmed` por paciente (`MAX_ACTIVE_FUTURE_APPOINTMENTS`). Es un límite blando: sin lock, dos solicitudes simultáneas del mismo paciente pueden pasarlo por uno.
 4. **Reservar** con `AppointmentBookingService::book()` (ver `booking-atomico.md`). El turno nace `confirmed`.

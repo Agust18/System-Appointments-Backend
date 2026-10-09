@@ -52,8 +52,7 @@ final class MedicalPostController extends ResourceController
 
         $medicalDataRequest = new MedicalDataRequest(
             tuition: $parameters->medical->tuition,
-            specialtyId: $parameters->medical->specialtyId,
-            isActive: $parameters->medical->isActive ?? true
+            specialtyId: $parameters->medical->specialtyId
         );
 
         return new MedicalRequest($userRequest, $medicalDataRequest);

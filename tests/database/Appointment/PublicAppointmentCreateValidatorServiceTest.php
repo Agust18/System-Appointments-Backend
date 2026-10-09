@@ -79,19 +79,6 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
         $this->addToAssertionCount(1);
     }
 
-    public function testInactiveMedicalIsRejectedWith409(): void
-    {
-        [$medicalId, $serviceId] = $this->validScenario();
-        $this->db->table('medicals')->where('id', $medicalId)->update(['is_active' => 0]);
-
-        try {
-            $this->validator->validate($this->request($medicalId, $serviceId));
-            $this->fail('Se esperaba MedicalNotAvailableException');
-        } catch (MedicalNotAvailableException $e) {
-            $this->assertSame(409, $e->getCode());
-        }
-    }
-
     public function testMedicalWithInactiveUserIsRejectedWith409(): void
     {
         [$medicalId, $serviceId] = $this->validScenario();

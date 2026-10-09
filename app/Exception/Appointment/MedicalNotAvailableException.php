@@ -4,7 +4,7 @@ namespace App\Exception\Appointment;
 use Exception;
 
 /**
- * El médico (medicals.is_active) o su usuario (users.is_active) está inactivo.
+ * El usuario del médico (users.is_active) está inactivo.
  */
 class MedicalNotAvailableException extends Exception
 {

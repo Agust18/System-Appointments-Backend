@@ -5,8 +5,7 @@ final readonly class MedicalDataRequest
 {
     public function __construct(
        private string $tuition,
-       private int $specialtyId,
-       private bool $isActive = true
+       private int $specialtyId
     ) {
     }
 
@@ -17,11 +16,6 @@ final readonly class MedicalDataRequest
     public function getSpecialtyId(): int
     {
         return $this->specialtyId;
-    }
-    
-    public function getIsActive(): bool
-    {
-        return $this->isActive;
     }
 
     public static function rules(): array

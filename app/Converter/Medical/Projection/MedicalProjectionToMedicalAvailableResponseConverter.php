@@ -12,8 +12,7 @@ final class MedicalProjectionToMedicalAvailableResponseConverter
         return new MedicalAvailableResponse(
             $medical->getId(),
             $medical->getMedicoNombre(),
-            $medical->getEspecialidadNombre(),
-            $medical->isActive()
+            $medical->getEspecialidadNombre()
         );
     }
 }

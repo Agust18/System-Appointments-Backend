@@ -19,7 +19,6 @@ final class MedicalProjection
 
         // Datos del médico
         private string $tuition,
-        private bool $isActive,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {
@@ -62,10 +61,6 @@ final class MedicalProjection
     public function getPhone(): ?string
     {
         return $this->phone;
-    }
-    public function isActive(): bool
-    {
-        return $this->isActive;
     }
     public function getCreatedAt(): ?DateTime
     {

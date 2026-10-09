@@ -36,7 +36,7 @@ final class PublicMedicalServicesFinderService
         $medical = $this->medicalFinderService->find($medicalId);
         $doctor = $this->userFinderService->find($medical->getUserId());
 
-        if (!$medical->getIsActive() || !$doctor->getIsActive()) {
+        if (!$doctor->getIsActive()) {
             throw new MedicalNotAvailableException();
         }
 
