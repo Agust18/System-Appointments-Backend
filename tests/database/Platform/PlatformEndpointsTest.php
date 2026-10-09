@@ -271,17 +271,81 @@ final class PlatformEndpointsTest extends PlatformEndpointTestCase
     {
         $token = $this->platformToken();
         $body = $this->tenantBody();
-        unset($body['adminDni'], $body['adminPassword']);
+        unset($body['adminDni'], $body['frontendUrl']);
 
         try {
             $this->withToken($token)->fresh()->withBodyFormat('json')->post('platform/tenants', $body);
             $this->fail('Debió rechazar el body incompleto.');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('adminDni', $e->getErrors());
-            $this->assertArrayHasKey('adminPassword', $e->getErrors());
+            $this->assertArrayHasKey('frontendUrl', $e->getErrors());
+            $this->assertArrayNotHasKey('adminPassword', $e->getErrors());
         }
 
         $this->assertSame(1, $this->rowsIn('tenants'));
+    }
+
+    public function testCreateWithAnInvalidFrontendUrlIs422AndWritesNothing(): void
+    {
+        $token = $this->platformToken();
+        $this->seedAdminRole();
+
+        foreach (['clinica-sur.test.local', 'https://clinica.test/app', 'ftp://clinica.test', 'https://u:p@clinica.test'] as $url) {
+            try {
+                $this->withToken($token)->fresh()->withBodyFormat('json')->post('platform/tenants', $this->tenantBody(['frontendUrl' => $url]));
+                $this->fail("Debió rechazar la URL {$url}.");
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('frontendUrl', $e->getErrors());
+            }
+        }
+
+        $this->assertSame(1, $this->rowsIn('tenants'));
+        $this->assertSame(0, $this->rowsIn('users'));
+        $this->assertSame(1, $this->rowsIn('tenant_settings'));
+    }
+
+    public function testCreateStoresTheFrontendUrlNormalizedAndReportsTheWelcomeEmail(): void
+    {
+        $token = $this->platformToken();
+        $this->seedAdminRole();
+
+        $result = $this->withToken($token)->fresh()->withBodyFormat('json')
+            ->post('platform/tenants', $this->tenantBody(['frontendUrl' => ' HTTPS://Clinica-Sur.Test.Local/ ']));
+
+        $result->assertStatus(201);
+        $body = $this->decode($result);
+        $this->assertSame(
+            'https://clinica-sur.test.local',
+            $this->db->query('SELECT frontend_url FROM tenant_settings WHERE tenant_id = ?', [$body['id']])->getRow()->frontend_url
+        );
+        // EMAIL_HOST vacío en estos tests: el email no puede salir, pero el alta se confirma igual.
+        $this->assertArrayHasKey('welcomeEmailSent', $body);
+        $this->assertFalse($body['welcomeEmailSent']);
+    }
+
+    public function testCreateWithoutAdminPasswordLeavesTheAdminWithoutAccount(): void
+    {
+        $token = $this->platformToken();
+        $this->seedAdminRole();
+        $body = $this->tenantBody();
+        unset($body['adminPassword']);
+
+        $this->withToken($token)->fresh()->withBodyFormat('json')->post('platform/tenants', $body)->assertStatus(201);
+
+        $admin = $this->db->query("SELECT * FROM users WHERE email = 'ana@clinicasur.test'")->getRow();
+        $this->assertNull($admin->password);
+        $this->assertSame('1', (string) $admin->is_verified);
+    }
+
+    public function testCreateTreatsAnEmptyAdminPasswordAsNone(): void
+    {
+        $token = $this->platformToken();
+        $this->seedAdminRole();
+
+        $this->withToken($token)->fresh()->withBodyFormat('json')
+            ->post('platform/tenants', $this->tenantBody(['adminPassword' => '']))->assertStatus(201);
+
+        $this->assertNull($this->db->query("SELECT password FROM users WHERE email = 'ana@clinicasur.test'")->getRow()->password);
     }
 
     public function testCreateWithoutAToken401WritesNothing(): void

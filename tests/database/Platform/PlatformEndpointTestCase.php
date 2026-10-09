@@ -31,9 +31,14 @@ abstract class PlatformEndpointTestCase extends CIUnitTestCase
     protected const ADMIN_EMAIL = 'root@plataforma.test';
     protected const ADMIN_PASSWORD = 'Secreta-12345';
 
+    private mixed $previousEmailHost = null;
+
     protected function setUp(): void
     {
         parent::setUp();
+        // El alta de un Tenant envía un email de bienvenida: sin EMAIL_HOST no abre ninguna conexión SMTP.
+        $this->previousEmailHost = $_ENV['EMAIL_HOST'] ?? null;
+        $_ENV['EMAIL_HOST'] = '';
         $this->resetServices();
         $this->clearSession();
         unset($_SERVER['HTTP_AUTHORIZATION']);
@@ -42,6 +47,12 @@ abstract class PlatformEndpointTestCase extends CIUnitTestCase
 
     protected function tearDown(): void
     {
+        if ($this->previousEmailHost === null) {
+            unset($_ENV['EMAIL_HOST']);
+        } else {
+            $_ENV['EMAIL_HOST'] = $this->previousEmailHost;
+        }
+
         unset($_SERVER['HTTP_AUTHORIZATION']);
         $this->clearSession();
 
@@ -139,6 +150,7 @@ abstract class PlatformEndpointTestCase extends CIUnitTestCase
             'adminEmail'     => 'ana@clinicasur.test',
             'adminDni'       => '30123456',
             'adminPassword'  => 'Temporal-123',
+            'frontendUrl'    => 'https://clinica-sur.test.local',
         ], $overrides);
     }
 

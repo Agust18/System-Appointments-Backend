@@ -45,13 +45,13 @@ Perfil propio `Config\Cors::$platform` (se usa con `cors:platform`): permite `PU
 
 ## Alta de un Tenant (`TenantCreatorService`)
 
-Body: `slug`, `name`, `adminFirstName`, `adminLastName`, `adminEmail`, `adminDni`, `adminPassword` (contraseña **temporal**: la fija quien da de alta el Tenant y se la comunica por fuera).
+Body: `slug`, `name`, `adminFirstName`, `adminLastName`, `adminEmail`, `adminDni`, `frontendUrl` (**obligatorio**) y `adminPassword` (**opcional**, mín. 8; vacío = ausente: el ADMIN nace sin contraseña y la elige con el link del email de bienvenida).
 
-1. Pre-valida fuera de la transacción: slug con formato de subdominio (`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`, máx. 63), no reservado (`TenantCreateValidatorService::RESERVED_SLUGS`: `422`) y no repetido (`409`).
+1. Pre-valida fuera de la transacción: slug con formato de subdominio (`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`, máx. 63), no reservado (`TenantCreateValidatorService::RESERVED_SLUGS`: `422`) y no repetido (`409`); `frontendUrl` válido según `App\Tenancy\FrontendUrl` (`422`, clave `frontendUrl`; `http` solo fuera de producción).
 2. Una sola transacción (`UserCreatorService` no abre otra: no se anidan): inserta el Tenant, verifica el resultado (no null y `transStatus()`), `TenantContext::set($nuevo)` y crea el ADMIN con `isVerified = true`.
-   Entre el Tenant y el ADMIN se inserta su fila de `tenant_settings` (`TenantSettings::defaultsFor`: `name` = nombre del Tenant, el resto NULL).
+   Entre el Tenant y el ADMIN se inserta su fila de `tenant_settings` (`TenantSettings::defaultsFor`: `name` = nombre del Tenant, `frontend_url` = el del body normalizado, el resto NULL).
 3. Ante cualquier error: `transRollback()`. En el `finally` restaura el `TenantContext` previo (`clear()` si estaba vacío).
-4. **No se envía ningún email** (llega con el Paso 4, cuando `FRONTEND_URL` sea por Tenant). Requiere que exista el rol `admin` en `roles` (ver `bitacora/pendiente/roles-seeder.md`).
+4. **Email de bienvenida** (`SendTenantAdminWelcomeEmailService`): después del commit, con el Tenant nuevo en el `TenantContext` (se restaura después), sale **siempre** (con o sin `adminPassword`) al email del ADMIN, con un link `{frontend_url}/reset-password?token=...` y **sin contraseña**. El token es del tipo `password_reset` (lo acepta `/reset-password`) pero dura **72 h** (`TenantAdminWelcomeTokenService`; el reset normal dura 1 h). El Service nunca lanza: si el SMTP falla, el alta **no se deshace** y la respuesta trae `welcomeEmailSent: false` (`TenantCreatedResponse`); el ADMIN puede pedir otro link con `forgot-password` (un usuario sin contraseña recibe "Activá tu cuenta"). Requiere que exista el rol `admin` en `roles` (ver `bitacora/pendiente/roles-seeder.md`).
 
 Un Tenant suspendido responde `403` en todas sus rutas (filtro `tenant`), conserva sus datos y se puede seguir gestionando desde el panel.
 

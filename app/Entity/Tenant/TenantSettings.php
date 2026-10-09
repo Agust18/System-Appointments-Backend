@@ -20,11 +20,11 @@ final class TenantSettings
 
     /**
      * Configuración inicial de un Tenant recién creado: el nombre visible parte del nombre del
-     * Tenant y todo lo demás queda sin configurar.
+     * Tenant, `frontend_url` es el que se pide en el alta y todo lo demás queda sin configurar.
      */
-    public static function defaultsFor(Tenant $tenant): self
+    public static function defaultsFor(Tenant $tenant, ?string $frontendUrl = null): self
     {
-        return new self($tenant->getId(), $tenant->getName(), null, null, null, true, new DateTime(), new DateTime());
+        return new self($tenant->getId(), $tenant->getName(), null, $frontendUrl, null, true, new DateTime(), new DateTime());
     }
 
     /**

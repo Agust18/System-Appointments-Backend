@@ -40,7 +40,8 @@ final class TenantPostController extends ResourceController
             $parameters->adminLastName,
             $parameters->adminEmail,
             (int) $parameters->adminDni,
-            $parameters->adminPassword
+            $parameters->adminPassword ?? null,
+            $parameters->frontendUrl
         );
     }
 
@@ -53,6 +54,11 @@ final class TenantPostController extends ResourceController
     {
         if (isset($parameters['slug']) && is_string($parameters['slug'])) {
             $parameters['slug'] = strtolower(trim($parameters['slug']));
+        }
+
+        // Vacío = sin contraseña (el ADMIN la elige con el link del email de bienvenida).
+        if (array_key_exists('adminPassword', $parameters) && ($parameters['adminPassword'] === '' || $parameters['adminPassword'] === null)) {
+            unset($parameters['adminPassword']);
         }
 
         if (isset($parameters['adminEmail']) && (is_string($parameters['adminEmail']) || is_int($parameters['adminEmail']))) {

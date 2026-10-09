@@ -2,11 +2,18 @@
 
 use App\Constants\Role;
 use App\Constants\TenantStatus;
+use App\Dto\Request\Auth\ResetPasswordRequest;
+use App\Dto\Request\Auth\UserLoginRequest;
+use App\Dto\Request\Email\EmailRequest;
 use App\Dto\Request\Platform\TenantRequest;
 use App\Exception\Platform\TenantSlugAlreadyExistsException;
 use App\Exception\Role\RoleNotFoundException;
 use App\Exception\Validation\ValidationException;
 use App\Models\Tenant\TenantModel;
+use App\Services\auth\ResetPasswordService;
+use App\Services\auth\UserLoginService;
+use App\Services\Platform\Tenant\SendTenantAdminWelcomeEmailService;
+use App\Services\Platform\Tenant\TenantAdminWelcomeTokenService;
 use App\Services\Platform\Tenant\TenantCreatorService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -24,10 +31,14 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
 
     private ?\App\Entity\Tenant\Tenant $originalContext;
 
+    /** @var list<EmailRequest> */
+    private array $sent = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->originalContext = TenantContext::current();
+        $this->sent = [];
     }
 
     protected function tearDown(): void
@@ -43,9 +54,22 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    private function request(string $slug = 'clinica-sur', string $email = 'ana@clinicasur.test', int $dni = 30123456): TenantRequest
+    private function request(
+        string $slug = 'clinica-sur',
+        string $email = 'ana@clinicasur.test',
+        int $dni = 30123456,
+        ?string $password = 'Temporal-123',
+        string $frontendUrl = 'https://clinica-sur.test.local'
+    ): TenantRequest {
+        return new TenantRequest($slug, 'Clínica Sur', 'Ana', 'Pérez', $email, $dni, $password, $frontendUrl);
+    }
+
+    /** Servicio con el email de bienvenida observado por un spy (nunca toca SMTP). */
+    private function service(?callable $sender = null): TenantCreatorService
     {
-        return new TenantRequest($slug, 'Clínica Sur', 'Ana', 'Pérez', $email, $dni, 'Temporal-123');
+        return new TenantCreatorService(new SendTenantAdminWelcomeEmailService($sender ?? function (EmailRequest $request): void {
+            $this->sent[] = $request;
+        }));
     }
 
     private function seedAdminRole(): void
@@ -62,7 +86,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
     {
         $this->seedAdminRole();
 
-        $response = (new TenantCreatorService())->create($this->request());
+        $response = $this->service()->create($this->request());
 
         $this->assertSame('clinica-sur', $response->slug);
         $this->assertSame(TenantStatus::ACTIVE, $response->status);
@@ -79,7 +103,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
     public function testTheAdminCanLoginInItsOwnTenantOnly(): void
     {
         $this->seedAdminRole();
-        $response = (new TenantCreatorService())->create($this->request());
+        $response = $this->service()->create($this->request());
 
         $inNew = $this->db->query("SELECT COUNT(*) AS c FROM users WHERE email = ? AND tenant_id = ?", ['ana@clinicasur.test', $response->id])->getRow()->c;
         $inDemo = $this->db->query("SELECT COUNT(*) AS c FROM users WHERE email = ? AND tenant_id = 1", ['ana@clinicasur.test'])->getRow()->c;
@@ -93,7 +117,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->seedAdminRole();
         $before = TenantContext::current();
 
-        (new TenantCreatorService())->create($this->request());
+        $this->service()->create($this->request());
 
         $this->assertSame($before?->getId(), TenantContext::current()?->getId());
     }
@@ -103,18 +127,122 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->seedAdminRole();
         TenantContext::clear();
 
-        (new TenantCreatorService())->create($this->request());
+        $this->service()->create($this->request());
 
         $this->assertFalse(TenantContext::isSet());
     }
 
-    public function testNoEmailIsSentOnCreation(): void
+    public function testWelcomeEmailLinksToTheNewTenantFrontendAndReportsIt(): void
     {
         $this->seedAdminRole();
 
-        (new TenantCreatorService())->create($this->request());
+        $response = $this->service()->create($this->request(frontendUrl: 'HTTPS://Clinica-Sur.Test.Local/'));
 
+        $this->assertTrue($response->welcomeEmailSent);
+        $this->assertCount(1, $this->sent);
+        $this->assertSame('ana@clinicasur.test', $this->sent[0]->getTo());
+        $this->assertMatchesRegularExpression(
+            '#https://clinica-sur\.test\.local/reset-password\?token=[0-9a-f]{64}#',
+            $this->sent[0]->getBody()
+        );
+        $this->assertStringNotContainsString('Temporal-123', $this->sent[0]->getBody());
+    }
+
+    public function testWelcomeTokenBelongsToTheNewTenantAndLastsSeventyTwoHours(): void
+    {
+        $this->seedAdminRole();
+
+        $response = $this->service()->create($this->request());
+
+        $token = $this->db->query('SELECT * FROM user_verification_tokens')->getRow();
+        $this->assertSame($response->id, (int) $token->tenant_id);
+        $this->assertSame('password_reset', $token->type);
+        $hours = (strtotime($token->expires_at) - time()) / 3600;
+        $this->assertGreaterThan(TenantAdminWelcomeTokenService::TTL_HOURS - 0.1, $hours);
+        $this->assertLessThanOrEqual(TenantAdminWelcomeTokenService::TTL_HOURS + 0.1, $hours);
+    }
+
+    public function testTheEmailIsSentEvenWhenAnAdminPasswordWasGiven(): void
+    {
+        $this->seedAdminRole();
+
+        $this->service()->create($this->request(password: 'Temporal-123'));
+
+        $this->assertCount(1, $this->sent);
+    }
+
+    public function testWithoutAdminPasswordTheAdminChoosesItWithTheEmailLink(): void
+    {
+        $this->seedAdminRole();
+        $response = $this->service()->create($this->request(password: null));
+
+        $user = $this->db->query("SELECT * FROM users WHERE email = 'ana@clinicasur.test'")->getRow();
+        $this->assertNull($user->password);
+        $this->assertSame('1', (string) $user->is_verified);
+
+        preg_match('/token=([0-9a-f]{64})/', $this->sent[0]->getBody(), $matches);
+        TenantContext::set((new TenantModel())->findBySlug('clinica-sur'));
+        (new ResetPasswordService())->reset(new ResetPasswordRequest($matches[1], 'MiClaveNueva-99'));
+
+        $login = (new UserLoginService())->login(new UserLoginRequest('ana@clinicasur.test', 'MiClaveNueva-99'));
+        $this->assertSame($response->id, (int) $user->tenant_id);
+        $this->assertNotNull($login);
+    }
+
+    public function testSmtpFailureKeepsTheTenantAndReportsFalse(): void
+    {
+        $this->seedAdminRole();
+
+        $response = $this->service(static function (EmailRequest $request): void {
+            throw new RuntimeException('SMTP caído');
+        })->create($this->request());
+
+        $this->assertFalse($response->welcomeEmailSent);
+        $this->assertNotNull((new TenantModel())->findBySlug('clinica-sur'));
+        $this->assertSame(1, $this->countRows('users'));
+    }
+
+    public function testNoEmailNorTokenWhenCreationFails(): void
+    {
+        // Sin el rol ADMIN sembrado el alta falla y se deshace todo.
+        try {
+            $this->service()->create($this->request());
+            $this->fail('Debió fallar por el rol ADMIN inexistente.');
+        } catch (RoleNotFoundException) {
+        }
+
+        $this->assertSame([], $this->sent);
         $this->assertSame(0, $this->countRows('user_verification_tokens'));
+    }
+
+    public function testInvalidFrontendUrlIs422AndWritesNothing(): void
+    {
+        $this->seedAdminRole();
+        $tenants = $this->countRows('tenants');
+
+        foreach (['sin-esquema.test', 'https://clinica.test/ruta', 'javascript:alert(1)'] as $url) {
+            try {
+                $this->service()->create($this->request(frontendUrl: $url));
+                $this->fail("Debió rechazar {$url}.");
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('frontendUrl', $e->getErrors());
+            }
+        }
+
+        $this->assertSame($tenants, $this->countRows('tenants'));
+        $this->assertSame(0, $this->countRows('users'));
+        $this->assertSame([], $this->sent);
+    }
+
+    public function testWelcomeEmailRestoresTheContextWhenItStartedEmpty(): void
+    {
+        $this->seedAdminRole();
+        TenantContext::clear();
+
+        $this->service()->create($this->request());
+
+        $this->assertFalse(TenantContext::isSet());
+        $this->assertCount(1, $this->sent);
     }
 
     public function testDuplicateSlugIs409AndWritesNothing(): void
@@ -124,7 +252,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $users = $this->countRows('users');
 
         try {
-            (new TenantCreatorService())->create($this->request('demo'));
+            $this->service()->create($this->request('demo'));
             $this->fail('Debió rechazar el slug repetido.');
         } catch (TenantSlugAlreadyExistsException $e) {
             $this->assertSame(409, $e->getCode());
@@ -139,7 +267,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->seedAdminRole();
 
         try {
-            (new TenantCreatorService())->create($this->request('platform'));
+            $this->service()->create($this->request('platform'));
             $this->fail('Debió rechazar el slug reservado.');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('slug', $e->getErrors());
@@ -154,7 +282,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $tenants = $this->countRows('tenants');
 
         try {
-            (new TenantCreatorService())->create($this->request());
+            $this->service()->create($this->request());
             $this->fail('Debió fallar por el rol ADMIN inexistente.');
         } catch (RoleNotFoundException) {
         }
@@ -166,17 +294,17 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->assertSame(1, $this->countRows('tenant_settings'));
     }
 
-    public function testCreatesTheSettingsRowWithDefaults(): void
+    public function testCreatesTheSettingsRowWithItsFrontendUrlAndDefaults(): void
     {
         $this->seedAdminRole();
 
-        $response = (new TenantCreatorService())->create($this->request());
+        $response = $this->service()->create($this->request());
 
         $row = $this->db->query('SELECT * FROM tenant_settings WHERE tenant_id = ?', [$response->id])->getRow();
         $this->assertNotNull($row);
         $this->assertSame('Clínica Sur', $row->name);
         $this->assertNull($row->reply_to_email);
-        $this->assertNull($row->frontend_url);
+        $this->assertSame('https://clinica-sur.test.local', $row->frontend_url);
         $this->assertNull($row->reception_email);
         $this->assertSame('1', (string) $row->reception_email_enabled);
     }
@@ -186,7 +314,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $before = TenantContext::current();
 
         try {
-            (new TenantCreatorService())->create($this->request());
+            $this->service()->create($this->request());
         } catch (RoleNotFoundException) {
         }
 
@@ -196,7 +324,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
     public function testTheSameEmailAndDniCanBeUsedInAnotherTenant(): void
     {
         $this->seedAdminRole();
-        $service = new TenantCreatorService();
+        $service = $this->service();
 
         $service->create($this->request('clinica-sur'));
         $service->create($this->request('clinica-norte'));

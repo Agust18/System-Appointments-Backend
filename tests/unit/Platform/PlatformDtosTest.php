@@ -26,6 +26,7 @@ final class PlatformDtosTest extends CIUnitTestCase
             'adminEmail'     => 'ana@clinicasur.test',
             'adminDni'       => '30123456',
             'adminPassword'  => 'Temporal-123',
+            'frontendUrl'    => 'https://clinica-sur.test.local',
         ], $override);
     }
 
@@ -70,15 +71,26 @@ final class PlatformDtosTest extends CIUnitTestCase
         $this->assertSame([], $this->runRules(TenantRequest::rules(), $this->validTenantBody(['slug' => 'a'])));
     }
 
-    public function testAdminPasswordAndDniAreRequired(): void
+    public function testAdminDniAndFrontendUrlAreRequired(): void
     {
         $errors = $this->runRules(
             TenantRequest::rules(),
-            $this->validTenantBody(['adminPassword' => '', 'adminDni' => ''])
+            $this->validTenantBody(['adminDni' => '', 'frontendUrl' => ''])
         );
 
-        $this->assertArrayHasKey('adminPassword', $errors);
         $this->assertArrayHasKey('adminDni', $errors);
+        $this->assertArrayHasKey('frontendUrl', $errors);
+    }
+
+    public function testAdminPasswordIsOptionalButNeedsEightCharactersWhenSent(): void
+    {
+        $this->assertSame([], $this->runRules(TenantRequest::rules(), $this->validTenantBody(['adminPassword' => ''])));
+
+        $body = $this->validTenantBody();
+        unset($body['adminPassword']);
+        $this->assertSame([], $this->runRules(TenantRequest::rules(), $body));
+
+        $this->assertArrayHasKey('adminPassword', $this->runRules(TenantRequest::rules(), $this->validTenantBody(['adminPassword' => 'corta'])));
     }
 
     public function testUpdateOnlyAcceptsKnownStatuses(): void
@@ -89,7 +101,7 @@ final class PlatformDtosTest extends CIUnitTestCase
 
     public function testAdminUserRequestHasTheAdminRole(): void
     {
-        $request = new TenantRequest('clinica-sur', 'Clínica Sur', 'Ana', 'Pérez', 'ana@clinicasur.test', 30123456, 'Temporal-123');
+        $request = new TenantRequest('clinica-sur', 'Clínica Sur', 'Ana', 'Pérez', 'ana@clinicasur.test', 30123456, 'Temporal-123', 'https://clinica-sur.test.local');
 
         $user = $request->toAdminUserRequest();
 
@@ -99,10 +111,17 @@ final class PlatformDtosTest extends CIUnitTestCase
         $this->assertSame('Temporal-123', $user->getPassword());
     }
 
+    public function testAdminUserRequestWithoutPasswordHasNone(): void
+    {
+        $request = new TenantRequest('clinica-sur', 'Clínica Sur', 'Ana', 'Pérez', 'ana@clinicasur.test', 30123456, null, 'https://clinica-sur.test.local');
+
+        $this->assertNull($request->toAdminUserRequest()->getPassword());
+    }
+
     public function testTenantFromRequestStartsActive(): void
     {
         $tenant = Tenant::fromRequest(
-            new TenantRequest('clinica-sur', 'Clínica Sur', 'Ana', 'Pérez', 'ana@clinicasur.test', 30123456, 'x')
+            new TenantRequest('clinica-sur', 'Clínica Sur', 'Ana', 'Pérez', 'ana@clinicasur.test', 30123456, 'x', 'https://clinica-sur.test.local')
         );
 
         $this->assertNull($tenant->getId());

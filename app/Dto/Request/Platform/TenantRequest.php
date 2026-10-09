@@ -6,8 +6,9 @@ use App\Constants\Role;
 use App\Dto\Request\User\UserRequest;
 
 /**
- * Alta de un Tenant junto con su primer ADMIN. La contraseña del ADMIN es temporal: la fija quien
- * da de alta el Tenant y se la comunica por fuera (el email llega con el Paso 4).
+ * Alta de un Tenant junto con su primer ADMIN. La contraseña del ADMIN es opcional: si falta, nace
+ * sin contraseña y la elige con el link del email de bienvenida. `frontendUrl` es obligatorio: arma
+ * los links de los emails del Tenant.
  */
 final readonly class TenantRequest
 {
@@ -18,7 +19,8 @@ final readonly class TenantRequest
         private string $adminLastName,
         private string $adminEmail,
         private int $adminDni,
-        private string $adminPassword,
+        private ?string $adminPassword,
+        private string $frontendUrl,
     ) {}
 
     public function getSlug(): string
@@ -51,9 +53,16 @@ final readonly class TenantRequest
         return $this->adminDni;
     }
 
-    public function getAdminPassword(): string
+    /** Opcional: sin contraseña el ADMIN la elige con el link del email de bienvenida. */
+    public function getAdminPassword(): ?string
     {
         return $this->adminPassword;
+    }
+
+    /** Origen del frontend del Tenant (se valida y normaliza con FrontendUrl). */
+    public function getFrontendUrl(): string
+    {
+        return $this->frontendUrl;
     }
 
     /**
@@ -82,7 +91,8 @@ final readonly class TenantRequest
             'adminLastName'  => 'required|min_length[2]|max_length[100]',
             'adminEmail'     => 'required|valid_email|max_length[255]',
             'adminDni'       => 'required|is_natural_no_zero|min_length[7]|max_length[8]',
-            'adminPassword'  => 'required|min_length[8]',
+            'adminPassword'  => 'permit_empty|min_length[8]',
+            'frontendUrl'    => 'required|max_length[255]',
         ];
     }
 
@@ -121,8 +131,11 @@ final readonly class TenantRequest
                 'max_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
             ],
             'adminPassword' => [
-                'required'   => 'Ingresá una contraseña temporal para el administrador.',
                 'min_length' => 'La contraseña necesita al menos 8 caracteres.',
+            ],
+            'frontendUrl' => [
+                'required'   => 'Ingresá la URL del frontend del cliente.',
+                'max_length' => 'La URL del frontend es muy larga.',
             ],
         ];
     }
