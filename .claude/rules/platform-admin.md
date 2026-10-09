@@ -11,6 +11,7 @@ Código: `app/Controllers/Platform/`, `app/Services/Platform/` (+ `Tenant/`), `a
 | `POST /platform/login` | `cors:platform`, `throttle:10,60` | `200` con `{token, admin}` |
 | `GET /platform/tenants` | `cors:platform`, `platformAdminOnly` | `{data, total}`; filtros `search` (nombre o slug), `status`, `page`, `size` |
 | `POST /platform/tenants` | idem | `201`. Crea el Tenant **y su primer ADMIN** en una transacción |
+| `GET /platform/tenants/{id}` | idem | Detalle: `{id, slug, name, status}`. `404` si no existe |
 | `PUT /platform/tenants/{id}` | idem | Cambia `name` y/o `status` (`active`/`suspended`). Suspender y reactivar son el mismo PUT |
 | `GET /platform/tenants/{id}/settings` | idem | Configuración completa del Tenant (`tenant_settings`): `name` visible, `replyToEmail`, `frontendUrl`, `receptionEmail`, `receptionEmailEnabled`, `primaryColor`, `secondaryColor` (branding). `404` si el Tenant no existe |
 | `PUT /platform/tenants/{id}/settings` | idem | Edita esa configuración. Campo ausente = sin cambio; `null`/`""` limpia `replyToEmail`, `frontendUrl` y `receptionEmail` (`name` y `receptionEmailEnabled` no se limpian). Body sin campos = `422`. Funciona con Tenants suspendidos |

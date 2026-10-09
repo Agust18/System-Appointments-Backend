@@ -175,6 +175,38 @@ final class PlatformEndpointsTest extends PlatformEndpointTestCase
         $this->withToken($token)->fresh()->get('platform/tenants?status=borrado');
     }
 
+    // ----------------------------------------------------------------- detalle
+
+    public function testGetReturnsTheTenant(): void
+    {
+        $token = $this->platformToken();
+        $this->db->table('tenants')->insert(['slug' => 'clinica-sur', 'name' => 'Clínica Sur', 'status' => 'suspended']);
+        $id = $this->db->insertID();
+
+        $result = $this->withToken($token)->fresh()->get("platform/tenants/{$id}");
+
+        $result->assertStatus(200);
+        $body = $this->decode($result);
+        $this->assertSame($id, $body['id']);
+        $this->assertSame('clinica-sur', $body['slug']);
+        $this->assertSame('Clínica Sur', $body['name']);
+        $this->assertSame('suspended', $body['status']);
+    }
+
+    public function testGetOfAnUnknownTenantIs404(): void
+    {
+        $token = $this->platformToken();
+
+        $code = $this->exceptionCodeOf(fn () => $this->withToken($token)->fresh()->get('platform/tenants/9999'));
+
+        $this->assertSame(404, $code);
+    }
+
+    public function testGetRequiresAToken(): void
+    {
+        $this->fresh()->get('platform/tenants/1')->assertStatus(401);
+    }
+
     // ------------------------------------------------------------------ alta
 
     public function testCreateReturns201AndTheTenantWithItsAdmin(): void

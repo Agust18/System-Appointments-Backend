@@ -58,6 +58,7 @@ $routes->group('platform', static function ($routes) use ($platformLogin, $platf
 
     $routes->get('tenants', 'Platform\TenantsGetController::search', $platformPrivate);
     $routes->post('tenants', 'Platform\TenantPostController::create', $platformPrivate);
+    $routes->get('tenants/(:num)', 'Platform\TenantGetController::find/$1', $platformPrivate);
     $routes->put('tenants/(:num)', 'Platform\TenantPutController::do/$1', $platformPrivate);
 
     // Configuración de cada Tenant (emails, URL del frontend). Solo la edita el panel: no hay PUT /tenant/config.
