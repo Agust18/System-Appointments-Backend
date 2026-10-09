@@ -45,9 +45,7 @@ final class User
         return $this->tokenExpirationDate;
     }
 
-    /**
-     * Un usuario sin cuenta (password NULL) nunca puede autenticarse.
-     */
+   
     public function hasAccount(): bool
     {
         return $this->password !== null;
@@ -62,9 +60,8 @@ final class User
         return password_verify($password, $this->password);
     }
 
-    /**
-     * Recepción completa los datos de un usuario sin cuenta que ya existía
-     * (p. ej. creado por reserva pública). Nunca se usa sobre una cuenta real.
+    /*Recepción completa los datos de un usuario sin cuenta que ya existía
+     (p. ej. creado por reserva pública). Nunca se usa sobre una cuenta real.
      */
     public function completeAsAccountless(UserUpdaterRequest $request): void
     {
@@ -76,9 +73,9 @@ final class User
         $this->isVerified = true;
     }
 
-    /**
-     * Registro público sobre un usuario sin cuenta: fija la contraseña pero deja
-     * el usuario sin verificar (no puede iniciar sesión hasta verificar su email).
+    /*
+      Registro público sobre un usuario sin cuenta: fija la contraseña pero deja
+      el usuario sin verificar (no puede iniciar sesión hasta verificar su email).
      */
     public function setPasswordFromRegistration(string $password): void
     {
@@ -87,8 +84,6 @@ final class User
 
     public function generateToken(): void
     {
-        //recomendacion  bin2hex(random_bytes(32));  
-        // $this->token = bin2hex(random_bytes(32));   // 64 caracteres aleatorios
         $this->token = md5($this->email . rand(1000, 9999) . date("YmdHis"));
         $this->tokenExpirationDate = new DateTime("+24 hours");
     }
@@ -186,10 +181,7 @@ final class User
         );
     }
 
-    /**
-     * Usuario creado sin contraseña (reserva pública): activo, sin verificar y sin
-     * posibilidad de iniciar sesión hasta que fije una contraseña por link de email.
-     */
+   
     public static function createWithoutAccount(
         string $firstName,
         string $lastName,
@@ -215,4 +207,6 @@ final class User
             null
         );
     }
+
+    
 }

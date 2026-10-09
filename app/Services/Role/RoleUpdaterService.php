@@ -24,7 +24,6 @@ final class RoleUpdaterService
     {
         $role = $this->roleFinderService->find($id);
         
-        // Si va a cambiar el nombre, verificar que no exista otro con ese nombre
         if ($request->getName() !== null && $request->getName() !== $role->getName()) {
             $existing = $this->roleModel->findByName($request->getName());
             if ($existing) {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Patient;
 
 use App\Tenancy\TenantContext;
@@ -25,6 +26,16 @@ final class PublicIdentityAttemptLimiter
     public const MAX_FAILURES = 5;
     public const BLOCK_SECONDS = 3600;
 
+    private function key(int $dni): string
+    {
+        return 'public_identity_failures_' . TenantContext::id() . '_' . hash('sha256', (string) $dni);
+    }
+
+    private function failures(int $dni): int
+    {
+        return (int) (service('cache')->get($this->key($dni)) ?? 0);
+    }
+
     public function isBlocked(int $dni): bool
     {
         return $this->failures($dni) >= self::MAX_FAILURES;
@@ -38,15 +49,5 @@ final class PublicIdentityAttemptLimiter
     public function clear(int $dni): void
     {
         service('cache')->delete($this->key($dni));
-    }
-
-    private function failures(int $dni): int
-    {
-        return (int) (service('cache')->get($this->key($dni)) ?? 0);
-    }
-
-    private function key(int $dni): string
-    {
-        return 'public_identity_failures_' . TenantContext::id() . '_' . hash('sha256', (string) $dni);
     }
 }

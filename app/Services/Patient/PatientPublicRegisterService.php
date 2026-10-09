@@ -14,39 +14,7 @@ use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use CodeIgniter\Database\BaseConnection;
 
-/**
- * Registro público de pacientes (POST /patients/register). Un solo paso de password.
- *
- * POST /patients/register
- * │
- * ├─ Request validado (PatientPublicRegisterRequest)
- * │
- * ├─ findActivatableAccountless(dni, email)
- * │  │
- * │  ├─ MATCH (DNI de un usuario sin cuenta, rol PATIENT, activo, mismo email guardado)
- * │  │   [transacción]
- * │  │    1. user->setPasswordFromRegistration(password)  (hashea, NO toca isVerified)
- * │  │    2. userModel->update()
- * │  │    3. asegurar patient: findByUserId(); si falta → validator + insert
- * │  │   [fuera de transacción]
- * │  │    4. SendVerificationEmailService::send(user)
- * │  │    → PatientResponse (201)
- * │  │
- * │  └─ NO MATCH
- * │      PatientCreatorService::create(request, false)
- * │        - crea User con password, is_verified=0, y Patient
- * │        - manda email de verificación
- * │      → PatientResponse (201)
- * │
- * └─ 409 si el email es distinto / rol no PATIENT / inactivo / cuenta real
- *
- * Post-registro (ambos caminos): el usuario hace clic en el link de verificación
- * → VerifyEmailService marca is_verified=1 → UserLoginService permite el login.
- *
- * Solo se fija la contraseña: nombre, apellido y teléfono del usuario existente no se
- * tocan (el teléfono es el segundo factor de la reserva pública). El usuario sigue sin
- * poder iniciar sesión hasta verificar su email.
- */
+
 final class PatientPublicRegisterService
 {
     private UserModel $userModel;
