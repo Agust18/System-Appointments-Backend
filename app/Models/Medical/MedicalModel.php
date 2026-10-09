@@ -76,6 +76,7 @@ final class MedicalModel
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
                 U.phone,
+                U.is_active AS user_is_active,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
@@ -101,6 +102,7 @@ final class MedicalModel
                 TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                 U.email,
                 U.phone,
+                U.is_active AS user_is_active,
                 S.name as especialidad_nombre
               FROM medicals M
               INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
@@ -132,6 +134,7 @@ final class MedicalModel
                     TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medico_nombre,
                     U.email,
                     U.phone,
+                    U.is_active AS user_is_active,
                     S.name AS especialidad_nombre
                   FROM medicals M
                   INNER JOIN users U ON U.id = M.user_id AND U.tenant_id = M.tenant_id
@@ -234,6 +237,7 @@ final class MedicalModel
                         TRIM(CONCAT(U.first_name, ' ', U.last_name)) as medico_nombre,
                         U.email,
                         U.phone,
+                        U.is_active AS user_is_active,
                         S.name as especialidad_nombre
                     ";
 

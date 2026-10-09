@@ -20,7 +20,10 @@ final class MedicalProjection
         // Datos del médico
         private string $tuition,
         private ?DateTime $createdAt,
-        private ?DateTime $updatedAt
+        private ?DateTime $updatedAt,
+
+        // Estado del usuario del médico (única fuente de verdad: users.is_active)
+        private bool $userIsActive = true
     ) {
     }
 
@@ -69,5 +72,9 @@ final class MedicalProjection
     public function getUpdatedAt(): ?DateTime
     {
         return $this->updatedAt;
+    }
+    public function isUserActive(): bool
+    {
+        return $this->userIsActive;
     }
 }

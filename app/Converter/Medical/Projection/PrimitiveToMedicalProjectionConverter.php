@@ -18,7 +18,8 @@ final class PrimitiveToMedicalProjectionConverter
             $primitive->especialidad_nombre,
             $primitive->tuition,
             new DateTime($primitive->created_at),
-            new DateTime($primitive->updated_at)
+            new DateTime($primitive->updated_at),
+            (bool) ($primitive->user_is_active ?? true)
         );
     }
 }

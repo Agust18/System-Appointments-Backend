@@ -18,7 +18,8 @@ final class MedicalProjectionToMedicalProjectionResponseConverter
             $medical->getEspecialidadNombre(),
             $medical->getTuition(),
             $medical->getCreatedAt()->format('Y-m-d H:i:s'),
-            $medical->getUpdatedAt()->format('Y-m-d H:i:s')
+            $medical->getUpdatedAt()->format('Y-m-d H:i:s'),
+            $medical->isUserActive()
         );
     }
 }

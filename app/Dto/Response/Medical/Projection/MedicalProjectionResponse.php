@@ -18,6 +18,9 @@ final readonly class MedicalProjectionResponse
         // Datos del médico
         public string $tuition,
         public ?string $createdAt,
-        public ?string $updatedAt
+        public ?string $updatedAt,
+
+        // Estado del usuario del médico (users.is_active)
+        public bool $userIsActive = true
     ) {}
 }
