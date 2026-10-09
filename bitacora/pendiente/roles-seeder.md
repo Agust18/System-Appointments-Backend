@@ -1,5 +1,7 @@
 # Crear RolesSeeder
 
+> **HECHO (09/10/2026).** `app/Database/Seeds/RolesSeeder.php` (idempotente; renombra `roles.name` sin mover ids), test `tests/database/Seeds/RolesSeederTest.php`. Deploy: `php spark migrate` y después `php spark db:seed RolesSeeder`. Corrido en `turnero_db`: 2 = medical y 3 = patient corregidos, sin tocar `users.role_id`. El resto es el texto original.
+
 Hoy los roles (admin, patient, medical, reception) no se siembran. Hay que insertarlos a mano después de migrar. Un seeder los crearía en el deploy.
 
 - **Por qué importa:** `POST /platform/tenants` crea el primer ADMIN de un Tenant con `role_id = 1` (FK a `roles`). Sin la fila `admin` en `roles`, el alta falla y hace rollback del Tenant.
