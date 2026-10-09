@@ -15,6 +15,8 @@ final class PrimitiveToTenantSettingsConverter
             $primitive->frontend_url,
             $primitive->reception_email,
             (bool) $primitive->reception_email_enabled,
+            $primitive->primary_color,
+            $primitive->secondary_color,
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)
         );

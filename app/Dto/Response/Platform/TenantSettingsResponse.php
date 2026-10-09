@@ -15,6 +15,8 @@ final readonly class TenantSettingsResponse
         public ?string $frontendUrl,
         public ?string $receptionEmail,
         public bool $receptionEmailEnabled,
+        public ?string $primaryColor,
+        public ?string $secondaryColor,
         public ?string $createdAt,
         public ?string $updatedAt,
     ) {}

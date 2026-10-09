@@ -16,6 +16,8 @@ final class TenantSettingsToTenantSettingsResponseConverter
             $settings->getFrontendUrl(),
             $settings->getReceptionEmail(),
             $settings->isReceptionEmailEnabled(),
+            $settings->getPrimaryColor(),
+            $settings->getSecondaryColor(),
             $settings->getCreatedAt()?->format('Y-m-d H:i:s'),
             $settings->getUpdatedAt()?->format('Y-m-d H:i:s')
         );

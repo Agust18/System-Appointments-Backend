@@ -9,6 +9,6 @@ final class TenantSettingsToTenantConfigResponseConverter
 {
     public function convert(Tenant $tenant, TenantSettings $settings): TenantConfigResponse
     {
-        return new TenantConfigResponse($tenant->getSlug(), $settings->getName());
+        return new TenantConfigResponse($tenant->getSlug(), $settings->getName(), $settings->getPrimaryColor(), $settings->getSecondaryColor());
     }
 }

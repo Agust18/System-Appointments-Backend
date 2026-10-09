@@ -9,9 +9,8 @@ namespace App\Dto\Request\Platform;
  */
 final readonly class TenantSettingsUpdateRequest
 {
-    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled'];
-    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail'];
-
+    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled', 'primaryColor', 'secondaryColor'];
+    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail', 'primaryColor', 'secondaryColor'];
     /** @param array<string, mixed> $data solo los campos presentes en el body */
     private function __construct(private array $data) {}
 
@@ -83,6 +82,16 @@ final readonly class TenantSettingsUpdateRequest
         return $this->data['receptionEmailEnabled'] ?? null;
     }
 
+    public function getPrimaryColor(): ?string
+    {
+        return $this->data['primaryColor'] ?? null;
+    }
+
+    public function getSecondaryColor(): ?string
+    {
+        return $this->data['secondaryColor'] ?? null;
+    }
+
     public static function rules(): array
     {
         return [
@@ -91,6 +100,8 @@ final readonly class TenantSettingsUpdateRequest
             'frontendUrl'           => 'permit_empty|string|max_length[255]',
             'receptionEmail'        => 'permit_empty|string|valid_email|max_length[255]',
             'receptionEmailEnabled' => 'permit_empty|in_list[0,1]',
+            'primaryColor'          => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
+            'secondaryColor'        => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
         ];
     }
 
@@ -118,6 +129,14 @@ final readonly class TenantSettingsUpdateRequest
             ],
             'receptionEmailEnabled' => [
                 'in_list' => 'receptionEmailEnabled debe ser true o false.',
+            ],
+            'primaryColor' => [
+                'string'      => 'El color principal no es válido.',
+                'regex_match' => 'El color principal debe tener el formato #RRGGBB.',
+            ],
+            'secondaryColor' => [
+                'string'      => 'El color secundario no es válido.',
+                'regex_match' => 'El color secundario debe tener el formato #RRGGBB.',
             ],
         ];
     }

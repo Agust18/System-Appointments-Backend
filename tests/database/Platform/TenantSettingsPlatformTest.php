@@ -125,6 +125,8 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
             'frontendUrl'           => 'https://sur.tusturnos.test',
             'receptionEmail'        => 'recepcion@sur.test',
             'receptionEmailEnabled' => true,
+            'primaryColor'          => null,
+            'secondaryColor'        => null,
         ], array_diff_key($this->decode($sur), ['createdAt' => 1, 'updatedAt' => 1]));
         $this->assertSame($this->norteId, $this->decode($norte)['tenantId']);
         $this->assertSame('recepcion@norte.test', $this->decode($norte)['receptionEmail']);
@@ -200,7 +202,7 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
         $public = $this->withToken(null)->fresh()->withHeaders(['X-Tenant' => 'clinica-sur'])->get('tenant/config');
 
         $public->assertStatus(200);
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Nuevo'], $this->decode($public));
+        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Nuevo', 'primaryColor' => null, 'secondaryColor' => null], $this->decode($public));
         $this->assertStringNotContainsString('secreto@sur.test', $public->getJSON());
     }
 
@@ -246,6 +248,51 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
             foreach (['no-es-un-email', "a@b.co\r\nBcc: x@y.co", str_repeat('a', 250) . '@b.co'] as $bad) {
                 $this->assertArrayHasKey($field, $this->errorsOf(fn () => $this->editSettings($this->surId, [$field => $bad])), "{$field}: {$bad}");
             }
+        }
+    }
+
+    // ------------------------------- branding (colores)
+
+    public function testEditingTheColorsOfTenantANeverTouchesTenantB(): void
+    {
+        $beforeNorte = $this->row($this->norteId);
+        $beforeDemo = $this->row(1);
+
+        $this->editSettings($this->surId, ['primaryColor' => '#1a73e8', 'secondaryColor' => '#FfFfFf'])->assertStatus(200);
+
+        $sur = $this->row($this->surId);
+        $this->assertSame('#1A73E8', $sur['primary_color']);
+        $this->assertSame('#FFFFFF', $sur['secondary_color']);
+        $this->assertSame($beforeNorte, $this->row($this->norteId));
+        $this->assertSame($beforeDemo, $this->row(1));
+    }
+
+    /** @return array<string, array{mixed}> */
+    public static function invalidColors(): array
+    {
+        return [
+            'nombre'           => ['red'],
+            'sin numeral'      => ['1A73E8'],
+            'abreviado'        => ['#fff'],
+            'rgb'              => ['rgb(1,2,3)'],
+            'no hexadecimal'   => ['#GGGGGG'],
+            'muy largo'        => ['#1A73E8FF'],
+            'css inyectado'    => ['#1A73E8;}'],
+            'etiqueta'         => ['#1A73E8</style>'],
+            'no es string'     => [['#1A73E8']],
+        ];
+    }
+
+    #[DataProvider('invalidColors')]
+    public function testAnInvalidColorIs422AndLeavesTheRowIntact(mixed $color): void
+    {
+        $before = $this->row($this->surId);
+
+        foreach (['primaryColor', 'secondaryColor'] as $field) {
+            $errors = $this->errorsOf(fn () => $this->editSettings($this->surId, ['name' => 'No debe guardarse', $field => $color]));
+
+            $this->assertArrayHasKey($field, $errors);
+            $this->assertSame($before, $this->row($this->surId));
         }
     }
 
