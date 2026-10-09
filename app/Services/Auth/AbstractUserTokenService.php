@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
 use App\Entity\UserToken\UserToken;
 use App\Models\UserToken\UserTokenModel;

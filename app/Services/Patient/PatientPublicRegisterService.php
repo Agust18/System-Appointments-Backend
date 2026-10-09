@@ -9,7 +9,7 @@ use App\Entity\Patient\Patient;
 use App\Entity\User\User;
 use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use CodeIgniter\Database\BaseConnection;

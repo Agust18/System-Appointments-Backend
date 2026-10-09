@@ -17,7 +17,7 @@ Templates HTML: una clase por mail, con un único `render()`.
 
 El flag `isVerified` (parámetro `$isVerified` en los Creator Services) decide
 si el usuario nace verificado y si se dispara el email de verificación
-(`SendVerificationEmailService`, `app/Services/auth/`).
+(`SendVerificationEmailService`, `app/Services/Auth/`).
 
 | Endpoint | Controller | `isVerified` | Envía email |
 |---|---|---|---|

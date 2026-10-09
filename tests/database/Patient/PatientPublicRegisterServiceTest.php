@@ -8,7 +8,7 @@ use App\Dto\Request\Auth\UserLoginRequest;
 use App\Exception\Auth\NotVerifiedException;
 use App\Exception\Email\EmailCannotBeSendedException;
 use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
-use App\Services\auth\UserLoginService;
+use App\Services\Auth\UserLoginService;
 use App\Services\Patient\PatientPublicRegisterService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;

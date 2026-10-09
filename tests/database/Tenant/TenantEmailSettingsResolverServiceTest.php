@@ -3,8 +3,8 @@
 use App\Constants\Role;
 use App\Entity\Tenant\Tenant;
 use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
-use App\Services\auth\SendPasswordResetEmailService;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendPasswordResetEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;

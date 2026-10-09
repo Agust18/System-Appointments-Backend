@@ -13,7 +13,7 @@ use App\Exception\User\MissingRoleIdException;
 use App\Exception\User\RoleMismatchException;
 use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Patient\Validations\PatientUpdateValidatorService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;

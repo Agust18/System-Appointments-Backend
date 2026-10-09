@@ -6,9 +6,9 @@ use App\Dto\Request\Auth\UserLoginRequest;
 use App\Entity\User\User;
 use App\Exception\Auth\WrongPasswordException;
 use App\Models\User\UserModel;
-use App\Services\auth\PasswordResetTokenService;
-use App\Services\auth\ResetPasswordService;
-use App\Services\auth\UserLoginService;
+use App\Services\Auth\PasswordResetTokenService;
+use App\Services\Auth\ResetPasswordService;
+use App\Services\Auth\UserLoginService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
 

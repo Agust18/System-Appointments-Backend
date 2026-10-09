@@ -3,7 +3,7 @@
 namespace App\Services\Platform\Tenant;
 
 use App\Exception\Auth\InvalidPasswordResetTokenException;
-use App\Services\auth\AbstractUserTokenService;
+use App\Services\Auth\AbstractUserTokenService;
 
 /**
  * Token del link de bienvenida del primer ADMIN. Es del tipo `password_reset` para que

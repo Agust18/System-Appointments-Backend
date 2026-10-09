@@ -74,4 +74,4 @@ rutas en el futuro, hay que ajustar el trait en un solo lugar.
 ## Namespaces
 - `app/Controllers/Auth/` — login, verify-email, forgot-password, reset-password. No siguen CRUD estándar.
 - `app/Controllers/User/` — CRUD de usuarios (adminOnly).
-- `app/Services/auth/` (minúscula) — Services de auth (login, token validation, verificación, reset).
+- `app/Services/Auth/` — Services de auth (login, token validation, verificación, reset).

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
 use App\Dto\Request\Auth\ResetPasswordRequest;
 use App\Exception\Auth\InvalidPasswordResetTokenException;
