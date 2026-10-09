@@ -4,9 +4,9 @@ namespace App\Email\User;
 
 use App\Entity\User\User;
 
-final class UserEmailTemplateRenderer
+final class EmailVerificationEmailTemplate
 {
-    public function renderVerificationBody(User $user, string $verificationUrl): string
+    public function render(User $user, string $verificationUrl): string
     {
         $firstName = htmlspecialchars($user->getFirstName(), ENT_QUOTES, 'UTF-8');
         $url = htmlspecialchars($verificationUrl, ENT_QUOTES, 'UTF-8');

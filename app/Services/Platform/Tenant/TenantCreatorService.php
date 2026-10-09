@@ -29,14 +29,14 @@ final class TenantCreatorService
     private SendTenantAdminWelcomeEmailService $welcomeEmailService;
     private TenantToTenantCreatedResponseConverter $converter;
 
-    public function __construct(?SendTenantAdminWelcomeEmailService $welcomeEmailService = null)
+    public function __construct()
     {
         $this->db = Database::connect();
         $this->tenantModel = new TenantModel();
         $this->tenantSettingsModel = new TenantSettingsModel();
         $this->validator = new TenantCreateValidatorService();
         $this->userCreatorService = new UserCreatorService();
-        $this->welcomeEmailService = $welcomeEmailService ?? new SendTenantAdminWelcomeEmailService();
+        $this->welcomeEmailService = new SendTenantAdminWelcomeEmailService();
         $this->converter = new TenantToTenantCreatedResponseConverter();
     }
 

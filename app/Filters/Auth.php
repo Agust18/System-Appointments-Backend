@@ -2,7 +2,7 @@
 
 namespace App\Filters;
 
-use App\Services\Auth\TokenValidatorService;
+use App\Services\Auth\AuthTokenValidatorService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -21,7 +21,7 @@ class Auth implements FilterInterface {
             ]);
         }
 
-        $validatorService = new TokenValidatorService();
+        $validatorService = new AuthTokenValidatorService();
 
         $user = $validatorService->validate($token);
 

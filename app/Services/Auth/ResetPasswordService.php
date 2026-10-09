@@ -30,16 +30,11 @@ final class ResetPasswordService
 
         $this->userModel->updatePassword($user->getId(), $hashedPassword);
 
-        // El token llegó al email guardado del usuario: fijar la contraseña con él
-        // prueba el control de ese email. Sin esto, un usuario sin cuenta que activa
-        // la suya quedaría sin poder iniciar sesión (login exige is_verified).
+       
         if (!$user->getIsVerified()) {
             $this->userModel->markAsVerified($user->getId());
         }
 
         $this->tokenService->markAsUsed($token);
     }
-
-
-    
 }

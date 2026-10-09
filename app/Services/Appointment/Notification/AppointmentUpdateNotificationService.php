@@ -15,11 +15,11 @@ final class AppointmentUpdateNotificationService
     private AppointmentConfirmedNotificationService $confirmed;
     private AppointmentRescheduledNotificationService $rescheduled;
 
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
-        $this->cancelled   = new AppointmentCancelledNotificationService($sender);
-        $this->confirmed   = new AppointmentConfirmedNotificationService($sender);
-        $this->rescheduled = new AppointmentRescheduledNotificationService($sender);
+        $this->cancelled   = new AppointmentCancelledNotificationService();
+        $this->confirmed   = new AppointmentConfirmedNotificationService();
+        $this->rescheduled = new AppointmentRescheduledNotificationService();
     }
 
     /**

@@ -18,16 +18,14 @@ final class AppointmentReminderService
     private AppointmentModel $appointmentModel;
     private TenantModel $tenantModel;
     private ReminderEmailTemplate $template;
-    /** @var callable(EmailRequest): mixed */
-    private $sender;
+    private EmailSenderService $emailSender;
 
- 
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
         $this->tenantModel      = new TenantModel();
         $this->template         = new ReminderEmailTemplate();
-        $this->sender           = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
+        $this->emailSender      = new EmailSenderService();
     }
 
     
@@ -65,17 +63,20 @@ final class AppointmentReminderService
         $sent     = 0;
         $failures = [];
 
-      
-        $replyTo = (new TenantEmailSettingsResolverService())->replyTo();
+        // Una instancia por Tenant: lee la configuración del Tenant actual del TenantContext.
+        $settingsResolver = new TenantEmailSettingsResolverService();
+        $replyTo = $settingsResolver->replyTo();
 
         foreach ($appointments as $projection) {
             try {
-                ($this->sender)(new EmailRequest(
-                    to:      $projection->getEmail(),
+                $request = new EmailRequest(
+                    to: $projection->getEmail(),
                     subject: 'Recordatorio: tenés un turno mañana',
-                    body:    $this->template->render($projection),
+                    body: $this->template->render($projection),
                     replyTo: $replyTo,
-                ));
+                );
+
+                $this->emailSender->send($request);
                 $sent++;
             } catch (Throwable $e) {
                 log_message('error', "Recordatorio del turno {$projection->getId()} no enviado: {$e->getMessage()}");

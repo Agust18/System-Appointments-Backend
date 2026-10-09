@@ -6,8 +6,12 @@ Para enviar: instanciar `EmailRequest` (destinatario, asunto, cuerpo HTML) y
 llamar a `EmailSenderService::send()`. Si falla, lanza
 `EmailCannotBeSendedException` (500).
 
-Templates HTML: `UserEmailTemplateRenderer` y `UserEmailTemplateRendererPassword`
-en `app/Email/User/`.
+Templates HTML: una clase por mail, con un único `render()`.
+- `app/Email/User/`: `EmailVerificationEmailTemplate`, `PasswordResetEmailTemplate`,
+  `AccountActivationEmailTemplate` (reset para usuarios con cuenta, activación para los
+  que no tienen contraseña; `SendPasswordResetEmailService` elige con `hasAccount()`).
+- `app/Email/Platform/`: `TenantAdminWelcomeEmailTemplate`.
+- `app/Email/Appointment/`: ver "Avisos de turnos".
 
 ## Verificación de email
 

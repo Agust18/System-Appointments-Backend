@@ -8,12 +8,12 @@ use App\Models\User\UserModel;
 final class ForgotPasswordService
 {
     private UserModel $userModel;
-    private SendPasswordResetEmailService $sender;
+    private SendPasswordResetEmailService $passwordResetEmailService;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->sender = new SendPasswordResetEmailService();
+        $this->passwordResetEmailService = new SendPasswordResetEmailService();
     }
 
     public function requestReset(ForgotPasswordRequest $request): void
@@ -24,6 +24,6 @@ final class ForgotPasswordService
             return;
         }
 
-        $this->sender->send($user);
+        $this->passwordResetEmailService->send($user);
     }
 }

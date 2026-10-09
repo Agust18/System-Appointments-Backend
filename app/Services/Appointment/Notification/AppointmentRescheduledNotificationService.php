@@ -11,11 +11,11 @@ final class AppointmentRescheduledNotificationService
     private RescheduledEmailTemplate $template;
     private AppointmentEmailDispatcherService $dispatcher;
 
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
         $this->template         = new RescheduledEmailTemplate();
-        $this->dispatcher       = new AppointmentEmailDispatcherService($sender);
+        $this->dispatcher       = new AppointmentEmailDispatcherService();
     }
 
     public function notify(int $appointmentId): void

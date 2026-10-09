@@ -5,7 +5,7 @@ ADMIN=1, MEDICAL=2, PATIENT=3, RECEPTION=4.
 
 ## Cómo funciona el token
 El filter `Auth` (`app/Filters/Auth.php`) lee el header `HTTP_AUTHORIZATION`,
-lo valida con `TokenValidatorService` y guarda en sesión:
+lo valida con `AuthTokenValidatorService` y guarda en sesión:
 - `session()->get('userId')`
 - `session()->get('roleId')` (usar constantes de `App\Constants\Role`)
 

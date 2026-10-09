@@ -8,25 +8,23 @@ use App\Services\User\UserFinderByEmailService;
 
 final class ResendVerificationEmailService
 {
-   
-    private SendVerificationEmailService $sender;
-
+    private SendVerificationEmailService $verificationEmailService;
     private UserFinderByEmailService $userFinderByEmailService;
 
     public function __construct()
     {
         $this->userFinderByEmailService = new UserFinderByEmailService();
-        $this->sender = new SendVerificationEmailService();
+        $this->verificationEmailService = new SendVerificationEmailService();
     }
 
     public function resend(ResendVerificationEmailRequest $request): void
     {
         $user = $this->userFinderByEmailService->find($request->getEmail());
-       
+
         if ($user->getIsVerified()) {
             throw new AlreadyVerifiedException();
         }
 
-        $this->sender->send($user);
+        $this->verificationEmailService->send($user);
     }
 }

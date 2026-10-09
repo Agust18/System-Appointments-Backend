@@ -20,13 +20,13 @@ final class PublicAppointmentCreatedNotificationService
     private TenantEmailSettingsResolverService $settingsResolver;
     private AppointmentEmailDispatcherService $dispatcher;
 
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->appointmentModel  = new AppointmentModel();
         $this->patientTemplate   = new ConfirmedEmailTemplate();
         $this->receptionTemplate = new ReceptionNewAppointmentEmailTemplate();
         $this->settingsResolver  = new TenantEmailSettingsResolverService();
-        $this->dispatcher        = new AppointmentEmailDispatcherService($sender);
+        $this->dispatcher        = new AppointmentEmailDispatcherService();
     }
 
     public function notify(int $appointmentId): void

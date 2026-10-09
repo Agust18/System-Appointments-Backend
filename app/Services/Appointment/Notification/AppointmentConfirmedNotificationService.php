@@ -15,11 +15,11 @@ final class AppointmentConfirmedNotificationService
     private ConfirmedEmailTemplate $template;
     private AppointmentEmailDispatcherService $dispatcher;
 
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
         $this->template         = new ConfirmedEmailTemplate();
-        $this->dispatcher       = new AppointmentEmailDispatcherService($sender);
+        $this->dispatcher       = new AppointmentEmailDispatcherService();
     }
 
     public function notify(int $appointmentId): void
