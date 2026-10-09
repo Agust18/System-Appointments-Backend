@@ -2,10 +2,7 @@
 
 namespace App\Dto\Request\Platform;
 
-/**
- * Alta de un platform_admin. Solo la usa el comando `platform:create-admin`: no hay endpoint,
- * porque nadie tendría con qué autenticarse para usarlo.
- */
+
 final readonly class PlatformAdminRequest
 {
     public function __construct(

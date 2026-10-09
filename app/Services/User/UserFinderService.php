@@ -23,7 +23,7 @@ final class UserFinderService
     public function find(int $id): User
     {
         $user = $this->userModel->find($id);
-        if (empty($user)) {
+        if ($user === null) {
             throw new UserNotFoundException($id);
         }
         return $user;

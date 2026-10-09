@@ -2,25 +2,24 @@
 
 namespace App\Dto\Request\Platform;
 
-/**
- * Edición de la configuración de un Tenant desde el panel. Todos los campos son opcionales:
- * uno ausente no se modifica; `null` (o "") limpia `replyToEmail`, `frontendUrl` y `receptionEmail`.
- * Por eso el DTO distingue "ausente" de "null" con has(). El Tenant sale de la URL, nunca del body.
- */
 final readonly class TenantSettingsUpdateRequest
 {
     private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled', 'primaryColor', 'secondaryColor'];
     private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail', 'primaryColor', 'secondaryColor'];
-    /** @param array<string, mixed> $data solo los campos presentes en el body */
-    private function __construct(private array $data) {}
 
-    /**
-     * Se queda solo con los campos conocidos (un `tenantId` del body se ignora). Los strings se
-     * recortan y, en los que se pueden limpiar, "" pasa a null.
-     *
-     * @param array<string, mixed> $parameters
-     * @return array<string, mixed>
-     */
+   
+    public function __construct(
+        private ?string $name,
+        private ?string $replyToEmail,
+        private ?string $frontendUrl,
+        private ?string $receptionEmail,
+        private ?bool $receptionEmailEnabled,
+        private ?string $primaryColor,
+        private ?string $secondaryColor,
+        private array $presentFields = [],
+    ) {}
+
+  
     public static function sanitize(array $parameters): array
     {
         $data = array_intersect_key($parameters, array_flip(self::FIELDS));
@@ -40,56 +39,61 @@ final readonly class TenantSettingsUpdateRequest
     {
         $data = self::sanitize($parameters);
 
-        if (isset($data['receptionEmailEnabled'])) {
-            $data['receptionEmailEnabled'] = (bool) $data['receptionEmailEnabled'];
-        }
-
-        return new self($data);
+        return new self(
+            $data['name'] ?? null,
+            $data['replyToEmail'] ?? null,
+            $data['frontendUrl'] ?? null,
+            $data['receptionEmail'] ?? null,
+            isset($data['receptionEmailEnabled']) ? (bool) $data['receptionEmailEnabled'] : null,
+            $data['primaryColor'] ?? null,
+            $data['secondaryColor'] ?? null,
+            array_keys($data),
+        );
     }
 
     public function has(string $field): bool
     {
-        return array_key_exists($field, $this->data);
+        return in_array($field, $this->presentFields, true);
     }
 
     public function isEmpty(): bool
     {
-        return $this->data === [];
+        return $this->presentFields === [];
     }
 
     public function getName(): ?string
     {
-        return $this->data['name'] ?? null;
+        return $this->name;
     }
 
     public function getReplyToEmail(): ?string
     {
-        return $this->data['replyToEmail'] ?? null;
+        return $this->replyToEmail;
     }
 
     public function getFrontendUrl(): ?string
     {
-        return $this->data['frontendUrl'] ?? null;
+        return $this->frontendUrl;
     }
 
     public function getReceptionEmail(): ?string
     {
-        return $this->data['receptionEmail'] ?? null;
+        return $this->receptionEmail;
     }
 
     public function getReceptionEmailEnabled(): ?bool
     {
-        return $this->data['receptionEmailEnabled'] ?? null;
+        return $this->receptionEmailEnabled;
     }
 
     public function getPrimaryColor(): ?string
     {
-        return $this->data['primaryColor'] ?? null;
+        return $this->primaryColor;
     }
 
     public function getSecondaryColor(): ?string
     {
-        return $this->data['secondaryColor'] ?? null;
+        return $this->secondaryColor;
     }
 
     public static function rules(): array

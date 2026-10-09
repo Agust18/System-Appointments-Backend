@@ -18,14 +18,7 @@ use Config\Database;
 use RuntimeException;
 use Throwable;
 
-/**
- * Alta de un Tenant con su primer ADMIN, en una sola transacción (UserCreatorService no abre
- * ninguna, así que no hay transacciones anidadas). Junto con el Tenant se crea su fila de
- * `tenant_settings` (con el `frontend_url` del body). El ADMIN nace verificado y, si el body trae
- * `adminPassword`, con esa contraseña; si no, sin contraseña. En ambos casos, después del commit se le
- * envía un email con un link para elegir su contraseña: si falla, el alta no se deshace y la
- * respuesta lo avisa en `welcomeEmailSent`.
- */
+
 final class TenantCreatorService
 {
     private BaseConnection $db;
