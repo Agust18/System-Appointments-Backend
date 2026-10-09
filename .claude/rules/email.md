@@ -50,12 +50,17 @@ consultorio, así que nacen verificados y no requieren el paso extra.
 - Un Tenant nuevo nace con `frontend_url` NULL: hay que cargarlo con `PUT /platform/tenants/{id}/settings` antes de que sus usuarios se registren o pidan reset.
 - Tests: los que llegan a esos envíos siembran la config con `Tests\Support\Database\SeedsTenantEmailSettings`.
 
-## Avisos de turnos (`AppointmentNotificationService`)
+## Avisos de turnos (`app/Services/Appointment/Notification/`)
 
-| Método | Quién lo llama | Emails |
+Un Service por aviso. Todos terminan en `AppointmentEmailDispatcherService::send()`, que agrega el `replyTo` del Tenant y loguea sin cortar el flujo si el envío falla. Las plantillas HTML (una por mail, con un único `render()`) viven en `app/Email/Appointment/`.
+
+| Service (`notify()`) | Quién lo llama | Emails |
 |---|---|---|
-| `notifyOnCreate()` | `AppointmentCreatorService` (admin/recepción/paciente logueado) | Paciente: "Tu turno fue confirmado" (solo si nace `confirmed`) |
-| `notifyOnPublicCreate()` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
+| `AppointmentConfirmedNotificationService` | `AppointmentCreatorService` (admin/recepción/paciente logueado) y `AppointmentUpdateNotificationService` | Paciente: "Tu turno fue confirmado" (solo si el turno está `confirmed`) |
+| `PublicAppointmentCreatedNotificationService` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
+| `AppointmentUpdateNotificationService` | `AppointmentUpdaterService` (`PUT /appointments/{id}`) | Decide según el estado previo: cancelado, confirmado o reprogramado (fecha, hora o médico distintos). Recibe el turno **sin modificar** |
+| `AppointmentCancelledNotificationService` / `AppointmentRescheduledNotificationService` | `AppointmentUpdateNotificationService` | Paciente: "Tu turno fue cancelado" / "Tu turno fue reprogramado" |
+| `AppointmentReminderService` | `SendAppointmentRemindersCommand` | Recordatorio 24 h antes (`ReminderEmailTemplate`). Tiene su propio envío porque cuenta los fallos por turno |
 
 Un turno público se identifica por el servicio que lo crea, no por un campo ni por el status
 (un turno de admin también puede nacer `confirmed`). El email al paciente va al email

@@ -1,13 +1,13 @@
 <?php
 
-use App\Email\Appointment\AppointmentEmailTemplateRenderer;
+use App\Email\Appointment\ReceptionNewAppointmentEmailTemplate;
 use App\Entity\Appointment\Projection\AppointmentProjection;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
  * @internal
  */
-final class AppointmentEmailTemplateRendererTest extends CIUnitTestCase
+final class ReceptionNewAppointmentEmailTemplateTest extends CIUnitTestCase
 {
     private function projection(?string $phone, string $paciente = 'Juana Pérez'): AppointmentProjection
     {
@@ -28,10 +28,9 @@ final class AppointmentEmailTemplateRendererTest extends CIUnitTestCase
         );
     }
 
-    public function testReceptionBodyIncludesAllAppointmentData(): void
+    public function testBodyIncludesAllAppointmentData(): void
     {
-        $body = (new AppointmentEmailTemplateRenderer())
-            ->renderReceptionNewAppointmentBody($this->projection('2325506499'));
+        $body = (new ReceptionNewAppointmentEmailTemplate())->render($this->projection('2325506499'));
 
         $this->assertStringContainsString('Nuevo turno agendado', $body);
         $this->assertStringContainsString('12/10/2026', $body);
@@ -42,18 +41,16 @@ final class AppointmentEmailTemplateRendererTest extends CIUnitTestCase
         $this->assertStringContainsString('2325506499', $body);
     }
 
-    public function testReceptionBodyShowsPlaceholderWhenPhoneIsMissing(): void
+    public function testBodyShowsPlaceholderWhenPhoneIsMissing(): void
     {
-        $body = (new AppointmentEmailTemplateRenderer())
-            ->renderReceptionNewAppointmentBody($this->projection(null));
+        $body = (new ReceptionNewAppointmentEmailTemplate())->render($this->projection(null));
 
         $this->assertStringContainsString('No informado', $body);
     }
 
-    public function testReceptionBodyEscapesHtml(): void
+    public function testBodyEscapesHtml(): void
     {
-        $body = (new AppointmentEmailTemplateRenderer())
-            ->renderReceptionNewAppointmentBody($this->projection('1', '<script>alert(1)</script>'));
+        $body = (new ReceptionNewAppointmentEmailTemplate())->render($this->projection('1', '<script>alert(1)</script>'));
 
         $this->assertStringNotContainsString('<script>', $body);
         $this->assertStringContainsString('&lt;script&gt;', $body);

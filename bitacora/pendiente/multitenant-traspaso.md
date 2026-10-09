@@ -180,7 +180,7 @@ Hecho: tablas `platform_admins` y `platform_admin_tokens`, login, `platformAdmin
 
 Pendiente de este bloque:
 - ~~**Email al primer ADMIN** del Tenant nuevo~~ **hecho (08/10/2026, Paso 4.3)**: ver `.claude/rules/platform-admin.md`. Pendiente menor: no hay endpoint del panel para reenviar el email de bienvenida; si falla, el ADMIN usa `forgot-password`.
-- ~~**RolesSeeder:** [roles-seeder.md](roles-seeder.md)~~ **hecho (09/10/2026)**: `php spark db:seed RolesSeeder` en el deploy, después de migrar. Sin el rol `admin` el alta de un Tenant falla (y hace rollback).
+- ~~**RolesSeeder:** [roles-seeder.md](../hecho/roles-seeder.md)~~ **hecho (09/10/2026)**: `php spark db:seed RolesSeeder` en el deploy, después de migrar. Sin el rol `admin` el alta de un Tenant falla (y hace rollback).
 - **Módulos y configuración por Tenant** (`tenant_modules`, `tenant_settings`): Paso 4.
 - **CORS del panel en otro dominio:** si el panel no comparte los orígenes de `/public/*`, `Cors::$platform` necesita su propia lista.
 - **CORS en rutas de Tenant:** [cors-en-rutas-privadas.md](cors-en-rutas-privadas.md) sigue vigente.
