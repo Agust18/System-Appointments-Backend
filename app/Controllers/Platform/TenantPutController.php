@@ -8,10 +8,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-/**
- * PUT /platform/tenants/{id}: renombra, suspende (`status: suspended`) o reactiva (`status: active`).
- * No existe DELETE: los datos de un Tenant se conservan.
- */
+
 final class TenantPutController extends ResourceController
 {
     private TenantUpdaterService $tenantUpdaterService;

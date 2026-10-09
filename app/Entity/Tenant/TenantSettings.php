@@ -20,18 +20,22 @@ final class TenantSettings
         private ?DateTime $updatedAt
     ) {}
 
-    /**
-     * Configuración inicial de un Tenant recién creado: el nombre visible parte del nombre del
-     * Tenant, `frontend_url` es el que se pide en el alta y todo lo demás queda sin configurar.
-     */
+ 
     public static function defaultsFor(Tenant $tenant, ?string $frontendUrl = null): self
     {
-        return new self($tenant->getId(), $tenant->getName(), null, $frontendUrl, null, true, null, null, new DateTime(), new DateTime());
+        return new self(
+            $tenant->getId(), 
+            $tenant->getName(), 
+            null, $frontendUrl, 
+            null, 
+            true, 
+            null, 
+            null, 
+            new DateTime(), 
+            new DateTime()
+        );
     }
 
-    /**
-     * Aplica solo los campos presentes en el request (ya validado por TenantSettingsUpdateValidatorService).
-     */
     public function modify(TenantSettingsUpdateRequest $request): void
     {
         if ($request->has('name')) {

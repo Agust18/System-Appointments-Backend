@@ -8,9 +8,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-/**
- * PUT /platform/tenants/{id}/settings: el cliente no edita su configuración, la carga el panel.
- */
+
 final class TenantSettingsPutController extends ResourceController
 {
     private TenantSettingsUpdaterService $tenantSettingsUpdaterService;
