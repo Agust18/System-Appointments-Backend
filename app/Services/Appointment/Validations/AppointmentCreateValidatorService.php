@@ -6,23 +6,21 @@ use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Exception\Appointment\CannotCreateAppointmentForOtherPatientException;
 use App\Exception\Appointment\InvalidInitialStatusException;
 use App\Exception\Appointment\MedicalCannotCreateAppointmentException;
-use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\PatientCannotBeMedicalException;
 use App\Exception\Patient\UserNotPatientException;
-use App\Services\Medical\MedicalFinderService;
 use App\Services\Patient\PatientFinderService;
 use App\Services\User\UserFinderService;
 
 final class AppointmentCreateValidatorService
 {
-    private MedicalFinderService $medicalFinderService;
+    private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
     private UserFinderService $userFinderService;
     private PatientFinderService $patientFinderService;
     private AppointmentSlotValidatorService $slotValidator;
 
     public function __construct()
     {
-        $this->medicalFinderService = new MedicalFinderService();
+        $this->medicalActiveValidator = new AppointmentMedicalActiveValidatorService();
         $this->userFinderService = new UserFinderService();
         $this->patientFinderService = new PatientFinderService();
         $this->slotValidator = new AppointmentSlotValidatorService();
@@ -46,15 +44,8 @@ final class AppointmentCreateValidatorService
             }
         }
 
-        $medical = $this->medicalFinderService->find($request->getMedicalId());
-
-        $user = $this->userFinderService->find($medical->getUserId());
-
-        if (!$user->getIsActive()) {
-            throw new MedicalNotAvailableException();
-        }
-
-        $doctorName = $user ? $user->getFullName() : 'Profesional';
+        $user = $this->medicalActiveValidator->validate($request->getMedicalId());
+        $doctorName = $user->getFullName();
 
         $patient = $this->patientFinderService->find($request->getPatientId());
 

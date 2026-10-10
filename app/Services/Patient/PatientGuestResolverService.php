@@ -18,27 +18,6 @@ use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Database;
 
-/**
- * Resuelve el paciente de una reserva pública: reutiliza el que ya existe o
- * crea un usuario sin cuenta (password NULL) con su paciente. Nunca modifica
- * los datos de un usuario existente.
- *
- * Reglas (el teléfono es el segundo factor que acompaña al DNI):
- *  - A. DNI y email nuevos: se crea usuario sin cuenta + paciente.
- *  - B/E. DNI existente y teléfono coincide: se usa su paciente.
- *  - D. DNI existente, teléfono coincide, sin paciente: se crea el paciente.
- *  - B'. DNI existente con otro teléfono, sin teléfono, de otro rol o inactivo: se rechaza.
- *  - C. DNI nuevo pero el email es de otro usuario: se rechaza.
- * B' y C devuelven la misma excepción para no revelar cuál de las dos ocurrió.
- *
- * Los rechazos por teléfono se cuentan por DNI (PublicIdentityAttemptLimiter): al llegar al
- * límite el DNI queda bloqueado y se responde lo mismo sin consultar la base.
- *
- * Tiene su propio lock + transacción. NO debe llamarse desde dentro de otra
- * transacción: AppointmentSlotLockService libera su GET_LOCK en un `finally`, y
- * con transacciones anidadas (el commit interno no commitea) liberaría el lock
- * antes del commit real. La reserva del turno corre después, por separado.
- */
 final class PatientGuestResolverService
 {
     private const LOCK_TIMEOUT_SECONDS = 10;

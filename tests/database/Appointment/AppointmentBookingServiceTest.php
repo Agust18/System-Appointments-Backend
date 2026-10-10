@@ -10,8 +10,8 @@ use App\Services\Appointment\AppointmentBookingService;
 
 /**
  * Test de caracterización: fija el comportamiento ACTUAL de
- * AppointmentBookingService::book() antes de extraer la lógica compartida
- * a AppointmentSlotLockService.
+ * AppointmentBookingService::book()
+ * (alta bajo lock + transacción).
  *
  * @internal
  */

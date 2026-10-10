@@ -1,49 +1,49 @@
 <?php
 
 use App\Exception\Validation\ValidationException;
-use App\Services\Appointment\Validations\AppointmentAvailabilityRangeValidatorService;
+use App\Services\Appointment\Validations\AppointmentAvailabilityValidatorService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
  * @internal
  */
-final class AppointmentAvailabilityRangeValidatorServiceTest extends CIUnitTestCase
+final class AppointmentAvailabilityRangeValidationTest extends CIUnitTestCase
 {
-    private AppointmentAvailabilityRangeValidatorService $validator;
+    private AppointmentAvailabilityValidatorService $validator;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new AppointmentAvailabilityRangeValidatorService();
+        $this->validator = new AppointmentAvailabilityValidatorService();
     }
 
     public function testAcceptsValidRangeWithin60Days(): void
     {
-        $this->validator->validate('2026-09-15', '2026-09-28');
+        $this->validator->validateRange('2026-09-15', '2026-09-28');
         $this->addToAssertionCount(1);
     }
 
     public function testRejectsInvalidFormat(): void
     {
         $this->expectException(ValidationException::class);
-        $this->validator->validate('15-09-2026', '2026-09-28');
+        $this->validator->validateRange('15-09-2026', '2026-09-28');
     }
 
     public function testRejectsFromAfterTo(): void
     {
         $this->expectException(ValidationException::class);
-        $this->validator->validate('2026-09-28', '2026-09-15');
+        $this->validator->validateRange('2026-09-28', '2026-09-15');
     }
 
     public function testRejectsRangeOver60Days(): void
     {
         $this->expectException(ValidationException::class);
-        $this->validator->validate('2026-01-01', '2026-12-31');
+        $this->validator->validateRange('2026-01-01', '2026-12-31');
     }
 
     public function testAcceptsExactly60DaysRange(): void
     {
-        $this->validator->validate('2026-01-01', '2026-03-02'); // 60 días exactos
+        $this->validator->validateRange('2026-01-01', '2026-03-02'); // 60 días exactos
         $this->addToAssertionCount(1);
     }
 }

@@ -5,9 +5,7 @@ use App\Exception\Appointment\AppointmentNotPast;
 use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
-use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
-use App\Services\Appointment\ServiceDurationCalculatorService;
+use App\Services\Appointment\ServiceBlockResolverService;
 use DateTime;
 
 /**
@@ -21,18 +19,12 @@ use DateTime;
 final class AppointmentSlotValidatorService
 {
     private MedicalScheduleModel $medicalScheduleModel;
-    private ServiceModel $serviceModel;
-    private MedicalServiceModel $medicalServiceModel;
-    private ServiceDurationCalculatorService $durationCalculator;
-    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
+    private ServiceBlockResolverService $blockResolver;
 
     public function __construct()
     {
         $this->medicalScheduleModel = new MedicalScheduleModel();
-        $this->serviceModel = new ServiceModel();
-        $this->medicalServiceModel = new MedicalServiceModel();
-        $this->durationCalculator = new ServiceDurationCalculatorService();
-        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
+        $this->blockResolver = new ServiceBlockResolverService();
     }
 
     /**
@@ -48,7 +40,7 @@ final class AppointmentSlotValidatorService
         }
 
         // Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
-        $bloqueTotalMinutes = $this->calculateTotalBlockMinutes($medicalId, $serviceId);
+        $bloqueTotalMinutes = $this->blockResolver->resolve($medicalId, $serviceId)->getTotalBlockMinutes();
 
         //Validar que el médico atienda ese día (múltiples rangos posibles)
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -84,17 +76,5 @@ final class AppointmentSlotValidatorService
                 $horaInicioStr
             );
         }
-    }
-
-    private function calculateTotalBlockMinutes(int $medicalId, ?int $serviceId): int
-    {
-        $service = $serviceId !== null ? $this->serviceModel->find($serviceId) : null;
-        $medicalService = $serviceId !== null
-            ? $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId)
-            : null;
-
-        $this->serviceOfferValidator->validate($service, $medicalService);
-
-        return $this->durationCalculator->calculate($service, $medicalService)->getTotalBlockMinutes();
     }
 }

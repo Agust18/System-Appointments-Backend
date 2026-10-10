@@ -4,8 +4,8 @@ use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
 
 /**
- * Base común de los tests de caracterización de AppointmentBookingService y
- * AppointmentUpdateBookingService. Solo aporta helpers de seed y asserts de
+ * Base común de los tests de caracterización de AppointmentBookingService
+ * (book y reschedule). Solo aporta helpers de seed y asserts de
  * lock/rollback; no contiene tests propios.
  */
 abstract class BookingServiceTestCase extends CIUnitTestCase

@@ -9,24 +9,24 @@ use App\Services\Appointment\Validations\AppointmentUpdateValidatorService;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
 use App\Exception\Appointment\ServiceNotAvailableException;
 use App\Models\Appointment\AppointmentModel;
-use App\Services\Appointment\AppointmentUpdateBookingService;
+use App\Services\Appointment\AppointmentBookingService;
 
 /**
  * Test de caracterización: fija el comportamiento ACTUAL de
- * AppointmentUpdateBookingService::update() antes de extraer la lógica
- * compartida a AppointmentSlotLockService.
+ * AppointmentBookingService::reschedule()
+ * (edición de horario bajo lock + transacción).
  *
  * @internal
  */
-final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
+final class AppointmentRescheduleTest extends BookingServiceTestCase
 {
-    private AppointmentUpdateBookingService $service;
+    private AppointmentBookingService $service;
     private AppointmentModel $appointmentModel;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new AppointmentUpdateBookingService();
+        $this->service = new AppointmentBookingService();
         $this->appointmentModel = new AppointmentModel();
     }
 
@@ -45,7 +45,7 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
     {
         $appointment = $this->appointmentModel->find($id);
 
-        return $this->service->update($appointment, $request, $id);
+        return $this->service->reschedule($appointment, $request, $id);
     }
 
     public function testUpdatesHoraAndRecalculatesHoraFin(): void
@@ -250,7 +250,7 @@ final class AppointmentUpdateBookingServiceTest extends BookingServiceTestCase
         $id = $this->seedLegacyAppointmentWithoutService($medicalId, $patientId);
 
         $appointment = $this->appointmentModel->find($id);
-        $updated = $this->service->update($appointment, $this->updateRequest(null, $serviceId), $id);
+        $updated = $this->service->reschedule($appointment, $this->updateRequest(null, $serviceId), $id);
 
         $this->assertSame($serviceId, $updated->getServiceId());
         $this->assertSame('09:30:00', $updated->getHoraFin()->format('H:i:s'));

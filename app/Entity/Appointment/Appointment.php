@@ -22,10 +22,10 @@ final class Appointment
     ) {
     }
 
-    /**
-     * Aplica los cambios "de negocio" que vienen del usuario. NO toca
-     * horaFin: ese campo nunca lo decide el usuario, se recalcula aparte
-     * con setHoraFin() dentro de AppointmentUpdateBookingService, bajo lock.
+    /*
+    Aplica los cambios "de negocio" que vienen del usuario. NO toca
+     horaFin: ese campo nunca lo decide el usuario, se recalcula aparte
+     con setHoraFin() dentro de AppointmentBookingService::reschedule(), bajo lock.
      */
     public function modify(AppointmentUpdateRequest $request): void
     {
@@ -45,9 +45,8 @@ final class Appointment
         $this->updatedAt = new DateTime();
     }
 
-    /**
-     * Setter dedicado para horaFin: se calcula a partir del servicio
-     * vigente (duración + buffer), nunca se recibe directo del usuario.
+    /*Setter dedicado para horaFin: se calcula a partir del servicio
+      vigente (duración + buffer), nunca se recibe directo del usuario.
      */
     public function setHoraFin(DateTime $horaFin): void
     {

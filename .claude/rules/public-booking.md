@@ -32,7 +32,7 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 4. **Reservar** con `AppointmentBookingService::book()` (ver `booking-atomico.md`). El turno nace `confirmed`.
 5. **Avisar** con `PublicAppointmentCreatedNotificationService::notify()`: email al paciente y a recepción (ver `email.md`). Fuera de toda transacción y a prueba de fallos.
 
-**Los pasos no van en una transacción exterior, a propósito.** `AppointmentSlotLockService` libera su `GET_LOCK` en un `finally`; con una transacción exterior su commit no commitearía y el lock se liberaría antes del commit real, rompiendo la reserva atómica. Cada paso tiene su propio lock + transacción. Si se pierde la carrera por el horario después del paso 2, queda un usuario sin cuenta con su paciente y sin turno: es inofensivo, el próximo intento con el mismo DNI + teléfono lo reutiliza.
+**Los pasos no van en una transacción exterior, a propósito.** `AppointmentBookingService` libera su `GET_LOCK` en un `finally`; con una transacción exterior su commit no commitearía y el lock se liberaría antes del commit real, rompiendo la reserva atómica. Cada paso tiene su propio lock + transacción. Si se pierde la carrera por el horario después del paso 2, queda un usuario sin cuenta con su paciente y sin turno: es inofensivo, el próximo intento con el mismo DNI + teléfono lo reutiliza.
 
 **Nunca llamar a `PatientGuestResolverService` desde dentro de otra transacción**, por el mismo motivo.
 

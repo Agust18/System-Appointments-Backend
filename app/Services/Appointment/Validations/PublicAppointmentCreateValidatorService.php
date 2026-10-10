@@ -2,9 +2,6 @@
 namespace App\Services\Appointment\Validations;
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Exception\Appointment\MedicalNotAvailableException;
-use App\Services\Medical\MedicalFinderService;
-use App\Services\User\UserFinderService;
 
 /**
  * Reglas de la reserva pública que no dependen del paciente. No lee la sesión:
@@ -13,25 +10,18 @@ use App\Services\User\UserFinderService;
  */
 final class PublicAppointmentCreateValidatorService
 {
-    private MedicalFinderService $medicalFinderService;
-    private UserFinderService $userFinderService;
+    private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
     private AppointmentSlotValidatorService $slotValidator;
 
     public function __construct()
     {
-        $this->medicalFinderService = new MedicalFinderService();
-        $this->userFinderService = new UserFinderService();
+        $this->medicalActiveValidator = new AppointmentMedicalActiveValidatorService();
         $this->slotValidator = new AppointmentSlotValidatorService();
     }
 
     public function validate(PublicAppointmentRequest $request): void
     {
-        $medical = $this->medicalFinderService->find($request->getMedicalId());
-        $doctor = $this->userFinderService->find($medical->getUserId());
-
-        if (!$doctor->getIsActive()) {
-            throw new MedicalNotAvailableException();
-        }
+        $doctor = $this->medicalActiveValidator->validate($request->getMedicalId());
 
         $this->slotValidator->validate(
             $request->getMedicalId(),

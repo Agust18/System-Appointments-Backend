@@ -10,21 +10,17 @@ use App\Exception\Appointment\AppointmentServiceRequiredException;
 use App\Exception\Appointment\InvalidStatusTransitionException;
 use App\Exception\Appointment\MedicalCanOnlyChangeStatusException;
 use App\Exception\Appointment\MedicalCanOnlyCompleteException;
-use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
 use App\Exception\Appointment\PatientCanOnlyCancelException;
-use App\Services\Medical\MedicalFinderService;
 use App\Services\User\UserFinderService;
 
 final class AppointmentUpdateValidatorService
 {
-    private MedicalFinderService $medicalFinderService;
-    private UserFinderService $userFinderService;
+    private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
 
     public function __construct()
     {
-        $this->medicalFinderService = new MedicalFinderService();
-        $this->userFinderService = new UserFinderService();
+        $this->medicalActiveValidator = new AppointmentMedicalActiveValidatorService();
     }
     public function validate(AppointmentUpdateRequest $request, Appointment $appointment, int $id): void
     {
@@ -77,10 +73,7 @@ final class AppointmentUpdateValidatorService
 
         // Reasignar el turno a otro médico: su usuario tiene que estar activo (como en el alta).
         if ($request->getMedicalId() !== null && $request->getMedicalId() !== $appointment->getMedicalId()) {
-            $medical = $this->medicalFinderService->find($request->getMedicalId());
-            if (!$this->userFinderService->find($medical->getUserId())->getIsActive()) {
-                throw new MedicalNotAvailableException();
-            }
+            $this->medicalActiveValidator->validate($request->getMedicalId());
         }
 
         // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
