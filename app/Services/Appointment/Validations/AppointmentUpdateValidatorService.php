@@ -5,11 +5,16 @@ namespace App\Services\Appointment\Validations;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentNotModifiableException;
 use App\Exception\Appointment\AppointmentServiceRequiredException;
+use App\Exception\Appointment\InvalidStatusTransitionException;
+use App\Exception\Appointment\MedicalCanOnlyChangeStatusException;
+use App\Exception\Appointment\MedicalCanOnlyCompleteException;
 use App\Exception\Appointment\MedicalNotAvailableException;
+use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
+use App\Exception\Appointment\PatientCanOnlyCancelException;
 use App\Services\Medical\MedicalFinderService;
 use App\Services\User\UserFinderService;
-use Exception;
 
 final class AppointmentUpdateValidatorService
 {
@@ -28,7 +33,7 @@ final class AppointmentUpdateValidatorService
         $requestedStatus = $request->getStatus();
 
         if (in_array($currentStatus, ['completed', 'cancelled'], true)) {
-            throw new Exception('No se puede modificar un turno completado o cancelado', 409);
+            throw new AppointmentNotModifiableException();
         }
 
         if ($roleId === Role::MEDICAL) {
@@ -40,16 +45,16 @@ final class AppointmentUpdateValidatorService
                 $request->getHora() !== null ||
                 $request->getNota() !== null
             ) {
-                throw new Exception('Los médicos solo pueden modificar el estado del turno', 403);
+                throw new MedicalCanOnlyChangeStatusException();
             }
 
             if ($requestedStatus !== 'completed') {
-                throw new Exception('Los médicos solo pueden marcar el turno como completado', 403);
+                throw new MedicalCanOnlyCompleteException();
             }
         }
 
         if ($roleId === Role::PATIENT && $requestedStatus !== 'cancelled') {
-            throw new Exception('Los pacientes solo pueden cancelar turnos', 403);
+            throw new PatientCanOnlyCancelException();
         }
 
         if ($requestedStatus !== null && $requestedStatus !== $currentStatus) {
@@ -59,7 +64,7 @@ final class AppointmentUpdateValidatorService
             ];
 
             if (!in_array($requestedStatus, $allowedTransitions[$currentStatus] ?? [], true)) {
-                throw new Exception('La transición de estado del turno no está permitida', 409);
+                throw new InvalidStatusTransitionException();
             }
         }
 
@@ -67,10 +72,7 @@ final class AppointmentUpdateValidatorService
             $request->getFecha() !== null &&
             $request->getFecha() < date('Y-m-d')
         ) {
-            throw new Exception(
-                'No se puede modificar un turno con fecha pasada',
-                409
-            );
+            throw new PastAppointmentCannotBeModifiedException();
         }
 
         // Reasignar el turno a otro médico: su usuario tiene que estar activo (como en el alta).

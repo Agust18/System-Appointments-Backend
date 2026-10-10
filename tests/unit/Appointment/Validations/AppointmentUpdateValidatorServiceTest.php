@@ -3,6 +3,12 @@
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentNotModifiableException;
+use App\Exception\Appointment\InvalidStatusTransitionException;
+use App\Exception\Appointment\MedicalCanOnlyChangeStatusException;
+use App\Exception\Appointment\MedicalCanOnlyCompleteException;
+use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
+use App\Exception\Appointment\PatientCanOnlyCancelException;
 use App\Services\Appointment\Validations\AppointmentUpdateValidatorService;
 use CodeIgniter\Test\CIUnitTestCase;
 
@@ -69,7 +75,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::PATIENT);
 
-        $this->expectException(Exception::class);
+        $this->expectException(PatientCanOnlyCancelException::class);
         $this->expectExceptionCode(403);
         $this->expectExceptionMessage('Los pacientes solo pueden cancelar turnos');
 
@@ -80,7 +86,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::PATIENT);
 
-        $this->expectException(Exception::class);
+        $this->expectException(PatientCanOnlyCancelException::class);
         $this->expectExceptionCode(403);
 
         $this->validator->validate($this->request(nota: 'algo'), $this->appointment('pending'), 1);
@@ -90,7 +96,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::MEDICAL);
 
-        $this->expectException(Exception::class);
+        $this->expectException(MedicalCanOnlyCompleteException::class);
         $this->expectExceptionCode(403);
         $this->expectExceptionMessage('Los médicos solo pueden marcar el turno como completado');
 
@@ -101,7 +107,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::MEDICAL);
 
-        $this->expectException(Exception::class);
+        $this->expectException(MedicalCanOnlyChangeStatusException::class);
         $this->expectExceptionCode(403);
         $this->expectExceptionMessage('Los médicos solo pueden modificar el estado del turno');
 
@@ -120,7 +126,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::ADMIN);
 
-        $this->expectException(Exception::class);
+        $this->expectException(AppointmentNotModifiableException::class);
         $this->expectExceptionCode(409);
         $this->expectExceptionMessage('No se puede modificar un turno completado o cancelado');
 
@@ -131,7 +137,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::ADMIN);
 
-        $this->expectException(Exception::class);
+        $this->expectException(AppointmentNotModifiableException::class);
         $this->expectExceptionCode(409);
 
         $this->validator->validate($this->request(nota: 'x'), $this->appointment('cancelled'), 1);
@@ -141,7 +147,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::ADMIN);
 
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidStatusTransitionException::class);
         $this->expectExceptionCode(409);
         $this->expectExceptionMessage('La transición de estado del turno no está permitida');
 
@@ -153,7 +159,7 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
     {
         session()->set('roleId', Role::ADMIN);
 
-        $this->expectException(Exception::class);
+        $this->expectException(PastAppointmentCannotBeModifiedException::class);
         $this->expectExceptionCode(409);
         $this->expectExceptionMessage('No se puede modificar un turno con fecha pasada');
 

@@ -1,6 +1,6 @@
 # Excepciones tipadas en AppointmentUpdateValidatorService
 
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Hecho
 - **Repo:** backend
 - **Esfuerzo:** —
 - **Fecha:** 03/10/2026

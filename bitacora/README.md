@@ -12,12 +12,13 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (20)
+## ✅ Hecho (21)
 
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
 - [FRONTEND_URL por Tenant en emails de verificación y reset (resuelto en el Paso 4.2)](hecho/frontend-url-por-tenant.md)
 - [Auditar el doble isActive: se eliminó `medicals.is_active`](hecho/auditar-doble-isactive.md)
 - [B2 — Auditoría de transStart() vs transBegin()](hecho/b2-auditoria-transbegin.md)
+- [Excepciones tipadas en AppointmentUpdateValidatorService](hecho/update-validator-excepciones-tipadas.md)
 - [R6 — Booking atómico extraído a AppointmentSlotLockService](hecho/r6-booking-atomico-extraido.md)
 - [DELETE /appointments/{id} devolvía 500](hecho/fix-delete-appointments-500.md)
 - [AppointmentServiceRequiredException era código muerto](hecho/fix-service-required-exception-codigo-muerto.md)
@@ -36,7 +37,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (34)
+## ⏳ Pendiente (33)
 
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
@@ -65,7 +66,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)
 - [Suite lenta: regla de trabajo y refactor de tests (resuelto en gran parte con `FastDatabaseTestTrait`, ver suite-rapida-pendientes)](pendiente/suite-lenta-refactor-tests.md)
 - [Gap funcional: el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
-- [Excepciones tipadas en AppointmentUpdateValidatorService](pendiente/update-validator-excepciones-tipadas.md)
 - [AppointmentOverlapValidatorService](pendiente/appointment-overlap-validator.md)
 - [Duplicaciones menores en los Services de Appointment](pendiente/appointment-duplicaciones-menores.md)
 - [Suite completa sin correr tras el refactor de validators](pendiente/suite-completa-post-refactor-validators.md)
