@@ -12,8 +12,10 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (18)
+## ✅ Hecho (20)
 
+- [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
+- [FRONTEND_URL por Tenant en emails de verificación y reset (resuelto en el Paso 4.2)](hecho/frontend-url-por-tenant.md)
 - [Auditar el doble isActive: se eliminó `medicals.is_active`](hecho/auditar-doble-isactive.md)
 - [B2 — Auditoría de transStart() vs transBegin()](hecho/b2-auditoria-transbegin.md)
 - [R6 — Booking atómico extraído a AppointmentSlotLockService](hecho/r6-booking-atomico-extraido.md)
@@ -34,16 +36,13 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (37)
+## ⏳ Pendiente (34)
 
-- [📌 Multitenant: traspaso (Pasos 1 y 2 cerrados, suite lenta resuelta; siguiente: Paso 3)](pendiente/multitenant-traspaso.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
 - [Auditar el modelo de borrado: lógico (`deleted_at`) vs físico (post-multitenant)](pendiente/borrado-logico-vs-fisico.md)
 - [Conteo y estadísticas de turnos no hacen JOIN a `services` (total ≠ lista)](pendiente/count-y-stats-de-turnos-sin-join-a-services.md)
-- [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](pendiente/multitenant-grupo-3-plan.md)
-- [⚠️ FRONTEND_URL por Tenant en emails de verificación y reset (bug de producción, Paso 4)](pendiente/frontend-url-por-tenant.md)
-- [Multitenant: plan de implementación](pendiente/multitenant-plan.md) — decisiones en [glosario](glosario.md) y [ADR](adr/)
+- [📌 Multitenant: lo que falta (módulos, tope de turnos, timezone/logo, fallback `demo`)](pendiente/multitenant-plan.md) — decisiones en [glosario](glosario.md) y [ADR](adr/)
 - [Fallback `demo` del filtro tenant con más de un Tenant](pendiente/fallback-demo-con-mas-de-un-tenant.md)
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)

@@ -1,6 +1,8 @@
 <?php
 
+use App\Entity\Tenant\Tenant;
 use App\Filters\Auth;
+use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
 use Config\Services;
@@ -94,5 +96,29 @@ final class AuthTest extends CIUnitTestCase
 
         $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
         $this->assertSame($userId, session()->get('userId'));
+    }
+
+    public function testValidTokenOfAnotherTenantReturns401(): void
+    {
+        $token = 'valid-' . uniqid();
+        $this->seedUserWithToken($token, date('Y-m-d H:i:s', strtotime('+1 day')));
+
+        $this->db->table('tenants')->insert(['slug' => 'tenant-b', 'name' => 'Tenant B']);
+        $tenantB = $this->db->insertID();
+
+        try {
+            TenantContext::set(new Tenant($tenantB, 'tenant-b', 'Tenant B', 'active', null, null));
+
+            $_SERVER['HTTP_AUTHORIZATION'] = $token;
+            $result = $this->filter->before(Services::request(null, false));
+
+            $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
+            $this->assertSame(401, $result->getStatusCode());
+            $this->assertNull(session()->get('userId'));
+        } finally {
+            TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
+            $this->db->query('DELETE FROM users');
+            $this->db->query('DELETE FROM tenants WHERE id <> 1');
+        }
     }
 }
