@@ -50,7 +50,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Fallback `demo` del filtro tenant con más de un Tenant](pendiente/fallback-demo-con-mas-de-un-tenant.md)
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
-- [R5 — Extraer isDayOff() a MedicalDaysOffService](pendiente/r5-extraer-isdayoff.md)
+- [Días no laborables: dónde chequearlos en disponibilidad y booking (ex R5)](pendiente/dias-no-laborables-chequeo-en-booking.md)
 - [Migración al RequestValidator](pendiente/migracion-al-request-validator.md)
 - [Alertas del sistema (post-MVP)](pendiente/alertas-del-sistema.md)
 - [Deploy: app.trustedProxies](pendiente/deploy-trusted-proxies.md)
@@ -79,7 +79,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ## Prioridad sugerida
 
-1. **R5** — Extraer `isDayOff()` (30 min, preparación para días no laborables).
+1. **Días no laborables** — chequeo en disponibilidad y booking (30 min, cuando exista la feature).
 2. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentBookingService::runLocked()`.
 3. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
 

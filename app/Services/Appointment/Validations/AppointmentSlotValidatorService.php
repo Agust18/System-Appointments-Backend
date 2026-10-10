@@ -8,14 +8,7 @@ use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Services\Appointment\ServiceBlockResolverService;
 use DateTime;
 
-/**
- * Reglas del horario de un turno que no dependen de quién lo pide ni de la
- * sesión: fecha no pasada, servicio activo y ofrecido por el médico, y que el
- * bloque completo entre en la agenda del médico.
- *
- * Lo comparten el flujo autenticado (AppointmentCreateValidatorService) y el de
- * reserva pública (PublicAppointmentCreateValidatorService).
- */
+
 final class AppointmentSlotValidatorService
 {
     private MedicalScheduleModel $medicalScheduleModel;
