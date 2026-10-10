@@ -62,7 +62,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Deploy: reception.email configurado](pendiente/deploy-reception-email.md)
 - [CORS en rutas privadas (no incluido)](pendiente/cors-en-rutas-privadas.md)
 - [Flujo autenticado: fecha/hora sin largo exacto](pendiente/fecha-hora-exact-length-flujo-autenticado.md)
-- [Tope de turnos futuros "blando"](pendiente/tope-turnos-futuros-blando.md)
 - [CORS: exponer Retry-After](pendiente/cors-exponer-retry-after.md)
 - [Agregar campo code a los 409 de POST /public/appointments](pendiente/campo-code-en-409-publicos.md)
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)

@@ -11,9 +11,11 @@ final class ServiceDurationCalculatorService
      */
     public function calculate(Service $service, MedicalService $medicalService): ServiceDuration
     {
-        $effectiveDuration = $medicalService->getCustomDurationMinutes() ?? $service->getDurationMinutes();
-        $bufferMinutes = $service->getBufferMinutes();
+        $effectiveDuration = $medicalService->getCustomDurationMinutes();
+        if ($effectiveDuration === null) {
+            $effectiveDuration = $service->getDurationMinutes();
+        }
 
-        return new ServiceDuration($effectiveDuration, $bufferMinutes, $effectiveDuration + $bufferMinutes);
+        return new ServiceDuration($effectiveDuration, $effectiveDuration + $service->getBufferMinutes());
     }
 }

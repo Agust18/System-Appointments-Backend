@@ -15,10 +15,8 @@ use DateTime;
 
 final class PublicAppointmentCreatorService
 {
-  
     private const INITIAL_STATUS = 'confirmed';
 
- 
     public const MAX_ACTIVE_FUTURE_APPOINTMENTS = 3;
 
     private PublicAppointmentCreateValidatorService $validator;
@@ -42,10 +40,8 @@ final class PublicAppointmentCreatorService
 
     public function create(PublicAppointmentRequest $request): PublicAppointmentResponse
     {
-      
         $this->validator->validate($request);
 
-        
         $patient = $this->patientResolver->resolve($request->getPatient());
 
         if ($this->appointmentModel->countActiveFutureByPatient($patient->getId(), new DateTime())
