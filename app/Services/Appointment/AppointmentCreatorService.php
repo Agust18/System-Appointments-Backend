@@ -7,14 +7,12 @@ use App\Dto\Response\Appointment\AppointmentResponse;
 use App\Services\Appointment\Notification\AppointmentConfirmedNotificationService;
 use App\Services\Appointment\Validations\AppointmentCreateValidatorService;
 
-
 final class AppointmentCreatorService
 {
     private AppointmentCreateValidatorService $validator;
     private AppointmentBookingService $bookingService;
     private AppointmentToAppointmentResponseConverter $converter;
     private AppointmentConfirmedNotificationService $notificationService;
-
 
     public function __construct()
     {
@@ -26,7 +24,6 @@ final class AppointmentCreatorService
 
     public function create(AppointmentRequest $request): AppointmentResponse
     {
-       
         $this->validator->validate($request);
 
         $newAppointment = $this->bookingService->book($request);

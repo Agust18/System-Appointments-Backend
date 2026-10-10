@@ -17,52 +17,65 @@ final class SlotGeneratorService
         int $effectiveDuration,
         int $totalBlockMinutes
     ): array {
+        $busyBlocks = $this->toMinuteBlocks($existingAppointments);
         $availableSlots = [];
 
-        //recorre cada rango de atención
         foreach ($activeRanges as $range) {
-            $rangeStartMinutes = $this->timeToMinutes(substr($range->getStartTime(), 0, 5));
-            $rangeEndMinutes = $this->timeToMinutes(substr($range->getEndTime(), 0, 5));
+            $rangeStart = $this->timeToMinutes($range->getStartTime());
+            $rangeEnd = $this->timeToMinutes($range->getEndTime());
 
-            for ($candidateStart = $rangeStartMinutes; $candidateStart <= ($rangeEndMinutes - $totalBlockMinutes); $candidateStart += $totalBlockMinutes) {
-                $candidateEnd = $candidateStart + $totalBlockMinutes;       // Con buffer (bloque total)
-                $visibleEnd = $candidateStart + $effectiveDuration;        // Sin buffer (visible para paciente)
+            for ($blockStart = $rangeStart; $blockStart + $totalBlockMinutes <= $rangeEnd; $blockStart += $totalBlockMinutes) {
+                $blockEnd = $blockStart + $totalBlockMinutes;
 
-                if ($candidateEnd > $rangeEndMinutes) {
+                if ($this->overlapsAny($blockStart, $blockEnd, $busyBlocks)) {
                     continue;
                 }
 
-                $candidateStartStr = $this->minutesToTime($candidateStart) . ':00';
-                $candidateEndStr = $this->minutesToTime($candidateEnd) . ':00';
-
-                //chequea solapamiento: candidate_start < turno.hora_fin AND candidate_end > turno.hora
-                $overlaps = false;
-                foreach ($existingAppointments as $appt) {
-                    $apptHora = substr($appt->hora, 0, 8);
-                    $apptHoraFin = substr($appt->hora_fin, 0, 8);
-
-                    if ($candidateStartStr < $apptHoraFin && $candidateEndStr > $apptHora) {
-                        $overlaps = true;
-                        break;
-                    }
-                }
-
-                if (!$overlaps) {
-                    $availableSlots[] = [
-                        'start_time' => substr($candidateStartStr, 0, 5),
-                        'end_time' => $this->minutesToTime($visibleEnd),       //duración real sin buffer
-                        'block_end_time' => substr($candidateEndStr, 0, 5)          //fin con buffer (bloqueo total)
-                    ];
-                }
+                $availableSlots[] = [
+                    'start_time' => $this->minutesToTime($blockStart),
+                    'end_time' => $this->minutesToTime($blockStart + $effectiveDuration), // duración real, sin buffer
+                    'block_end_time' => $this->minutesToTime($blockEnd),                  // fin con buffer
+                ];
             }
         }
 
         return $availableSlots;
     }
 
+    /**
+     * @param array $appointments stdClass{hora, hora_fin}
+     * @return array<array{0: int, 1: int}> [inicio, fin] en minutos
+     */
+    private function toMinuteBlocks(array $appointments): array
+    {
+        $blocks = [];
+        foreach ($appointments as $appointment) {
+            $blocks[] = [$this->timeToMinutes($appointment->hora), $this->timeToMinutes($appointment->hora_fin)];
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Hay solapamiento si el bloque empieza antes de que termine el turno
+     * y termina después de que empiece.
+     *
+     * @param array<array{0: int, 1: int}> $busyBlocks
+     */
+    private function overlapsAny(int $blockStart, int $blockEnd, array $busyBlocks): bool
+    {
+        foreach ($busyBlocks as [$busyStart, $busyEnd]) {
+            if ($blockStart < $busyEnd && $blockEnd > $busyStart) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function timeToMinutes(string $time): int
     {
-        [$hours, $minutes] = explode(':', $time);
+        [$hours, $minutes] = explode(':', $time); // ignora los segundos si vienen
         return ((int) $hours * 60) + (int) $minutes;
     }
 

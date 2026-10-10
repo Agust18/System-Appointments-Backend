@@ -12,8 +12,9 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (23)
+## ✅ Hecho (24)
 
+- [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](hecho/micro-deuda-guard-service-required.md)
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
 - [FRONTEND_URL por Tenant en emails de verificación y reset (resuelto en el Paso 4.2)](hecho/frontend-url-por-tenant.md)
 - [Auditar el doble isActive: se eliminó `medicals.is_active`](hecho/auditar-doble-isactive.md)
@@ -39,7 +40,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (31)
+## ⏳ Pendiente (30)
 
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
@@ -51,7 +52,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
 - [R5 — Extraer isDayOff() a MedicalDaysOffService](pendiente/r5-extraer-isdayoff.md)
 - [Migración al RequestValidator](pendiente/migracion-al-request-validator.md)
-- [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](pendiente/micro-deuda-guard-service-required.md)
 - [Alertas del sistema (post-MVP)](pendiente/alertas-del-sistema.md)
 - [Deploy: app.trustedProxies](pendiente/deploy-trusted-proxies.md)
 - [Deploy: writable/cache escribible](pendiente/deploy-cache-escribible.md)

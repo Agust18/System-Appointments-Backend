@@ -1,10 +1,12 @@
 # Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService
 
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Hecho (09/10/2026)
 - **Repo:** backend
 - **Esfuerzo:** —
 - **Fecha:** —
 - **Origen:** PENDIENTES-BACKEND.md › 🟡 Deuda técnica backend
+
+> **HECHO (09/10/2026).** El guard de `AppointmentUpdateValidatorService` quedó en `$finalServiceId <= 0`; el valor final se resuelve con `if (=== null)` sobre `$appointment->getServiceId()`.
 
 ## Detalle
 

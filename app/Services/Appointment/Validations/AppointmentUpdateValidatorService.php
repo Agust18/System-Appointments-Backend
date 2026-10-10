@@ -77,8 +77,11 @@ final class AppointmentUpdateValidatorService
         }
 
         // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
-        $finalServiceId = $request->getServiceId() ?? $appointment->getServiceId();
-        if ($finalServiceId === null || $finalServiceId <= 0) {
+        $finalServiceId = $request->getServiceId();
+        if ($finalServiceId === null) {
+            $finalServiceId = $appointment->getServiceId();
+        }
+        if ($finalServiceId <= 0) {
             throw new AppointmentServiceRequiredException();
         }
 

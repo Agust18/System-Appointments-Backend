@@ -10,10 +10,8 @@ use App\Services\Appointment\Validations\AppointmentUpdateValidatorService;
 
 final class AppointmentUpdaterService
 {
-  
     private AppointmentToAppointmentResponseConverter $converter;
     private AppointmentUpdateValidatorService $validator;
-
     private AppointmentBookingService $bookingService;
     private AppointmentFinderService $appointmentFinderService;
     private AppointmentUpdateNotificationService $notificationService;
@@ -30,11 +28,11 @@ final class AppointmentUpdaterService
     public function update(AppointmentUpdateRequest $request, int $id): AppointmentResponse
     {
         $previousAppointment = $this->appointmentFinderService->find($id);
-        
+
         $appointment = $this->appointmentFinderService->find($id);
 
         $this->validator->validate($request, $appointment, $id);
-        
+
         $updatedAppointment = $this->bookingService->reschedule($appointment, $request, $id);
 
         $this->notificationService->notify($previousAppointment, $request, $id);
