@@ -340,7 +340,7 @@ final class AppointmentModel
             INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
             INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
             ";
-        $orderQuery = "ORDER BY A.fecha DESC, A.hora DESC ";
+        $orderQuery = "ORDER BY (A.fecha < CURDATE()) ASC, A.fecha ASC, A.hora ASC ";
         $paginationQuery = "LIMIT ?, ? ";
 
         $parameters[] = $request->getPagination()->getOffset();
