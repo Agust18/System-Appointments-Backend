@@ -1,6 +1,6 @@
 # Bitácora — BACKEND
 
-Última actualización: 03/10/2026
+Última actualización: 09/10/2026
 
 Solo tareas del **repo backend**. Los archivos `hecho/contrato-*` documentan el contrato de la API pública que el backend le deja al frontend.
 
@@ -12,14 +12,16 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (21)
+## ✅ Hecho (23)
 
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
 - [FRONTEND_URL por Tenant en emails de verificación y reset (resuelto en el Paso 4.2)](hecho/frontend-url-por-tenant.md)
 - [Auditar el doble isActive: se eliminó `medicals.is_active`](hecho/auditar-doble-isactive.md)
 - [B2 — Auditoría de transStart() vs transBegin()](hecho/b2-auditoria-transbegin.md)
+- [Refactor de Services de Appointment (booking unificado, resolver de bloque, validators)](hecho/refactor-services-appointment.md)
+- [Commit del refactor de validators de Appointment](hecho/commit-refactor-validators-appointment.md)
 - [Excepciones tipadas en AppointmentUpdateValidatorService](hecho/update-validator-excepciones-tipadas.md)
-- [R6 — Booking atómico extraído a AppointmentSlotLockService](hecho/r6-booking-atomico-extraido.md)
+- [R6 — Booking atómico extraído (hoy en AppointmentBookingService)](hecho/r6-booking-atomico-extraido.md)
 - [DELETE /appointments/{id} devolvía 500](hecho/fix-delete-appointments-500.md)
 - [AppointmentServiceRequiredException era código muerto](hecho/fix-service-required-exception-codigo-muerto.md)
 - [Mensaje de ServiceRequired más claro](hecho/mensaje-service-required-mas-claro.md)
@@ -37,7 +39,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (33)
+## ⏳ Pendiente (31)
 
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
@@ -49,7 +51,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
 - [R5 — Extraer isDayOff() a MedicalDaysOffService](pendiente/r5-extraer-isdayoff.md)
 - [Migración al RequestValidator](pendiente/migracion-al-request-validator.md)
-- [Micro-deuda: guard de AppointmentUpdateBookingService](pendiente/micro-deuda-guard-update-booking.md)
+- [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](pendiente/micro-deuda-guard-service-required.md)
 - [Alertas del sistema (post-MVP)](pendiente/alertas-del-sistema.md)
 - [Deploy: app.trustedProxies](pendiente/deploy-trusted-proxies.md)
 - [Deploy: writable/cache escribible](pendiente/deploy-cache-escribible.md)
@@ -69,7 +71,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [AppointmentOverlapValidatorService](pendiente/appointment-overlap-validator.md)
 - [Duplicaciones menores en los Services de Appointment](pendiente/appointment-duplicaciones-menores.md)
 - [Suite completa sin correr tras el refactor de validators](pendiente/suite-completa-post-refactor-validators.md)
-- [Commit pendiente: refactor de validators de Appointment](pendiente/commit-refactor-validators-appointment.md)
 - [Tests de CORS dependen del .env local](pendiente/tests-cors-dependen-del-env-local.md)
 
 ## 🔵 Features (2)
@@ -80,7 +81,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 ## Prioridad sugerida
 
 1. **R5** — Extraer `isDayOff()` (30 min, preparación para días no laborables).
-2. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentSlotLockService`.
+2. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentBookingService::runLocked()`.
 3. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
 
 ## Cómo usar

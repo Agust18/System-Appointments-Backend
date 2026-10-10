@@ -13,3 +13,5 @@
 | R5 | Extraer `isDayOff()` a `MedicalDaysOffService` | `AppointmentAvailabilityBatchService` | 30 min | Bajo |
 
 > **R5 — Detalle:** extraer `isDayOff()` de `AppointmentAvailabilityBatchService` a `MedicalDaysOffService`, inyectarlo en batch, single-date y Booking, e implementar la query real contra `medical_days_off`. Se hace **cuando se implemente la feature de días no laborables** (hoy `isDayOff()` devuelve `false`).
+
+> **Decisión 09/10/2026:** `isDayOff()` se conserva tal cual en `AppointmentAvailabilityBatchService` como hook para la feature de días no laborables; no se borra en limpiezas.
