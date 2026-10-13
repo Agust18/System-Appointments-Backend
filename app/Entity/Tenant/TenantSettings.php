@@ -14,8 +14,6 @@ final class TenantSettings
         private ?string $frontendUrl,
         private ?string $receptionEmail,
         private bool $receptionEmailEnabled,
-        private ?string $primaryColor,
-        private ?string $secondaryColor,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {}
@@ -29,8 +27,6 @@ final class TenantSettings
             null, $frontendUrl, 
             null, 
             true, 
-            null, 
-            null, 
             new DateTime(), 
             new DateTime()
         );
@@ -87,16 +83,6 @@ final class TenantSettings
     public function isReceptionEmailEnabled(): bool
     {
         return $this->receptionEmailEnabled;
-    }
-
-    public function getPrimaryColor(): ?string
-    {
-        return $this->primaryColor;
-    }
-
-    public function getSecondaryColor(): ?string
-    {
-        return $this->secondaryColor;
     }
 
     public function getCreatedAt(): ?DateTime

@@ -26,7 +26,7 @@ final class TenantSettingsModel
 
     public function insert(TenantSettings $settings): ?TenantSettings
     {
-        $query = "INSERT INTO tenant_settings (tenant_id, name, reply_to_email, frontend_url, reception_email, reception_email_enabled, primary_color, secondary_color, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)";
+        $query = "INSERT INTO tenant_settings (tenant_id, name, reply_to_email, frontend_url, reception_email, reception_email_enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)";
 
         $this->db->query($query, [
             $settings->getTenantId(),
@@ -35,8 +35,6 @@ final class TenantSettingsModel
             $settings->getFrontendUrl(),
             $settings->getReceptionEmail(),
             $settings->isReceptionEmailEnabled() ? 1 : 0,
-            $settings->getPrimaryColor(),
-            $settings->getSecondaryColor(),
             $settings->getCreatedAt()->format('Y-m-d H:i:s'),
             $settings->getUpdatedAt()->format('Y-m-d H:i:s'),
         ]);
@@ -51,15 +49,13 @@ final class TenantSettingsModel
     public function update(TenantSettings $settings): ?TenantSettings
     {
         $this->db->query(
-            "UPDATE tenant_settings SET name = ?, reply_to_email = ?, frontend_url = ?, reception_email = ?, reception_email_enabled = ?, primary_color = ?, secondary_color = ?, updated_at = NOW() WHERE tenant_id = ?",
+            "UPDATE tenant_settings SET name = ?, reply_to_email = ?, frontend_url = ?, reception_email = ?, reception_email_enabled = ?, updated_at = NOW() WHERE tenant_id = ?",
             [
                 $settings->getName(),
                 $settings->getReplyToEmail(),
                 $settings->getFrontendUrl(),
                 $settings->getReceptionEmail(),
                 $settings->isReceptionEmailEnabled() ? 1 : 0,
-                $settings->getPrimaryColor(),
-                $settings->getSecondaryColor(),
                 $settings->getTenantId(),
             ]
         );
