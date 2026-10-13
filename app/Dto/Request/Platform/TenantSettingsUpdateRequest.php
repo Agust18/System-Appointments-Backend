@@ -4,8 +4,8 @@ namespace App\Dto\Request\Platform;
 
 final readonly class TenantSettingsUpdateRequest
 {
-    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled', 'primaryColor', 'secondaryColor'];
-    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail', 'primaryColor', 'secondaryColor'];
+    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled'];
+    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail'];
 
    
     public function __construct(
@@ -14,8 +14,6 @@ final readonly class TenantSettingsUpdateRequest
         private ?string $frontendUrl,
         private ?string $receptionEmail,
         private ?bool $receptionEmailEnabled,
-        private ?string $primaryColor,
-        private ?string $secondaryColor,
         private array $presentFields = [],
     ) {}
 
@@ -45,8 +43,6 @@ final readonly class TenantSettingsUpdateRequest
             $data['frontendUrl'] ?? null,
             $data['receptionEmail'] ?? null,
             isset($data['receptionEmailEnabled']) ? (bool) $data['receptionEmailEnabled'] : null,
-            $data['primaryColor'] ?? null,
-            $data['secondaryColor'] ?? null,
             array_keys($data),
         );
     }
@@ -86,16 +82,6 @@ final readonly class TenantSettingsUpdateRequest
         return $this->receptionEmailEnabled;
     }
 
-    public function getPrimaryColor(): ?string
-    {
-        return $this->primaryColor;
-    }
-
-    public function getSecondaryColor(): ?string
-    {
-        return $this->secondaryColor;
-    }
-
     public static function rules(): array
     {
         return [
@@ -104,8 +90,6 @@ final readonly class TenantSettingsUpdateRequest
             'frontendUrl'           => 'permit_empty|string|max_length[255]',
             'receptionEmail'        => 'permit_empty|string|valid_email|max_length[255]',
             'receptionEmailEnabled' => 'permit_empty|in_list[0,1]',
-            'primaryColor'          => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
-            'secondaryColor'        => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
         ];
     }
 
@@ -133,14 +117,6 @@ final readonly class TenantSettingsUpdateRequest
             ],
             'receptionEmailEnabled' => [
                 'in_list' => 'receptionEmailEnabled debe ser true o false.',
-            ],
-            'primaryColor' => [
-                'string'      => 'El color principal no es válido.',
-                'regex_match' => 'El color principal debe tener el formato #RRGGBB.',
-            ],
-            'secondaryColor' => [
-                'string'      => 'El color secundario no es válido.',
-                'regex_match' => 'El color secundario debe tener el formato #RRGGBB.',
             ],
         ];
     }

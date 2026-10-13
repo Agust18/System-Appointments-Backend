@@ -56,15 +56,6 @@ final class TenantSettings
             $this->receptionEmailEnabled = $request->getReceptionEmailEnabled();
         }
 
-        if ($request->has('primaryColor')) {
-            $color = $request->getPrimaryColor();
-            $this->primaryColor = $color === null ? null : strtoupper($color);
-        }
-        if ($request->has('secondaryColor')) {
-            $color = $request->getSecondaryColor();
-            $this->secondaryColor = $color === null ? null : strtoupper($color);
-        }
-
         $this->updatedAt = new DateTime();
     }
 

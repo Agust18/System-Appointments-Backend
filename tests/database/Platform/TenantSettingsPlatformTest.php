@@ -249,49 +249,23 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
         }
     }
 
-    // ------------------------------- branding (colores)
+    // ------------------------------- claves de color obsoletas
 
-    public function testEditingTheColorsOfTenantANeverTouchesTenantB(): void
+    public function testLegacyColorKeysAreIgnoredAndTheRestIsSaved(): void
     {
-        $beforeNorte = $this->row($this->norteId);
-        $beforeDemo = $this->row(1);
+        $result = $this->editSettings($this->surId, ['name' => 'Sur Nuevo', 'primaryColor' => '#1A73E8', 'secondaryColor' => 'no-es-un-color']);
 
-        $this->editSettings($this->surId, ['primaryColor' => '#1a73e8', 'secondaryColor' => '#FfFfFf'])->assertStatus(200);
-
-        $sur = $this->row($this->surId);
-        $this->assertSame('#1A73E8', $sur['primary_color']);
-        $this->assertSame('#FFFFFF', $sur['secondary_color']);
-        $this->assertSame($beforeNorte, $this->row($this->norteId));
-        $this->assertSame($beforeDemo, $this->row(1));
+        $result->assertStatus(200);
+        $this->assertSame('Sur Nuevo', $this->row($this->surId)['name']);
+        $this->assertArrayNotHasKey('primaryColor', $this->decode($result));
+        $this->assertArrayNotHasKey('secondaryColor', $this->decode($result));
     }
 
-    /** @return array<string, array{mixed}> */
-    public static function invalidColors(): array
+    public function testABodyWithOnlyLegacyColorKeysIs422(): void
     {
-        return [
-            'nombre'           => ['red'],
-            'sin numeral'      => ['1A73E8'],
-            'abreviado'        => ['#fff'],
-            'rgb'              => ['rgb(1,2,3)'],
-            'no hexadecimal'   => ['#GGGGGG'],
-            'muy largo'        => ['#1A73E8FF'],
-            'css inyectado'    => ['#1A73E8;}'],
-            'etiqueta'         => ['#1A73E8</style>'],
-            'no es string'     => [['#1A73E8']],
-        ];
-    }
+        $errors = $this->errorsOf(fn () => $this->editSettings($this->surId, ['primaryColor' => '#1A73E8']));
 
-    #[DataProvider('invalidColors')]
-    public function testAnInvalidColorIs422AndLeavesTheRowIntact(mixed $color): void
-    {
-        $before = $this->row($this->surId);
-
-        foreach (['primaryColor', 'secondaryColor'] as $field) {
-            $errors = $this->errorsOf(fn () => $this->editSettings($this->surId, ['name' => 'No debe guardarse', $field => $color]));
-
-            $this->assertArrayHasKey($field, $errors);
-            $this->assertSame($before, $this->row($this->surId));
-        }
+        $this->assertArrayHasKey('body', $errors);
     }
 
     // ------------------------------- frontendUrl
