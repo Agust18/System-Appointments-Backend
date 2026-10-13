@@ -12,7 +12,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (24)
+## ✅ Hecho (25)
 
 - [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](hecho/micro-deuda-guard-service-required.md)
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
@@ -32,6 +32,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Métrica: turnos recientes](hecho/metrica-turnos-recientes.md)
 - [Refactor de métricas (sin Projection ni Converter)](hecho/refactor-metricas.md)
 - [Suite completa verificada tras la sub-fase 3.3](hecho/suite-verde-sub-fase-3-3.md)
+- [Contrato: se eliminó el branding de colores (`primaryColor`/`secondaryColor`) de `GET /tenant/config` y de settings](hecho/quitar-branding-de-colores.md)
 - [Suite completa en verde tras la Fase 5](hecho/suite-verde-fase-5.md)
 - [Reserva pública: cómo limita (throttle por IP y bloqueo por DNI, Fase 4)](hecho/reserva-publica-como-limita-fase-4.md)
 - [Contrato: POST /patients/register (202) y UserResponse.hasAccount](hecho/contrato-patients-register-202-y-hasaccount.md)
@@ -40,9 +41,8 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (32)
+## ⏳ Pendiente (31)
 
-- [Quitar el branding de colores (`primary_color`/`secondary_color`): el frontend ya no los usa](pendiente/quitar-branding-de-colores.md)
 - [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)

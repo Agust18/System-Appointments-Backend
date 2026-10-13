@@ -5,8 +5,8 @@
 - **Lado frontend:** `System-AppointmentsFrontend/bitacora/pendiente/contacto-clinica-a-tenant-settings.md`. Este archivo es el lado backend y va primero.
 
 ## Estado actual verificado (13/10/2026)
-- `tenant_settings` tiene: `tenant_id`, `name`, `reply_to_email`, `frontend_url`, `reception_email`, `reception_email_enabled`, `primary_color`, `secondary_color` (+ timestamps). **No hay ningún campo de contacto público.**
-- `GET /tenant/config` devuelve `slug`, `name`, `primaryColor`, `secondaryColor` (`TenantConfigResponse`).
+- `tenant_settings` tiene: `tenant_id`, `name`, `reply_to_email`, `frontend_url`, `reception_email`, `reception_email_enabled` (+ timestamps; los colores se eliminaron con `DropBrandingFromTenantSettings`). **No hay ningún campo de contacto público.**
+- `GET /tenant/config` devuelve `slug` y `name` (`TenantConfigResponse`).
 - `reception_email` es un email **interno** (avisos al consultorio); `reply_to_email` es el Reply-To de los emails. Ninguno sirve como contacto público.
 
 ## Qué se agrega (solo aditivo: no se quita nada de lo hecho)
@@ -28,13 +28,13 @@ Columnas nullable en `tenant_settings` (migración nueva, mismo patrón y guarda
 3. `TenantSettingsModel` (allowedFields y mapeo) y `PrimitiveToTenantSettingsConverter`.
 4. `TenantSettingsUpdateRequest` + `TenantSettingsUpdateValidatorService`: longitudes, `https` en URLs, email válido. Mismo estilo que los campos actuales.
 5. `TenantSettingsResponse` y `TenantSettingsToTenantSettingsResponseConverter` (`GET/PUT /platform/tenants/{id}/settings`).
-6. `GET /tenant/config`: agregar un bloque `contact` al DTO y al converter. Es **aditivo**: no cambia lo que ya devuelve (si `quitar-branding-de-colores.md` ya se hizo, queda `slug`, `name` y `contact`).
-7. Actualizar la regla de `CLAUDE.md` ("solo devuelve `slug`, `name` y el branding…") para incluir el contacto público, manteniendo "nunca emails internos ni `frontend_url`".
+6. `GET /tenant/config`: agregar un bloque `contact` al DTO y al converter. Es **aditivo**: no cambia lo que ya devuelve (tras `hecho/quitar-branding-de-colores.md` queda `slug`, `name` y `contact`).
+7. Actualizar la regla de `CLAUDE.md` ("solo devuelve `slug` y `name`") para incluir el contacto público, manteniendo "nunca emails internos ni `frontend_url`".
 8. Tests: extender `TenantSettingsPlatformTest` y `TenantSettingsTest` (PUT parcial, `null` limpia, validación https) y asegurar que `GET /tenant/config` **no** expone `reception_email`, `reply_to_email` ni `frontend_url`. Correr la suite completa.
 9. Docs: `.claude/rules/platform-admin.md`, `bitacora/glosario.md` (Configuración del Tenant) y un `hecho/contrato-contacto-publico.md` para el frontend.
 
 ## Fuera de alcance (decisión explícita)
-- Quitar `primary_color`/`secondary_color`: tarea aparte, [quitar-branding-de-colores.md](quitar-branding-de-colores.md). **Hacerla antes que esta** (toca los mismos archivos). Este cambio no los toca.
+- Quitar `primary_color`/`secondary_color`: ya hecho, ver [quitar-branding-de-colores.md](../hecho/quitar-branding-de-colores.md).
 - Logo (`logo-por-tenant.md`) y `timezone` (`multitenant-plan.md`): siguen en sus pendientes.
 
 ## Pregunta abierta
