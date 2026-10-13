@@ -125,8 +125,6 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
             'frontendUrl'           => 'https://sur.tusturnos.test',
             'receptionEmail'        => 'recepcion@sur.test',
             'receptionEmailEnabled' => true,
-            'primaryColor'          => null,
-            'secondaryColor'        => null,
         ], array_diff_key($this->decode($sur), ['createdAt' => 1, 'updatedAt' => 1]));
         $this->assertSame($this->norteId, $this->decode($norte)['tenantId']);
         $this->assertSame('recepcion@norte.test', $this->decode($norte)['receptionEmail']);
@@ -202,7 +200,7 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
         $public = $this->withToken(null)->fresh()->withHeaders(['X-Tenant' => 'clinica-sur'])->get('tenant/config');
 
         $public->assertStatus(200);
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Nuevo', 'primaryColor' => null, 'secondaryColor' => null], $this->decode($public));
+        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Nuevo'], $this->decode($public));
         $this->assertStringNotContainsString('secreto@sur.test', $public->getJSON());
     }
 

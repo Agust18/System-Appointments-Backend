@@ -46,8 +46,9 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
 
         $demo->assertStatus(200);
         $sur->assertStatus(200);
-        $this->assertSame(['slug' => 'demo', 'name' => 'Demo', 'primaryColor' => null, 'secondaryColor' => null], $this->decode($demo));
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible', 'primaryColor' => null, 'secondaryColor' => null], $this->decode($sur));
+        // assertSame sobre el array completo: también garantiza que no vuelvan claves de color.
+        $this->assertSame(['slug' => 'demo', 'name' => 'Demo'], $this->decode($demo));
+        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible'], $this->decode($sur));
     }
 
     public function testTheModelNeverReturnsTheRowOfAnotherTenant(): void
