@@ -43,14 +43,14 @@ class AppointmentPermission implements FilterInterface
 
         $permissionsService = new PermissionsService();
 
-        // El paciente solo puede cancelar su propio turno pendiente.
+        // El paciente solo puede cancelar su propio turno confirmado.
         if ($roleId === Role::PATIENT) {
             if ($method === 'put' && $permissionsService->canCancelAppointment($roleId, $userId, $appointment)) {
                 return $request;
             }
 
             return $response->setStatusCode(403)->setJSON([
-                "message" => "Los pacientes solo pueden cancelar sus turnos pendientes"
+                "message" => "Los pacientes solo pueden cancelar sus turnos confirmados"
             ]);
         }
 

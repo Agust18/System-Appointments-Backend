@@ -34,12 +34,12 @@ final class AppointmentCreateValidatorService
             throw new MedicalCannotCreateAppointmentException();
         }
         if ($userRoleId === Role::PATIENT) {
-            if ($request->getStatus() !== 'pending') {
+            if ($request->getStatus() !== 'confirmed') {
                 throw new InvalidInitialStatusException('pacientes');
             }
         }
         if ($userRoleId === Role::RECEPTION) {
-            if ($request->getStatus() !== 'pending') {
+            if ($request->getStatus() !== 'confirmed') {
                 throw new InvalidInitialStatusException('recepcionistas');
             }
         }

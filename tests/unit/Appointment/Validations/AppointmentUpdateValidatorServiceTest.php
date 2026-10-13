@@ -82,6 +82,32 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
         $this->validator->validate($this->request(status: 'confirmed'), $this->appointment('pending'), 1);
     }
 
+    public function testPatientCancellingConfirmedAppointmentPasses(): void
+    {
+        session()->set('roleId', Role::PATIENT);
+
+        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('confirmed'), 1);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testPatientCannotChangeOtherFieldsWhileCancelling(): void
+    {
+        session()->set('roleId', Role::PATIENT);
+
+        $this->expectException(PatientCanOnlyCancelException::class);
+
+        $this->validator->validate($this->request(status: 'cancelled', fecha: '2026-12-02', nota: 'x'), $this->appointment('pending'), 1);
+    }
+
+    public function testPatientCannotCancelAPastAppointment(): void
+    {
+        session()->set('roleId', Role::PATIENT);
+
+        $this->expectException(PastAppointmentCannotBeModifiedException::class);
+
+        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('confirmed', '2020-01-01'), 1);
+    }
+
     public function testPatientRequestingNoStatusThrows403(): void
     {
         session()->set('roleId', Role::PATIENT);

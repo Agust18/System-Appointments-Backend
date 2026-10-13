@@ -19,7 +19,7 @@ que los Filters cortan la cadena con Response, no con excepciones).
 | `auth` | Cualquier usuario autenticado |
 | `adminOnly` | Solo ADMIN |
 | `adminOrReception` | ADMIN o RECEPTION. Antes existía `receptionUserCreate` como filtro separado para `POST /patients`, pero se unificó acá al comprobarse que eran funcionalmente idénticos (mismo chequeo de rol, mismo 403); no verifica coherencia entre el recurso y el `roleId` del body (eso se valida fail-fast en `PatientQuickCreatorService`/`MedicalQuickCreatorService`, ver abajo) |
-| `appointmentPermission` | Admin/recepción sin restricción; paciente solo cancela su turno pendiente (vía `PermissionsService::canCancelAppointment()`); médico solo modifica sus propios turnos (vía `PermissionsService::canEditAppointment()`), nunca elimina |
+| `appointmentPermission` | Admin/recepción sin restricción; paciente solo cancela su turno `confirmed` (vía `PermissionsService::canCancelAppointment()`; el validator exige que mande solo `status: cancelled` y que el turno no haya pasado); médico solo modifica sus propios turnos (vía `PermissionsService::canEditAppointment()`), nunca elimina |
 | `appointmentCreatePermission` | ADMIN, RECEPTION y PATIENT pueden crear turnos; MEDICAL no |
 | `appointmentViewPermission` | Admin/recepción sin restricción; paciente/médico solo ven turnos propios, vía `PermissionsService::canViewAppointment()` |
 | `medicalViewPermission` | Admin/recepción sin restricción; paciente puede ver cualquier médico por `/medicals/{id}` pero **no** por `/medicals/user/{userId}` (esa ruta es solo para que el médico consulte su propio perfil — asimetría intencional); médico solo ve su propio perfil por cualquiera de las dos rutas |

@@ -124,19 +124,19 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
     }
 
-    public function testReceptionCanOnlyCreatePendingAppointments(): void
+    public function testReceptionCanOnlyCreateConfirmedAppointments(): void
     {
         [$medicalId, $serviceId, $patientId] = $this->validScenario();
         session()->set('roleId', Role::RECEPTION);
 
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
+        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'confirmed'));
         $this->addToAssertionCount(1);
 
         $this->expectException(InvalidInitialStatusException::class);
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'confirmed'));
+        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
     }
 
-    public function testPatientCanCreateOwnPendingAppointment(): void
+    public function testPatientCanCreateOwnConfirmedAppointment(): void
     {
         [$medicalId, $serviceId] = $this->seedMedicalWithService();
         $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
@@ -144,11 +144,11 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         session()->set('roleId', Role::PATIENT);
         session()->set('userId', $userId);
 
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
+        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'confirmed'));
         $this->addToAssertionCount(1);
     }
 
-    public function testPatientCannotCreateWithNonPendingStatus(): void
+    public function testPatientCannotCreateWithNonConfirmedStatus(): void
     {
         [$medicalId, $serviceId] = $this->seedMedicalWithService();
         $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
@@ -157,7 +157,7 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         session()->set('userId', $userId);
 
         $this->expectException(InvalidInitialStatusException::class);
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'confirmed'));
+        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
     }
 
     public function testPatientCannotCreateForAnotherPatient(): void
@@ -170,7 +170,7 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         session()->set('userId', $myUserId);
 
         $this->expectException(CannotCreateAppointmentForOtherPatientException::class);
-        $this->validator->validate($this->request($medicalId, $otherPatientId, $serviceId, '09:00', 'pending'));
+        $this->validator->validate($this->request($medicalId, $otherPatientId, $serviceId, '09:00', 'confirmed'));
     }
 
     // --------------------------------------------------------------- médico
