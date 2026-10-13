@@ -40,8 +40,10 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (30)
+## ⏳ Pendiente (32)
 
+- [Quitar el branding de colores (`primary_color`/`secondary_color`): el frontend ya no los usa](pendiente/quitar-branding-de-colores.md)
+- [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
 - [Auditar el modelo de borrado: lógico (`deleted_at`) vs físico (post-multitenant)](pendiente/borrado-logico-vs-fisico.md)
