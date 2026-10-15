@@ -1,7 +1,7 @@
 <?php
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Exception\Appointment\AppointmentNotPast;
 use App\Exception\Appointment\DoctorNotAvailableDayException;
 use App\Exception\Appointment\DoctorNotAvailableTimeException;
@@ -49,7 +49,7 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
     private function request(int $medicalId, int $serviceId, string $hora = '09:00', ?string $fecha = null): PublicAppointmentRequest
     {
         return new PublicAppointmentRequest(
-            new PublicPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456),
+            new GuestPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456),
             $medicalId,
             $serviceId,
             $fecha ?? $this->monday,

@@ -2,7 +2,7 @@
 
 namespace App\Controllers\Patient;
 
-use App\Dto\Request\Patient\PatientPublicRegisterRequest;
+use App\Dto\Request\Patient\PatientSelfRegisterRequest;
 use App\Services\Patient\PatientPublicRegisterService;
 use App\Support\IdentityNormalizer;
 use App\Validation\RequestValidator;
@@ -29,15 +29,15 @@ final class PatientPublicPostController extends ResourceController
         return $this->response->setStatusCode(201)->setJSON($patientResponse);
     }
 
-    private function getRequest(): PatientPublicRegisterRequest
+    private function getRequest(): PatientSelfRegisterRequest
     {
         $parameters = IdentityNormalizer::normalizeInput($this->request->getJSON(true) ?? []);
 
-        RequestValidator::validate($parameters, PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+        RequestValidator::validate($parameters, PatientSelfRegisterRequest::rules(), PatientSelfRegisterRequest::messages());
 
         $parameters = (object) $parameters;
 
-        return new PatientPublicRegisterRequest(
+        return new PatientSelfRegisterRequest(
             firstName: $parameters->firstName,
             lastName: $parameters->lastName,
             email: $parameters->email,

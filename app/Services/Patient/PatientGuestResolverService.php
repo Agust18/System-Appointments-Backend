@@ -3,7 +3,7 @@ namespace App\Services\Patient;
 
 use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Entity\Patient\Patient;
 use App\Entity\User\User;
 use App\Exception\Patient\PatientCannotBeCreatedException;
@@ -36,7 +36,7 @@ final class PatientGuestResolverService
         $this->attemptLimiter = new PublicIdentityAttemptLimiter();
     }
 
-    public function resolve(PublicPatientRequest $request): Patient
+    public function resolve(GuestPatientRequest $request): Patient
     {
         // DNI bloqueado por demasiados teléfonos incorrectos: mismo 409 neutral, sin tocar la base.
         if ($this->attemptLimiter->isBlocked($request->getDni())) {
@@ -75,7 +75,7 @@ final class PatientGuestResolverService
         }
     }
 
-    private function findOrCreate(PublicPatientRequest $request): Patient
+    private function findOrCreate(GuestPatientRequest $request): Patient
     {
         $user = $this->userModel->findByDni($request->getDni());
 
@@ -84,7 +84,7 @@ final class PatientGuestResolverService
             : $this->reuseExistingIdentity($user, $request);
     }
 
-    private function createNewIdentity(PublicPatientRequest $request): Patient
+    private function createNewIdentity(GuestPatientRequest $request): Patient
     {
         if ($this->userModel->findByEmail($request->getEmail()) !== null) {
             $this->reject('email_belongs_to_other_user', $request);
@@ -102,7 +102,7 @@ final class PatientGuestResolverService
         return $this->createPatient($user->getId());
     }
 
-    private function reuseExistingIdentity(User $user, PublicPatientRequest $request): Patient
+    private function reuseExistingIdentity(User $user, GuestPatientRequest $request): Patient
     {
         if ($user->getRoleId() !== Role::PATIENT) {
             $this->reject('dni_belongs_to_non_patient', $request);
@@ -127,7 +127,7 @@ final class PatientGuestResolverService
      * Un usuario sin teléfono guardado nunca coincide: completarlo desde la reserva
      * pública permitiría apropiarse de un DNI ajeno conociendo solo el DNI.
      */
-    private function phoneMatches(User $user, PublicPatientRequest $request): bool
+    private function phoneMatches(User $user, GuestPatientRequest $request): bool
     {
         $storedPhone = IdentityNormalizer::phone($user->getPhone());
 
@@ -139,7 +139,7 @@ final class PatientGuestResolverService
         return $this->patientModel->insert(Patient::fromRequest($userId, new PatientDataRequest(null)));
     }
 
-    private function reject(string $reason, PublicPatientRequest $request): never
+    private function reject(string $reason, GuestPatientRequest $request): never
     {
         // DNI hasheado: el log no debe contener datos personales.
         log_message('notice', sprintf(

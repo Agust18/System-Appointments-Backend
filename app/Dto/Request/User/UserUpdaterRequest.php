@@ -57,7 +57,7 @@ final readonly class UserUpdaterRequest {
         return [
             'firstName' => 'permit_empty|min_length[2]|max_length[100]',
             'lastName'  => 'permit_empty|min_length[2]|max_length[100]',
-            'email'     => 'permit_empty|valid_email',
+            'email'     => 'permit_empty|valid_email|max_length[150]',
             'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
             'password'  => 'permit_empty|min_length[8]',
             'dni'       => 'permit_empty|is_natural_no_zero|min_length[7]|max_length[8]',
@@ -79,6 +79,7 @@ final readonly class UserUpdaterRequest {
             ],
             'email' => [
                 'valid_email' => 'Ese email no es válido.',
+                'max_length'  => 'El email es muy largo.',
             ],
             'phone' => [
                 'is_natural' => 'El teléfono solo puede tener números.',

@@ -63,7 +63,7 @@ final readonly class PatientUpdateRequest
             'firstName' => 'permit_empty|min_length[2]|max_length[100]',
             'lastName'  => 'permit_empty|min_length[2]|max_length[100]',
             'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
-            'email'     => 'permit_empty|valid_email',
+            'email'     => 'permit_empty|valid_email|max_length[150]',
         ];
     }
 
@@ -88,6 +88,7 @@ final readonly class PatientUpdateRequest
             ],
             'email' => [
                 'valid_email' => 'Ese email no es válido.',
+                'max_length'  => 'El email es muy largo.',
             ],
         ];
     }

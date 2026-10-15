@@ -36,7 +36,15 @@ final class PatientPostController extends ResourceController
 
         // Recepción puede dar de alta un paciente sin contraseña: nace sin cuenta
         // y la activa después con el link de "olvidé mi contraseña".
-        RequestValidator::validate($parameters['user'], UserRequest::rules(passwordRequired: false), UserRequest::messages());
+        // El teléfono es obligatorio: es la prueba con la que la reserva pública reconoce a un paciente
+        // existente. Sin él, esa persona recibiría siempre el 409 neutral al reservar por la web.
+        $userRules = array_merge(UserRequest::rules(passwordRequired: false), [
+            'phone' => 'required|is_natural|min_length[10]|max_length[15]',
+        ]);
+        $userMessages = UserRequest::messages();
+        $userMessages['phone']['required'] = 'Ingresá el teléfono.';
+
+        RequestValidator::validate($parameters['user'], $userRules, $userMessages);
         RequestValidator::validate($parameters['patient'], PatientDataRequest::rules(), PatientDataRequest::messages());
 
         $parameters = (object) $parameters;

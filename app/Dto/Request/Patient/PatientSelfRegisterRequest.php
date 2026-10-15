@@ -5,7 +5,7 @@ namespace App\Dto\Request\Patient;
 use App\Constants\Role;
 use App\Dto\Request\User\UserRequest;
 
-final class PatientPublicRegisterRequest
+final class PatientSelfRegisterRequest
 {
     public function __construct(
         public readonly string $firstName,
@@ -41,7 +41,7 @@ final class PatientPublicRegisterRequest
         return [
             'firstName' => 'required|min_length[2]|max_length[100]',
             'lastName'  => 'required|min_length[2]|max_length[100]',
-            'email'     => 'required|valid_email',
+            'email'     => 'required|valid_email|max_length[150]',
             'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
             'password'  => 'required|min_length[8]',
             'dni'       => 'required|is_natural_no_zero|min_length[7]|max_length[8]',
@@ -65,6 +65,7 @@ final class PatientPublicRegisterRequest
             'email' => [
                 'required'    => 'Ingresá tu email.',
                 'valid_email' => 'Ese email no es válido.',
+                'max_length'  => 'El email es muy largo.',
             ],
             'phone' => [
                 'is_natural' => 'El teléfono solo puede tener números.',

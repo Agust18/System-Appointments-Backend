@@ -1,6 +1,6 @@
 <?php
 
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Exception\Validation\ValidationException;
 use App\Validation\RequestValidator;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -8,7 +8,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 /**
  * @internal
  */
-final class PublicPatientRequestValidationTest extends CIUnitTestCase
+final class GuestPatientRequestValidationTest extends CIUnitTestCase
 {
     private function validPayload(): array
     {
@@ -23,7 +23,7 @@ final class PublicPatientRequestValidationTest extends CIUnitTestCase
 
     private function validate(array $payload): void
     {
-        RequestValidator::validate($payload, PublicPatientRequest::rules(), PublicPatientRequest::messages());
+        RequestValidator::validate($payload, GuestPatientRequest::rules(), GuestPatientRequest::messages());
     }
 
     public function testValidPayloadPasses(): void
@@ -103,7 +103,7 @@ final class PublicPatientRequestValidationTest extends CIUnitTestCase
 
     public function testGettersExposeTheNormalizedData(): void
     {
-        $request = new PublicPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456);
+        $request = new GuestPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456);
 
         $this->assertSame('Juana', $request->getFirstName());
         $this->assertSame('Pérez', $request->getLastName());

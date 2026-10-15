@@ -52,6 +52,19 @@ final class UserRequestValidationTest extends CIUnitTestCase
         RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
     }
 
+    public function testEmailLongerThanColumnThrows422(): void
+    {
+        $payload = $this->validPayload();
+        $payload['email'] = str_repeat('a', 142) . '@mail.com'; // 151 caracteres: la columna es varchar(150)
+
+        try {
+            RequestValidator::validate($payload, UserRequest::rules(), UserRequest::messages());
+            $this->fail('Se esperaba ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('email', $e->getErrors());
+        }
+    }
+
     public function testRoleIdOutOfRangeThrows422(): void
     {
         $payload = $this->validPayload();

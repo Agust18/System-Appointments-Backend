@@ -65,11 +65,7 @@ final class User
      */
     public function completeAsAccountless(UserUpdaterRequest $request): void
     {
-        $this->firstName = $request->getFirstName() ?? $this->firstName;
-        $this->lastName = $request->getLastName() ?? $this->lastName;
-        $this->email = $request->getEmail() ?? $this->email;
-        $this->phone = $request->getPhone() ?? $this->phone;
-        $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
+        $this->modify($request);
         $this->isVerified = true;
     }
 

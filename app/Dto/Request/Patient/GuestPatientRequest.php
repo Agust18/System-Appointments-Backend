@@ -5,7 +5,7 @@ namespace App\Dto\Request\Patient;
  * Datos de identidad que declara quien reserva sin cuenta. Llegan ya
  * normalizados (IdentityNormalizer): el DNI y el teléfono solo con dígitos.
  */
-final readonly class PublicPatientRequest
+final readonly class GuestPatientRequest
 {
     public function __construct(
         private string $firstName,

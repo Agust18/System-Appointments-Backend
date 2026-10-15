@@ -2,7 +2,7 @@
 namespace App\Controllers\Appointment;
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Services\Appointment\PublicAppointmentCreatorService;
 use App\Support\IdentityNormalizer;
 use App\Validation\RequestValidator;
@@ -38,7 +38,7 @@ final class PublicAppointmentPostController extends ResourceController
         $parameters = (object) $parameters;
 
         return new PublicAppointmentRequest(
-            new PublicPatientRequest(
+            new GuestPatientRequest(
                 $parameters->firstName,
                 $parameters->lastName,
                 $parameters->email,

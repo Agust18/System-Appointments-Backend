@@ -1,7 +1,7 @@
 <?php
 
 use App\Constants\Role;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Entity\Tenant\Tenant;
 use App\Exception\Patient\PublicBookingIdentityException;
 use App\Exception\Patient\PublicIdentityLockTimeoutException;
@@ -67,10 +67,10 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         string $email = 'nuevo@test.com',
         string $phone = self::PHONE,
         string $firstName = 'Juana'
-    ): PublicPatientRequest {
+    ): GuestPatientRequest {
         // Nombre único: el down() de ReplaceUsernameWithFirstLastName reconstruye
         // users.username (UNIQUE) desde nombre + apellido al refrescar la base.
-        return new PublicPatientRequest($firstName . '_' . uniqid(), 'Pérez', $email, $phone, $dni);
+        return new GuestPatientRequest($firstName . '_' . uniqid(), 'Pérez', $email, $phone, $dni);
     }
 
     private function seedUser(
