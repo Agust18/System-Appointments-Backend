@@ -6,6 +6,7 @@ use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Request\User\UserRequest;
 use App\Services\Patient\PatientCreatorService;
 use App\Support\IdentityNormalizer;
+use App\Validation\IdentityRules;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
@@ -38,13 +39,13 @@ final class PatientPostController extends ResourceController
         // y la activa después con el link de "olvidé mi contraseña".
         // El teléfono es obligatorio: es la prueba con la que la reserva pública reconoce a un paciente
         // existente. Sin él, esa persona recibiría siempre el 409 neutral al reservar por la web.
+        // El email es opcional: hay pacientes que no tienen. Sin email no reciben avisos de turnos.
         $userRules = array_merge(UserRequest::rules(passwordRequired: false), [
-            'phone' => 'required|is_natural|min_length[10]|max_length[15]',
+            'email' => IdentityRules::optional(IdentityRules::EMAIL),
+            'phone' => IdentityRules::required(IdentityRules::PHONE),
         ]);
-        $userMessages = UserRequest::messages();
-        $userMessages['phone']['required'] = 'Ingresá el teléfono.';
 
-        RequestValidator::validate($parameters['user'], $userRules, $userMessages);
+        RequestValidator::validate($parameters['user'], $userRules, UserRequest::messages());
         RequestValidator::validate($parameters['patient'], PatientDataRequest::rules(), PatientDataRequest::messages());
 
         $parameters = (object) $parameters;
@@ -54,7 +55,7 @@ final class PatientPostController extends ResourceController
         $userRequest = new UserRequest(
             $parameters->user->firstName,
             $parameters->user->lastName,
-            $parameters->user->email,
+            $parameters->user->email ?? null,
             $parameters->user->phone ?? null,
             ($parameters->user->password ?? null) ?: null,
             $parameters->user->dni,

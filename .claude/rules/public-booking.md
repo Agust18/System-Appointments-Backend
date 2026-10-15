@@ -38,7 +38,7 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 
 ## Identidad: casos A–E (`PatientGuestResolverService`)
 
-El usuario creado nace sin cuenta (`password` NULL, `hasAccount = false`) y nunca se modifican los datos de un usuario existente.
+El usuario creado nace sin cuenta (`password` NULL, `hasAccount = false`) y nunca se modifican los datos de un usuario existente, con una excepción: en B/E, si el usuario **no tiene email** (lo cargó recepción sin email), se le guarda el del formulario, salvo que sea de otro usuario (en ese caso el turno se reserva igual y el email no se guarda).
 
 | Caso | Situación | Resultado |
 |---|---|---|

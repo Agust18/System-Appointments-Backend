@@ -18,7 +18,7 @@ final class AppointmentProjection
         private string $pacienteNombre,
         private string $servicioNombre,
 
-        private string $paciente_email,
+        private ?string $paciente_email,
         // Datos del turno
         private DateTime $fecha,
         private DateTime $hora,
@@ -53,7 +53,7 @@ final class AppointmentProjection
         return $this->pacienteNombre;
     }
 
-    public function getEmail():string
+    public function getEmail(): ?string
     {
         return $this->paciente_email;
     }

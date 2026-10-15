@@ -137,7 +137,7 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
 
     private function staffRequest(
         int $dni,
-        string $email,
+        ?string $email,
         ?string $password = null,
         ?string $phone = '2325506499',
         ?string $birthDate = null,
@@ -194,6 +194,17 @@ final class PatientCreatorServiceTest extends CIUnitTestCase
             'phone'       => '2325506499',
         ]);
         $this->seeNumRecords(1, 'patients', []);
+    }
+
+    public function testStaffCanCreateSeveralPatientsWithoutEmailInTheSameTenant(): void
+    {
+        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+
+        $this->service->create($this->staffRequest(30123456, null), true);
+        $this->service->create($this->staffRequest(30123457, null, null, '2325506400'), true);
+
+        $this->seeNumRecords(2, 'users', ['email' => null]);
+        $this->seeNumRecords(2, 'patients', []);
     }
 
     public function testStaffCreateReusesAccountlessUserAndPatientInsteadOfDuplicating(): void

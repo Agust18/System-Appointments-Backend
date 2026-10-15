@@ -221,6 +221,7 @@ final class AppointmentModel
      * Turnos de mañana (en 24 hs) con status pending o confirmed, con datos
      * de paciente (email, nombre), médico y servicio para enviar recordatorios.
      * Solo los del Tenant del contexto: el proceso de recordatorios recorre los Tenants activos.
+     * Excluye a los pacientes sin email: no hay a dónde mandarles el recordatorio.
      */
     public function findUpcomingIn24Hours(): array
     {
@@ -239,6 +240,7 @@ final class AppointmentModel
         WHERE A.tenant_id = ?
           AND A.fecha = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
           AND A.status IN ('pending', 'confirmed')
+          AND U_pac.email IS NOT NULL
         ORDER BY A.hora ASC";
 
         $result   = $this->db->query($query, [TenantContext::id()]);

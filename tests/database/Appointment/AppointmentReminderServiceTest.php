@@ -108,6 +108,15 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         $this->assertSame(['paciente-b@test.com'], $emailsOf($model->findUpcomingIn24Hours()));
     }
 
+    public function testPatientsWithoutEmailAreLeftOutOfTheReminders(): void
+    {
+        $this->db->table('users')->where('email', 'paciente-a@test.com')->update(['email' => null]);
+
+        TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
+
+        $this->assertSame([], (new AppointmentModel())->findUpcomingIn24Hours());
+    }
+
     public function testEachActiveTenantIsProcessedWithItsOwnAppointments(): void
     {
         $this->seedTenantWithAppointment($this->createTenant('tenant-b'), 'b');

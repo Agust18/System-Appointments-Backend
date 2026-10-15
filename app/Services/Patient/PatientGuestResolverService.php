@@ -120,7 +120,23 @@ final class PatientGuestResolverService
             $this->reject('phone_mismatch', $request);
         }
 
+        $this->completeMissingEmail($user, $request);
+
         return $this->patientModel->findByUserId($user->getId()) ?? $this->createPatient($user->getId());
+    }
+
+    /**
+     * Paciente cargado sin email por recepción: DNI y teléfono ya coincidieron, así que se guarda
+     * el email que escribió. Si ese email es de otro usuario, el turno se reserva igual sin guardarlo.
+     */
+    private function completeMissingEmail(User $user, GuestPatientRequest $request): void
+    {
+        if ($user->hasEmail() || $this->userModel->findByEmail($request->getEmail()) !== null) {
+            return;
+        }
+
+        $user->completeEmail($request->getEmail());
+        $this->userModel->update($user);
     }
 
     /**

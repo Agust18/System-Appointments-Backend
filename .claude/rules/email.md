@@ -36,6 +36,17 @@ Si el DNI es de un usuario sin cuenta (mismo email guardado, rol paciente, activ
 `PatientPublicRegisterService` fija la contraseña del body (solo la contraseña; nombre y
 teléfono no se tocan), crea el paciente si falta y envía el mismo email de verificación
 (el usuario queda `is_verified = 0` y no puede iniciar sesión hasta verificar).
+Si ese usuario **no tiene email** (lo cargó recepción sin email), se le guarda el del body
+(`409` si es de otro usuario) y el link de verificación va a ese email.
+
+## Pacientes sin email
+
+`users.email` admite NULL, pero **solo el alta de pacientes por panel** (`POST /patients`)
+lo deja vacío; el resto de los flujos lo sigue exigiendo (los médicos y el personal inician
+sesión con él). A un paciente sin email no se le envía nada: `AppointmentEmailDispatcherService`
+ignora un destinatario `null` y `findUpcomingIn24Hours()` lo excluye del recordatorio. El aviso
+a recepción no cambia. El email se completa después desde el panel (`PUT /patients/{id}`; no se
+puede borrar: un `""` se normaliza a `null` y no cambia nada), la reserva pública o el registro.
 
 ### Por qué es intencional
 

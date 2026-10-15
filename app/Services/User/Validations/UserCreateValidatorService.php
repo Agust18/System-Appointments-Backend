@@ -22,7 +22,10 @@ final class UserCreateValidatorService
 
     public function validate(UserRequest $request): void
     {
-        $existeUser = $this->userModel->findByEmail($request->getEmail());
+        // Sin email (paciente cargado por recepción) no hay con quién chocar.
+        $existeUser = $request->getEmail() !== null
+            ? $this->userModel->findByEmail($request->getEmail())
+            : null;
         if ($existeUser) {
             throw new EmailAlreadyRegisteredException();
         }

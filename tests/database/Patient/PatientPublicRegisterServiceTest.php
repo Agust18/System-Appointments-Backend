@@ -60,7 +60,7 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
     }
 
     private function seedAccountless(
-        string $email = 'reserva@test.com',
+        ?string $email = 'reserva@test.com',
         int $roleId = Role::PATIENT,
         bool $active = true
     ): int {
@@ -145,6 +145,42 @@ final class PatientPublicRegisterServiceTest extends CIUnitTestCase
         $this->seeInDatabase('user_verification_tokens', ['user_id' => $userId, 'type' => 'email_verification']);
         $this->seeNumRecords(1, 'users', []);
         $this->seeNumRecords(1, 'patients', ['user_id' => $userId]);
+    }
+
+    public function testAccountlessUserWithoutEmailRegistersWithTheTypedEmail(): void
+    {
+        $userId = $this->seedAccountless(null);
+
+        $this->registerExpectingEmailFailure($this->registerRequest('propio@test.com', 'mi-contrasenia-nueva'));
+
+        $user = $this->db->table('users')->where('id', $userId)->get()->getRow();
+        $this->assertSame('propio@test.com', $user->email);
+        $this->assertTrue(password_verify('mi-contrasenia-nueva', $user->password));
+        $this->assertSame('0', (string) $user->is_verified);
+        $this->seeInDatabase('user_verification_tokens', ['user_id' => $userId, 'type' => 'email_verification']);
+        $this->seeNumRecords(1, 'users', []);
+    }
+
+    public function testAccountlessUserWithoutEmailCannotTakeAnEmailOfAnotherUser(): void
+    {
+        $this->db->table('users')->insert(['tenant_id' => 1,
+            'first_name' => 'otro_' . uniqid(),
+            'last_name'  => 'Usuario',
+            'email'      => 'ocupado@test.com',
+            'dni'        => 40123456,
+            'role_id'    => Role::PATIENT,
+        ]);
+        $userId = $this->seedAccountless(null);
+
+        try {
+            $this->service->register($this->registerRequest('ocupado@test.com'));
+            $this->fail('Se esperaba EmailAlreadyRegisteredException');
+        } catch (Exception $e) {
+            $this->assertSame(409, $e->getCode());
+        }
+
+        $this->seeInDatabase('users', ['id' => $userId, 'email' => null, 'password' => null]);
+        $this->seeNumRecords(0, 'user_verification_tokens', []);
     }
 
     public function testAccountlessUserWithExistingPatientDoesNotDuplicatePatients(): void

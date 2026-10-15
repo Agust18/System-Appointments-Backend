@@ -12,7 +12,7 @@ final class User
         private ?int $id,
         private string $firstName,
         private string $lastName,
-        private string $email,
+        private ?string $email,
         private ?string $phone,
         private ?string $password,
         private int $dni,
@@ -103,9 +103,25 @@ final class User
         return trim("{$this->firstName} {$this->lastName}");
     }
 
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function hasEmail(): bool
+    {
+        return $this->email !== null;
+    }
+
+    /*
+      Un paciente cargado sin email lo completa desde la web (reserva o registro).
+      Nunca reemplaza un email que ya tenía.
+     */
+    public function completeEmail(string $email): void
+    {
+        if ($this->email === null) {
+            $this->email = $email;
+        }
     }
 
     public function getPhone(): ?string

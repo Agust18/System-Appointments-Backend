@@ -17,8 +17,15 @@ final class AppointmentEmailDispatcherService
         $this->emailSender      = new EmailSenderService();
     }
 
-    public function send(string $to, string $subject, string $body): void
+    /**
+     * $to null: paciente cargado sin email por recepción. No se envía nada; recepción le avisa por teléfono.
+     */
+    public function send(?string $to, string $subject, string $body): void
     {
+        if ($to === null) {
+            return;
+        }
+
         $request = new EmailRequest(
             to: $to,
             subject: $subject,
