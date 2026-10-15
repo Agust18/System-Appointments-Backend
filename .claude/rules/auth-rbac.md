@@ -3,6 +3,18 @@
 ## Roles (`app/Constants/Role.php`)
 ADMIN=1, MEDICAL=2, PATIENT=3, RECEPTION=4.
 
+## Los roles no tienen CRUD
+No existe `/roles`: la tabla `roles` es global (sin `tenant_id`) y un rol sin
+código que lo respalde no tiene funciones. Los roles los agrega el
+desarrollador, en un mismo cambio:
+1. Migración o `RolesSeeder` (la FK `users.role_id` apunta a `roles.id`).
+2. Constante en `App\Constants\Role`.
+3. Constante y etiqueta en `constants/role.js` del frontend (`ROLES` + `ROLE_OPTIONS`).
+4. Permisos: Filters y `PermissionsService`.
+
+`RoleFinderService::find()` solo lee la tabla, para validar el `roleId` al
+crear/editar usuarios (`RoleNotFoundException`).
+
 ## Cómo funciona el token
 El filter `Auth` (`app/Filters/Auth.php`) lee el header `HTTP_AUTHORIZATION`,
 lo valida con `AuthTokenValidatorService` y guarda en sesión:

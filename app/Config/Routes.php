@@ -116,13 +116,6 @@ $routes->get('metrics/top-specialties', 'Metrics\MetricsTopSpecialtiesGetControl
 $routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('metrics/recent-appointments', 'Metrics\MetricsRecentAppointmentsGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 
-//roles
-$routes->post('roles', 'Role\RolePostController::create', ['filter' => ['auth', 'adminOnly']]);
-$routes->get('roles/(:num)', 'Role\RoleGetController::find/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->put('roles/(:num)', 'Role\RolePutController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->delete('roles/(:num)', 'Role\RoleDeleteController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->get('roles', 'Role\RolesGetController::search', ['filter' => ['auth', 'adminOnly']]);
-
 
 // Medical Schedules
 $routes->post('medical-schedules', 'MedicalSchedule\MedicalSchedulePostController::create', ['filter' => ['auth', 'adminOrReception']]);
