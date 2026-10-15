@@ -16,18 +16,11 @@ use CodeIgniter\Database\Seeder;
  */
 final class RolesSeeder extends Seeder
 {
-    private const ROLES = [
-        Role::ADMIN => 'admin',
-        Role::MEDICAL => 'medical',
-        Role::PATIENT => 'patient',
-        Role::RECEPTION => 'reception',
-    ];
-
     public function run(): void
     {
         $this->db->transBegin();
         try {
-            foreach (self::ROLES as $id => $name) {
+            foreach (Role::NAMES as $id => $name) {
                 $this->db->query(
                     'UPDATE roles SET name = CONCAT(?, id) WHERE name = ? AND id <> ?',
                     ['__tmp_', $name, $id]
@@ -38,7 +31,7 @@ final class RolesSeeder extends Seeder
                 );
             }
             $this->db->transCommit();
-            echo 'Roles OK: ' . count(self::ROLES) . " roles sembrados.\n";
+            echo 'Roles OK: ' . count(Role::NAMES) . " roles sembrados.\n";
         } catch (\Throwable $e) {
             $this->db->transRollback();
             throw $e;

@@ -6,7 +6,7 @@ use App\Dto\Request\Auth\ResetPasswordRequest;
 use App\Dto\Request\Auth\UserLoginRequest;
 use App\Dto\Request\Platform\TenantRequest;
 use App\Exception\Platform\TenantSlugAlreadyExistsException;
-use App\Exception\Role\RoleNotFoundException;
+use App\Exception\User\UserCannotBeCreatedException;
 use App\Exception\Validation\ValidationException;
 use App\Models\Tenant\TenantModel;
 use App\Services\Auth\ResetPasswordService;
@@ -43,6 +43,10 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
+        // Un INSERT que falla por la FK de role_id deja transStatus en false y la conexión es compartida
+        // entre tests: sin esto, el alta del Tenant del test siguiente se rechaza.
+        $this->db->resetTransStatus();
+
         // El mismo email/DNI en dos Tenants impide revertir la migración AddTenantIdToUsersAndPatients
         // (limitación del ADR 003): no dejar datos entre clases.
         $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
@@ -180,7 +184,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         try {
             $this->service()->create($this->request());
             $this->fail('Debió fallar por el rol ADMIN inexistente.');
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
         $this->assertSame(0, $this->countRows('user_verification_tokens'));
@@ -253,7 +257,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         try {
             $this->service()->create($this->request());
             $this->fail('Debió fallar por el rol ADMIN inexistente.');
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
         $this->assertSame($tenants, $this->countRows('tenants'));
@@ -284,7 +288,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
 
         try {
             $this->service()->create($this->request());
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
         $this->assertSame($before?->getId(), TenantContext::current()?->getId());

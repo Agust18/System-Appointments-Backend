@@ -7,13 +7,17 @@ ADMIN=1, MEDICAL=2, PATIENT=3, RECEPTION=4.
 No existe `/roles`: la tabla `roles` es global (sin `tenant_id`) y un rol sin
 código que lo respalde no tiene funciones. Los roles los agrega el
 desarrollador, en un mismo cambio:
-1. Migración o `RolesSeeder` (la FK `users.role_id` apunta a `roles.id`).
-2. Constante en `App\Constants\Role`.
+1. Constante en `App\Constants\Role` **y** su entrada en `Role::NAMES` (id => nombre).
+   `RolesSeeder` y `Role::isValid()` leen de `NAMES`: es la única lista.
+2. Sembrarlo: `php spark db:seed RolesSeeder` (o una migración). La FK
+   `users.role_id` apunta a `roles.id`.
 3. Constante y etiqueta en `constants/role.js` del frontend (`ROLES` + `ROLE_OPTIONS`).
 4. Permisos: Filters y `PermissionsService`.
 
-`RoleFinderService::find()` solo lee la tabla, para validar el `roleId` al
-crear/editar usuarios (`RoleNotFoundException`).
+El `roleId` al crear/editar usuarios se valida en memoria con
+`Role::isValid()` (`RoleNotFoundException`, 404); no consulta la tabla. Por eso
+**el seeder tiene que correr en el deploy**: sin la fila, el `INSERT` falla por
+la FK y responde `UserCannotBeCreatedException` (500).
 
 ## Cómo funciona el token
 El filter `Auth` (`app/Filters/Auth.php`) lee el header `HTTP_AUTHORIZATION`,

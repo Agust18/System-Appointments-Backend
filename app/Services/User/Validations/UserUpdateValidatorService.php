@@ -1,23 +1,21 @@
 <?php
 namespace App\Services\User\Validations;
 
+use App\Constants\Role;
 use App\Dto\Request\User\UserUpdaterRequest;
 use App\Entity\User\User;
 use App\Exception\Role\RoleNotFoundException;
 use App\Exception\User\DniAlreadyRegisteredException;
 use App\Exception\User\EmailAlreadyRegisteredException;
 use App\Models\User\UserModel;
-use App\Services\Role\RoleFinderService;
 
 final class UserUpdateValidatorService
 {
     private UserModel $userModel;
-    private RoleFinderService $roleFinderService;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->roleFinderService = new RoleFinderService();
     }
 
     public function validate(User $user, UserUpdaterRequest $request): void
@@ -39,11 +37,8 @@ final class UserUpdateValidatorService
         }
 
         // Validar que el rol exista
-        if ($request->getRoleId() && $request->getRoleId() !== $user->getRoleId()) {
-            $role = $this->roleFinderService->find($request->getRoleId());
-            if (!$role) {
-                throw new RoleNotFoundException($request->getRoleId());
-            }
+        if ($request->getRoleId() && $request->getRoleId() !== $user->getRoleId() && !Role::isValid($request->getRoleId())) {
+            throw new RoleNotFoundException($request->getRoleId());
         }
 
        
