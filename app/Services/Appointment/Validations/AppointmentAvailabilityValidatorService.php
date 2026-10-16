@@ -28,6 +28,21 @@ final class AppointmentAvailabilityValidatorService
         }
     }
 
+    /**
+     * Turno a excluir de los ocupados (edición): ausente (null) o entero positivo.
+     */
+    public function validateExcludeAppointmentId(mixed $excludeAppointmentId): void
+    {
+        if ($excludeAppointmentId === null) {
+            return;
+        }
+
+        // Un array (?excludeAppointmentId[]=1) o un texto no numérico no son un id válido.
+        if (!is_string($excludeAppointmentId) || !ctype_digit($excludeAppointmentId) || (int) $excludeAppointmentId <= 0) {
+            throw new ValidationException(['excludeAppointmentId' => 'excludeAppointmentId debe ser un entero positivo']);
+        }
+    }
+
     public function validateDate(string $fecha, string $field = 'fecha'): void
     {
         if ($this->parse($fecha) === null) {

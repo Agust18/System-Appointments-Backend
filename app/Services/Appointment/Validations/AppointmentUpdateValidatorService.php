@@ -12,6 +12,7 @@ use App\Exception\Appointment\MedicalCanOnlyChangeStatusException;
 use App\Exception\Appointment\MedicalCanOnlyCompleteException;
 use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
 use App\Exception\Appointment\PatientCanOnlyCancelException;
+use App\Exception\Validation\ValidationException;
 use App\Services\User\UserFinderService;
 use DateTime;
 
@@ -25,6 +26,8 @@ final class AppointmentUpdateValidatorService
     }
     public function validate(AppointmentUpdateRequest $request, Appointment $appointment, int $id): void
     {
+        $this->validateScheduleFieldsNotBlank($request);
+
         $roleId = session()->get('roleId');
         $currentStatus = $appointment->getStatus();
         $requestedStatus = $request->getStatus();
@@ -100,5 +103,23 @@ final class AppointmentUpdateValidatorService
             throw new AppointmentServiceRequiredException();
         }
 
+    }
+
+    /**
+     * fecha/hora ausentes (null) significan "sin cambio"; presentes pero vacías no: llegarían a
+     * reschedule() y romperían el cálculo del bloque (500). El formato de las no vacías lo valida la regla del DTO.
+     */
+    private function validateScheduleFieldsNotBlank(AppointmentUpdateRequest $request): void
+    {
+        $errors = [];
+        if ($request->getFecha() === '') {
+            $errors['fecha'] = 'La fecha no puede estar vacía.';
+        }
+        if ($request->getHora() === '') {
+            $errors['hora'] = 'La hora no puede estar vacía.';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
     }
 }

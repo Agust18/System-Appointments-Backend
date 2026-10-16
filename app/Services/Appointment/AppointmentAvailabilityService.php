@@ -39,6 +39,7 @@ final class AppointmentAvailabilityService
 
         $this->validator->validateQuery($medicalId, $serviceId);
         $this->validator->validateDate($fecha);
+        $this->validator->validateExcludeAppointmentId($request->getRawExcludeAppointmentId());
 
         //médico con usuario inactivo no ofrece horarios (mismo criterio que el alta del turno).
         $this->medicalActiveValidator->validate($medicalId);
@@ -54,7 +55,7 @@ final class AppointmentAvailabilityService
             return [];
         }
 
-        $existingAppointments = $this->appointmentModel->findActiveHoursByMedicalAndFecha($medicalId, $fecha);
+        $existingAppointments = $this->appointmentModel->findActiveHoursByMedicalAndFecha($medicalId, $fecha, $request->getExcludeAppointmentId());
 
         return $this->slotGenerator->generate(
             $activeRanges,

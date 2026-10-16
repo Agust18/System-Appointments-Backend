@@ -285,6 +285,28 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
         $this->assertSame(['start_time', 'end_time', 'block_end_time'], array_keys($slots[0]));
     }
 
+    public function testPublicAvailabilityIgnoresExcludeAppointmentId(): void
+    {
+        [$medicalId, $serviceId] = $this->bookableScenario();
+        $patientId = $this->seedPatient();
+        // seedAppointment usa self::FECHA; se pisa la fecha al lunes del escenario
+        $id = $this->seedAppointment($medicalId, $patientId, $serviceId, '09:30:00', '10:00:00');
+        $this->db->table('appointments')->where('id', $id)->update(['fecha' => $this->monday]);
+
+        $params = ['medicalId' => (string) $medicalId, 'serviceId' => (string) $serviceId, 'fecha' => $this->monday];
+        $sin = array_column($this->decode($this->get('public/appointments/availability', $params)), 'start_time');
+        $this->assertNotContains('09:30', $sin);
+
+        // con el parámetro (válido o inválido) la ruta pública lo ignora: mismo resultado y sin 422
+        $result = $this->get('public/appointments/availability', $params + ['excludeAppointmentId' => (string) $id]);
+        $result->assertStatus(200);
+        $this->assertSame($sin, array_column($this->decode($result), 'start_time'));
+
+        $result = $this->get('public/appointments/availability', $params + ['excludeAppointmentId' => 'abc']);
+        $result->assertStatus(200);
+        $this->assertSame($sin, array_column($this->decode($result), 'start_time'));
+    }
+
     // ------------------------------------------------------------ reserva (POST)
 
     public function testBookingReturns201WithAMinimalBodyAndPersistsEverything(): void

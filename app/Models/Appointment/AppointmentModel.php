@@ -285,7 +285,7 @@ final class AppointmentModel
      * solapamiento contra cada slot candidato sin repetir el query por
      * cada uno.
      */
-    public function findActiveHoursByMedicalAndFecha(int $medicalId, string $fecha): array
+    public function findActiveHoursByMedicalAndFecha(int $medicalId, string $fecha, ?int $excludeAppointmentId = null): array
     {
         $query = "SELECT hora, COALESCE(hora_fin, ADDTIME(hora, '00:30:00')) as hora_fin
                   FROM appointments
@@ -294,7 +294,15 @@ final class AppointmentModel
                     AND fecha = ?
                     AND status IN ('pending', 'confirmed', 'completed')";
 
-        $result = $this->db->query($query, [$medicalId, TenantContext::id(), $fecha]);
+        $params = [$medicalId, TenantContext::id(), $fecha];
+
+        // Al editar un turno su propio horario no cuenta como ocupado (mismo criterio que hasOverlap).
+        if ($excludeAppointmentId !== null) {
+            $query .= " AND id != ?";
+            $params[] = $excludeAppointmentId;
+        }
+
+        $result = $this->db->query($query, $params);
 
         return $result->getResult();
     }
@@ -305,7 +313,7 @@ final class AppointmentModel
      * disponibilidad). Cada fila trae también `fecha` para poder agrupar
      * en PHP.
      */
-    public function findActiveHoursByMedicalAndFechaRange(int $medicalId, string $from, string $to): array
+    public function findActiveHoursByMedicalAndFechaRange(int $medicalId, string $from, string $to, ?int $excludeAppointmentId = null): array
     {
         $query = "SELECT fecha, hora, COALESCE(hora_fin, ADDTIME(hora, '00:30:00')) as hora_fin
                   FROM appointments
@@ -314,7 +322,14 @@ final class AppointmentModel
                     AND fecha BETWEEN ? AND ?
                     AND status IN ('pending', 'confirmed', 'completed')";
 
-        $result = $this->db->query($query, [$medicalId, TenantContext::id(), $from, $to]);
+        $params = [$medicalId, TenantContext::id(), $from, $to];
+
+        if ($excludeAppointmentId !== null) {
+            $query .= " AND id != ?";
+            $params[] = $excludeAppointmentId;
+        }
+
+        $result = $this->db->query($query, $params);
 
         return $result->getResult();
     }

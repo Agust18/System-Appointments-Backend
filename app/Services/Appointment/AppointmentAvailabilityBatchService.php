@@ -41,6 +41,7 @@ final class AppointmentAvailabilityBatchService
 
         $this->validator->validateQuery($medicalId, $serviceId);
         $this->validator->validateRange($from, $to);
+        $this->validator->validateExcludeAppointmentId($request->getRawExcludeAppointmentId());
 
         // médico con usuario inactivo no ofrece horarios (mismo criterio que la consulta de un día).
         $this->medicalActiveValidator->validate($medicalId);
@@ -49,7 +50,7 @@ final class AppointmentAvailabilityBatchService
 
         $dates = $this->buildDateRange($from, $to);
         $rangesByDay = $this->findRangesByDay($medicalId, $dates);
-        $appointmentsByDate = $this->findAppointmentsByDate($medicalId, $from, $to);
+        $appointmentsByDate = $this->findAppointmentsByDate($medicalId, $from, $to, $request->getExcludeAppointmentId());
 
         $slotsByDate = [];
         foreach ($dates as $fecha) {
@@ -95,10 +96,10 @@ final class AppointmentAvailabilityBatchService
      *
      * @return array<string, array> agrupados por fecha
      */
-    private function findAppointmentsByDate(int $medicalId, string $from, string $to): array
+    private function findAppointmentsByDate(int $medicalId, string $from, string $to, ?int $excludeAppointmentId): array
     {
         $appointmentsByDate = [];
-        foreach ($this->appointmentModel->findActiveHoursByMedicalAndFechaRange($medicalId, $from, $to) as $row) {
+        foreach ($this->appointmentModel->findActiveHoursByMedicalAndFechaRange($medicalId, $from, $to, $excludeAppointmentId) as $row) {
             $appointmentsByDate[$row->fecha][] = $row;
         }
 

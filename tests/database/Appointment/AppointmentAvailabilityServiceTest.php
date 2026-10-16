@@ -82,7 +82,7 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
         ]);
     }
 
-    private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): void
+    private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): int
     {
         $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
@@ -107,6 +107,8 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
             'hora_fin'   => $horaFin,
             'status'     => 'confirmed',
         ]);
+
+        return (int) $this->db->insertID();
     }
 
     public function testReturnsSlotsForAttendedDayExcludingExistingAppointment(): void
@@ -131,6 +133,53 @@ final class AppointmentAvailabilityServiceTest extends CIUnitTestCase
             ['start_time' => '09:00', 'end_time' => '09:30', 'block_end_time' => '09:30'],
             $slots[0]
         );
+    }
+
+    public function testExcludeAppointmentIdFreesTheOwnSlotButKeepsOthers(): void
+    {
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
+        $fecha = '2026-10-05';
+        $this->seedSchedule($medicalId, (int) date('N', strtotime($fecha)), '09:00:00', '11:00:00');
+
+        $propio = $this->seedAppointment($medicalId, $fecha, '09:30:00', '10:00:00');
+        $this->seedAppointment($medicalId, $fecha, '10:00:00', '10:30:00');
+
+        // sin el parámetro: ambos ocupados (comportamiento anterior)
+        $sin = $this->service->getAvailableSlots(new AppointmentAvailabilityRequest($medicalId, $serviceId, $fecha));
+        $this->assertSame(['09:00', '10:30'], array_column($sin, 'start_time'));
+
+        // excluyendo el propio: su horario vuelve a ofrecerse, el del otro sigue ocupado
+        $con = $this->service->getAvailableSlots(new AppointmentAvailabilityRequest($medicalId, $serviceId, $fecha, $propio));
+        $this->assertSame(['09:00', '09:30', '10:30'], array_column($con, 'start_time'));
+    }
+
+    public function testExcludeAppointmentIdOfAnotherTenantDoesNotFreeSlots(): void
+    {
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
+        $fecha = '2026-10-05';
+        $this->seedSchedule($medicalId, (int) date('N', strtotime($fecha)), '09:00:00', '11:00:00');
+        $this->seedAppointment($medicalId, $fecha, '09:30:00', '10:00:00');
+
+        // un id inexistente (o de otro tenant) no excluye nada: las queries siguen filtrando por médico y tenant
+        $slots = $this->service->getAvailableSlots(new AppointmentAvailabilityRequest($medicalId, $serviceId, $fecha, 999999));
+        $this->assertSame(['09:00', '10:00', '10:30'], array_column($slots, 'start_time'));
+    }
+
+    #[DataProvider('invalidExcludeProvider')]
+    public function testInvalidExcludeAppointmentIdThrowsValidationException(int $exclude): void
+    {
+        try {
+            $this->service->getAvailableSlots(new AppointmentAvailabilityRequest(1, 1, '2026-10-05', $exclude));
+            $this->fail('Se esperaba ValidationException.');
+        } catch (ValidationException $e) {
+            $this->assertSame(422, $e->getCode());
+            $this->assertSame(['excludeAppointmentId'], array_keys($e->getErrors()));
+        }
+    }
+
+    public static function invalidExcludeProvider(): array
+    {
+        return ['cero' => [0], 'negativo' => [-3]];
     }
 
     public function testUsesCustomDurationOverrideAndBuffer(): void

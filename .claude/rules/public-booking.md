@@ -16,7 +16,7 @@ Sin header `Authorization`. Todos pasan por `cors` y después por `throttle` (el
 | `GET /public/services` | 60/min | Servicios activos |
 | `GET /public/medicals/available?specialtyId=` | 60/min | Médicos con `users.is_active = 1` (`medicals` no tiene `is_active`) |
 | `GET /public/medicals/{id}/services` | 60/min | Servicios del médico (duración y precio efectivos) |
-| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Reusa `AppointmentAvailabilityGetController` |
+| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Controller propio, `PublicAppointmentAvailabilityGetController` (no acepta `excludeAppointmentId`, que es solo de la ruta autenticada) |
 | `POST /public/appointments` | 5/min | `201` con `PublicAppointmentResponse` (`id, fecha, hora, medicoNombre, servicioNombre, status`) |
 | `OPTIONS /public/*` | no gasta cupo | Preflight CORS |
 

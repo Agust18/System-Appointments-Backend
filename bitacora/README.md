@@ -1,6 +1,6 @@
 # Bitácora — BACKEND
 
-Última actualización: 09/10/2026
+Última actualización: 16/10/2026
 
 Solo tareas del **repo backend**. Los archivos `hecho/contrato-*` documentan el contrato de la API pública que el backend le deja al frontend.
 
@@ -12,8 +12,9 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (26)
+## ✅ Hecho (27)
 
+- [Contrato: PUT de turnos con fecha/hora vacías (422) y `excludeAppointmentId` en disponibilidad](hecho/contrato-put-appointments-vacios-y-exclude-availability.md)
 - [Permisos: recepción edita médicos; el médico cancela y deja nota](hecho/permisos-recepcion-medicos-y-medico-nota-cancelar.md)
 - [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](hecho/micro-deuda-guard-service-required.md)
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)

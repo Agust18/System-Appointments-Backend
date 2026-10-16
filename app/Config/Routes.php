@@ -28,7 +28,7 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->get('services', 'Service\PublicServicesGetController::search', $publicRead);
     $routes->get('medicals/available', 'Medical\PublicMedicalsGetController::search', $publicRead);
     $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1', $publicRead);
-    $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability', $publicRead);
+    $routes->get('appointments/availability', 'Appointment\PublicAppointmentAvailabilityGetController::getAvailability', $publicRead);
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 

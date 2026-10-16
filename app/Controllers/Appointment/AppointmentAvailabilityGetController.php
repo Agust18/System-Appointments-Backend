@@ -23,6 +23,7 @@ final class AppointmentAvailabilityGetController extends ResourceController
      * Devuelve los horarios/slots disponibles para reservar.
      * - Un día:  GET /appointments/availability?medicalId=1&serviceId=2&fecha=2026-09-01
      * - Rango:   GET /appointments/availability?medicalId=1&serviceId=2&from=2026-09-01&to=2026-09-14
+     * Opcional: excludeAppointmentId=15 -> ese turno no cuenta como ocupado (edición).
      */
     public function getAvailability(): ResponseInterface
     {
@@ -44,7 +45,8 @@ final class AppointmentAvailabilityGetController extends ResourceController
         return new AppointmentAvailabilityRequest(
             (int)$this->request->getGet('medicalId'),
             (int)$this->request->getGet('serviceId'),
-            (string)$this->request->getGet('fecha')
+            (string)$this->request->getGet('fecha'),
+            $this->request->getGet('excludeAppointmentId')
         );
     }
 
@@ -54,7 +56,8 @@ final class AppointmentAvailabilityGetController extends ResourceController
             (int)$this->request->getGet('medicalId'),
             (int)$this->request->getGet('serviceId'),
             (string)$this->request->getGet('from'),
-            (string)$this->request->getGet('to')
+            (string)$this->request->getGet('to'),
+            $this->request->getGet('excludeAppointmentId')
         );
     }
 }
