@@ -2,7 +2,7 @@
 
 namespace App\Services\Patient;
 
-use App\Exception\Patient\PatientNotFoundException;
+use App\Exception\Patient\PatientHasAppointmentsException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\Patient\PatientModel;
 use App\Services\Patient\PatientFinderService;
@@ -27,8 +27,7 @@ final class PatientDeleterService
         $appointments = $this->appointmentModel->findByPatientId($id);
 
         if (!empty($appointments)) {
-            $count = count($appointments);
-            throw new \Exception("No se puede eliminar el paciente porque tiene {$count} turnos asignados");
+            throw new PatientHasAppointmentsException(count($appointments));
         }
 
         $this->patientModel->delete($id);

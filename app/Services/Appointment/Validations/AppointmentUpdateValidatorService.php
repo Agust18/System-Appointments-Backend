@@ -39,13 +39,12 @@ final class AppointmentUpdateValidatorService
                 $request->getPatientId() !== null ||
                 $request->getServiceId() !== null ||
                 $request->getFecha() !== null ||
-                $request->getHora() !== null ||
-                $request->getNota() !== null
+                $request->getHora() !== null
             ) {
                 throw new MedicalCanOnlyChangeStatusException();
             }
 
-            if ($requestedStatus !== 'completed') {
+            if (!in_array($requestedStatus, ['completed', 'cancelled'], true)) {
                 throw new MedicalCanOnlyCompleteException();
             }
         }

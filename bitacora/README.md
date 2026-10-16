@@ -12,8 +12,9 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (25)
+## ✅ Hecho (26)
 
+- [Permisos: recepción edita médicos; el médico cancela y deja nota](hecho/permisos-recepcion-medicos-y-medico-nota-cancelar.md)
 - [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](hecho/micro-deuda-guard-service-required.md)
 - [Multitenant, Grupo 3: plan detallado (`appointments`, `user_verification_tokens`)](hecho/multitenant-grupo-3-plan.md)
 - [FRONTEND_URL por Tenant en emails de verificación y reset (resuelto en el Paso 4.2)](hecho/frontend-url-por-tenant.md)

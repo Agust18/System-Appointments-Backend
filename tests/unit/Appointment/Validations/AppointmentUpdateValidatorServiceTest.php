@@ -118,13 +118,13 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
         $this->validator->validate($this->request(nota: 'algo'), $this->appointment('pending'), 1);
     }
 
-    public function testMedicalCanOnlyMarkCompleted(): void
+    public function testMedicalCanOnlyCompleteOrCancel(): void
     {
         session()->set('roleId', Role::MEDICAL);
 
         $this->expectException(MedicalCanOnlyCompleteException::class);
         $this->expectExceptionCode(403);
-        $this->expectExceptionMessage('Los médicos solo pueden marcar el turno como completado');
+        $this->expectExceptionMessage('Los médicos solo pueden completar o cancelar el turno');
 
         $this->validator->validate($this->request(status: 'confirmed'), $this->appointment('confirmed'), 1);
     }
@@ -135,9 +135,25 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
 
         $this->expectException(MedicalCanOnlyChangeStatusException::class);
         $this->expectExceptionCode(403);
-        $this->expectExceptionMessage('Los médicos solo pueden modificar el estado del turno');
+        $this->expectExceptionMessage('Los médicos solo pueden modificar el estado y la nota del turno');
 
-        $this->validator->validate($this->request(status: 'completed', nota: 'cambio'), $this->appointment('confirmed'), 1);
+        $this->validator->validate($this->request(status: 'completed', fecha: '2026-12-02'), $this->appointment('confirmed'), 1);
+    }
+
+    public function testMedicalCanCompleteWithNote(): void
+    {
+        session()->set('roleId', Role::MEDICAL);
+
+        $this->validator->validate($this->request(status: 'completed', nota: 'Control sin novedades'), $this->appointment('confirmed'), 1);
+        $this->addToAssertionCount(1);
+    }
+
+    public function testMedicalCanCancelOwnAppointment(): void
+    {
+        session()->set('roleId', Role::MEDICAL);
+
+        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('confirmed'), 1);
+        $this->addToAssertionCount(1);
     }
 
     public function testMedicalMarkingCompletedPasses(): void
