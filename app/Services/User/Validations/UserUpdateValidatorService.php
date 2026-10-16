@@ -7,6 +7,7 @@ use App\Entity\User\User;
 use App\Exception\Role\RoleNotFoundException;
 use App\Exception\User\DniAlreadyRegisteredException;
 use App\Exception\User\EmailAlreadyRegisteredException;
+use App\Exception\Validation\ValidationException;
 use App\Models\User\UserModel;
 
 final class UserUpdateValidatorService
@@ -41,6 +42,16 @@ final class UserUpdateValidatorService
             throw new RoleNotFoundException($request->getRoleId());
         }
 
-       
+        // Paciente y médico tienen su propia fila (patients/medicals): cambiar el rol por acá
+        // dejaría un usuario sin perfil o un perfil huérfano.
+        $newRoleId = $request->getRoleId();
+        if ($newRoleId !== null && $newRoleId !== $user->getRoleId()) {
+            $profileRoles = [Role::PATIENT, Role::MEDICAL];
+            if (in_array($newRoleId, $profileRoles, true) || in_array($user->getRoleId(), $profileRoles, true)) {
+                throw new ValidationException([
+                    'roleId' => 'El rol de paciente o médico no se puede asignar ni quitar desde usuarios: usá pacientes o médicos.',
+                ]);
+            }
+        }
     }
 }
