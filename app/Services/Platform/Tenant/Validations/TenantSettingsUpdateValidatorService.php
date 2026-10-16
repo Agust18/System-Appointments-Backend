@@ -33,6 +33,20 @@ final class TenantSettingsUpdateValidatorService
             $errors['receptionEmailEnabled'] = 'receptionEmailEnabled debe ser true o false.';
         }
 
+        if ($request->has('landingEnabled') && $request->getLandingEnabled() === null) {
+            $errors['landingEnabled'] = 'landingEnabled debe ser true o false.';
+        }
+
+        if ($request->has('contactPhone') && $request->getContactPhone() !== null
+            && !preg_match('/^\+?[0-9][0-9 ()\-.]{4,48}$/', $request->getContactPhone())) {
+            $errors['contactPhone'] = 'El teléfono solo admite dígitos, espacios, +, -, ( ) y punto.';
+        }
+
+        if ($request->has('contactWhatsapp') && $request->getContactWhatsapp() !== null
+            && !preg_match('/^[0-9]{8,15}$/', $request->getContactWhatsapp())) {
+            $errors['contactWhatsapp'] = 'El WhatsApp debe tener entre 8 y 15 dígitos, con código de país.';
+        }
+
         if ($request->has('frontendUrl') && $request->getFrontendUrl() !== null
             && FrontendUrl::normalize($request->getFrontendUrl(), $this->allowHttp) === null) {
             $errors['frontendUrl'] = $this->allowHttp

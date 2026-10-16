@@ -15,6 +15,12 @@ final class PrimitiveToTenantSettingsConverter
             $primitive->frontend_url,
             $primitive->reception_email,
             (bool) $primitive->reception_email_enabled,
+            $primitive->contact_phone,
+            $primitive->contact_whatsapp,
+            $primitive->contact_email,
+            $primitive->address,
+            $primitive->opening_hours,
+            (bool) $primitive->landing_enabled,
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)
         );

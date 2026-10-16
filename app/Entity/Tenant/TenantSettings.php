@@ -14,20 +14,32 @@ final class TenantSettings
         private ?string $frontendUrl,
         private ?string $receptionEmail,
         private bool $receptionEmailEnabled,
+        private ?string $contactPhone,
+        private ?string $contactWhatsapp,
+        private ?string $contactEmail,
+        private ?string $address,
+        private ?string $openingHours,
+        private bool $landingEnabled,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {}
 
- 
+
     public static function defaultsFor(Tenant $tenant, ?string $frontendUrl = null): self
     {
         return new self(
-            $tenant->getId(), 
-            $tenant->getName(), 
-            null, $frontendUrl, 
-            null, 
-            true, 
-            new DateTime(), 
+            $tenant->getId(),
+            $tenant->getName(),
+            null, $frontendUrl,
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            new DateTime(),
             new DateTime()
         );
     }
@@ -50,6 +62,24 @@ final class TenantSettings
         }
         if ($request->has('receptionEmailEnabled')) {
             $this->receptionEmailEnabled = $request->getReceptionEmailEnabled();
+        }
+        if ($request->has('contactPhone')) {
+            $this->contactPhone = $request->getContactPhone();
+        }
+        if ($request->has('contactWhatsapp')) {
+            $this->contactWhatsapp = $request->getContactWhatsapp();
+        }
+        if ($request->has('contactEmail')) {
+            $this->contactEmail = $request->getContactEmail();
+        }
+        if ($request->has('address')) {
+            $this->address = $request->getAddress();
+        }
+        if ($request->has('openingHours')) {
+            $this->openingHours = $request->getOpeningHours();
+        }
+        if ($request->has('landingEnabled')) {
+            $this->landingEnabled = $request->getLandingEnabled();
         }
 
         $this->updatedAt = new DateTime();
@@ -83,6 +113,36 @@ final class TenantSettings
     public function isReceptionEmailEnabled(): bool
     {
         return $this->receptionEmailEnabled;
+    }
+
+    public function getContactPhone(): ?string
+    {
+        return $this->contactPhone;
+    }
+
+    public function getContactWhatsapp(): ?string
+    {
+        return $this->contactWhatsapp;
+    }
+
+    public function getContactEmail(): ?string
+    {
+        return $this->contactEmail;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getOpeningHours(): ?string
+    {
+        return $this->openingHours;
+    }
+
+    public function isLandingEnabled(): bool
+    {
+        return $this->landingEnabled;
     }
 
     public function getCreatedAt(): ?DateTime

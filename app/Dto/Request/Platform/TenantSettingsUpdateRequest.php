@@ -4,8 +4,10 @@ namespace App\Dto\Request\Platform;
 
 final readonly class TenantSettingsUpdateRequest
 {
-    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled'];
-    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail'];
+    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled',
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours', 'landingEnabled'];
+    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail',
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours'];
 
    
     public function __construct(
@@ -14,6 +16,12 @@ final readonly class TenantSettingsUpdateRequest
         private ?string $frontendUrl,
         private ?string $receptionEmail,
         private ?bool $receptionEmailEnabled,
+        private ?string $contactPhone,
+        private ?string $contactWhatsapp,
+        private ?string $contactEmail,
+        private ?string $address,
+        private ?string $openingHours,
+        private ?bool $landingEnabled,
         private array $presentFields = [],
     ) {}
 
@@ -25,6 +33,10 @@ final readonly class TenantSettingsUpdateRequest
         foreach ($data as $field => $value) {
             if (is_string($value)) {
                 $value = trim($value);
+                if ($field === 'contactWhatsapp') {
+                    // Solo dígitos con código de país: "+54 9 11 1234-5678" -> "5491112345678".
+                    $value = preg_replace('/\D+/', '', $value);
+                }
                 $data[$field] = ($value === '' && in_array($field, self::CLEARABLE, true)) ? null : $value;
             }
         }
@@ -43,6 +55,12 @@ final readonly class TenantSettingsUpdateRequest
             $data['frontendUrl'] ?? null,
             $data['receptionEmail'] ?? null,
             isset($data['receptionEmailEnabled']) ? (bool) $data['receptionEmailEnabled'] : null,
+            $data['contactPhone'] ?? null,
+            $data['contactWhatsapp'] ?? null,
+            $data['contactEmail'] ?? null,
+            $data['address'] ?? null,
+            $data['openingHours'] ?? null,
+            isset($data['landingEnabled']) ? (bool) $data['landingEnabled'] : null,
             array_keys($data),
         );
     }
@@ -82,6 +100,36 @@ final readonly class TenantSettingsUpdateRequest
         return $this->receptionEmailEnabled;
     }
 
+    public function getContactPhone(): ?string
+    {
+        return $this->contactPhone;
+    }
+
+    public function getContactWhatsapp(): ?string
+    {
+        return $this->contactWhatsapp;
+    }
+
+    public function getContactEmail(): ?string
+    {
+        return $this->contactEmail;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getOpeningHours(): ?string
+    {
+        return $this->openingHours;
+    }
+
+    public function getLandingEnabled(): ?bool
+    {
+        return $this->landingEnabled;
+    }
+
     public static function rules(): array
     {
         return [
@@ -90,6 +138,12 @@ final readonly class TenantSettingsUpdateRequest
             'frontendUrl'           => 'permit_empty|string|max_length[255]',
             'receptionEmail'        => 'permit_empty|string|valid_email|max_length[255]',
             'receptionEmailEnabled' => 'permit_empty|in_list[0,1]',
+            'contactPhone'          => 'permit_empty|string|max_length[50]',
+            'contactWhatsapp'       => 'permit_empty|string|max_length[20]',
+            'contactEmail'          => 'permit_empty|string|valid_email|max_length[255]',
+            'address'               => 'permit_empty|string|max_length[255]',
+            'openingHours'          => 'permit_empty|string|max_length[500]',
+            'landingEnabled'        => 'permit_empty|in_list[0,1]',
         ];
     }
 
@@ -117,6 +171,30 @@ final readonly class TenantSettingsUpdateRequest
             ],
             'receptionEmailEnabled' => [
                 'in_list' => 'receptionEmailEnabled debe ser true o false.',
+            ],
+            'contactPhone' => [
+                'string'     => 'El teléfono no es válido.',
+                'max_length' => 'El teléfono es muy largo.',
+            ],
+            'contactWhatsapp' => [
+                'string'     => 'El WhatsApp no es válido.',
+                'max_length' => 'El WhatsApp es muy largo (máx. 20 dígitos).',
+            ],
+            'contactEmail' => [
+                'string'      => 'El email de contacto no es válido.',
+                'valid_email' => 'El email de contacto no es válido.',
+                'max_length'  => 'El email de contacto es muy largo.',
+            ],
+            'address' => [
+                'string'     => 'La dirección no es válida.',
+                'max_length' => 'La dirección es muy larga.',
+            ],
+            'openingHours' => [
+                'string'     => 'Los horarios no son válidos.',
+                'max_length' => 'Los horarios son muy largos.',
+            ],
+            'landingEnabled' => [
+                'in_list' => 'landingEnabled debe ser true o false.',
             ],
         ];
     }

@@ -125,6 +125,12 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
             'frontendUrl'           => 'https://sur.tusturnos.test',
             'receptionEmail'        => 'recepcion@sur.test',
             'receptionEmailEnabled' => true,
+            'contactPhone'          => null,
+            'contactWhatsapp'       => null,
+            'contactEmail'          => null,
+            'address'               => null,
+            'openingHours'          => null,
+            'landingEnabled'        => true,
         ], array_diff_key($this->decode($sur), ['createdAt' => 1, 'updatedAt' => 1]));
         $this->assertSame($this->norteId, $this->decode($norte)['tenantId']);
         $this->assertSame('recepcion@norte.test', $this->decode($norte)['receptionEmail']);
@@ -200,8 +206,70 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
         $public = $this->withToken(null)->fresh()->withHeaders(['X-Tenant' => 'clinica-sur'])->get('tenant/config');
 
         $public->assertStatus(200);
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Nuevo'], $this->decode($public));
+        $this->assertSame('clinica-sur', $this->decode($public)['slug']);
+        $this->assertSame('Sur Nuevo', $this->decode($public)['name']);
         $this->assertStringNotContainsString('secreto@sur.test', $public->getJSON());
+    }
+
+    // ------------------------------- contacto público
+
+    public function testContactIsSavedNormalizedAndPublishedWithoutInternalEmails(): void
+    {
+        $this->editSettings($this->surId, [
+            'contactPhone'    => '+54 (11) 4000-1234',
+            'contactWhatsapp' => '+54 9 11 5555-1234',
+            'contactEmail'    => 'info@sur.test',
+            'address'         => 'Av. Siempreviva 742',
+            'openingHours'    => 'Lun a Vie 8 a 18',
+            'landingEnabled'  => false,
+        ])->assertStatus(200);
+
+        $row = $this->row($this->surId);
+        $this->assertSame('5491155551234', $row['contact_whatsapp']);
+        $this->assertSame('0', (string) $row['landing_enabled']);
+
+        $public = $this->withToken(null)->fresh()->withHeaders(['X-Tenant' => 'clinica-sur'])->get('tenant/config');
+        $json = $this->decode($public);
+        $this->assertFalse($json['landingEnabled']);
+        $this->assertSame('info@sur.test', $json['contact']['email']);
+        $this->assertSame('5491155551234', $json['contact']['whatsapp']);
+        foreach (['recepcion@sur.test', 'respuestas@sur.test', 'sur.tusturnos.test'] as $secret) {
+            $this->assertStringNotContainsString($secret, $public->getJSON());
+        }
+    }
+
+    public function testContactFieldsKeepWhenAbsentAndClearWithNull(): void
+    {
+        $this->editSettings($this->surId, ['contactPhone' => '4000-1234', 'address' => 'Calle 1'])->assertStatus(200);
+        $this->editSettings($this->surId, ['name' => 'Otro'])->assertStatus(200);
+        $this->assertSame('4000-1234', $this->row($this->surId)['contact_phone']);
+
+        $this->editSettings($this->surId, ['contactPhone' => null, 'address' => ''])->assertStatus(200);
+        $row = $this->row($this->surId);
+        $this->assertNull($row['contact_phone']);
+        $this->assertNull($row['address']);
+    }
+
+    public function testInvalidContactIsRejectedAndLeavesTheRowIntact(): void
+    {
+        $before = $this->row($this->surId);
+
+        $this->assertArrayHasKey('contactEmail', $this->errorsOf(fn () => $this->editSettings($this->surId, ['contactEmail' => 'no-es-email'])));
+        $this->assertArrayHasKey('contactPhone', $this->errorsOf(fn () => $this->editSettings($this->surId, ['contactPhone' => '<script>alert(1)</script>'])));
+        $this->assertArrayHasKey('contactWhatsapp', $this->errorsOf(fn () => $this->editSettings($this->surId, ['contactWhatsapp' => '123'])));
+        $this->assertArrayHasKey('landingEnabled', $this->errorsOf(fn () => $this->editSettings($this->surId, ['landingEnabled' => null, 'name' => 'Valido'])));
+        $this->assertArrayHasKey('openingHours', $this->errorsOf(fn () => $this->editSettings($this->surId, ['openingHours' => str_repeat('a', 501)])));
+
+        $this->assertSame($before, $this->row($this->surId));
+    }
+
+    public function testEditingContactOfTenantANeverTouchesTenantB(): void
+    {
+        $beforeNorte = $this->row($this->norteId);
+
+        $this->editSettings($this->surId, ['contactPhone' => '4000-1234', 'landingEnabled' => false])->assertStatus(200);
+
+        $this->assertSame($beforeNorte, $this->row($this->norteId));
     }
 
     // ------------------------------- semántica del PUT

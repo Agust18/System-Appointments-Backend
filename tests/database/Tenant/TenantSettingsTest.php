@@ -7,6 +7,7 @@ use App\Tenancy\TenantContext;
 
 require_once __DIR__ . '/../Platform/PlatformEndpointTestCase.php';
 require_once APPPATH . 'Database/Migrations/2026-10-07-110000_CreateTenantSettingsTable.php';
+require_once APPPATH . 'Database/Migrations/2026-10-16-100000_AddContactToTenantSettings.php';
 
 /**
  * Configuración por Tenant: aislamiento entre Tenants, datos que NO se publican en
@@ -47,8 +48,9 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
         $demo->assertStatus(200);
         $sur->assertStatus(200);
         // assertSame sobre el array completo: también garantiza que no vuelvan claves de color.
-        $this->assertSame(['slug' => 'demo', 'name' => 'Demo'], $this->decode($demo));
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible'], $this->decode($sur));
+        $emptyContact = ['phone' => null, 'whatsapp' => null, 'email' => null, 'address' => null, 'openingHours' => null];
+        $this->assertSame(['slug' => 'demo', 'name' => 'Demo', 'landingEnabled' => true, 'contact' => $emptyContact], $this->decode($demo));
+        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible', 'landingEnabled' => true, 'contact' => $emptyContact], $this->decode($sur));
     }
 
     public function testTheModelNeverReturnsTheRowOfAnotherTenant(): void
@@ -74,7 +76,8 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
     {
         $result = $this->asTenant('clinica-sur')->get('tenant/config');
 
-        $this->assertSame(['slug', 'name'], array_keys($this->decode($result)));
+        $this->assertSame(['slug', 'name', 'landingEnabled', 'contact'], array_keys($this->decode($result)));
+        $this->assertSame(['phone', 'whatsapp', 'email', 'address', 'openingHours'], array_keys($this->decode($result)['contact']));
         foreach (['recepcion@sur.test', 'respuestas@sur.test', 'sur.tusturnos.test'] as $secret) {
             $this->assertStringNotContainsString($secret, $result->getJSON());
         }
@@ -96,6 +99,7 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
 
         try {
             (new \App\Database\Migrations\CreateTenantSettingsTable())->up();
+            (new \App\Database\Migrations\AddContactToTenantSettings())->up();
 
             $rows = $this->db->query('SELECT t.slug, s.name, s.reception_email_enabled FROM tenants t LEFT JOIN tenant_settings s ON s.tenant_id = t.id ORDER BY t.id')->getResultArray();
             $this->assertCount(3, $rows);
@@ -106,6 +110,7 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
         } finally {
             // Deja el esquema como lo espera el resto de la suite.
             (new \App\Database\Migrations\CreateTenantSettingsTable())->up();
+            (new \App\Database\Migrations\AddContactToTenantSettings())->up();
         }
     }
 }

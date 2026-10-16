@@ -16,6 +16,12 @@ final class TenantSettingsToTenantSettingsResponseConverter
             $settings->getFrontendUrl(),
             $settings->getReceptionEmail(),
             $settings->isReceptionEmailEnabled(),
+            $settings->getContactPhone(),
+            $settings->getContactWhatsapp(),
+            $settings->getContactEmail(),
+            $settings->getAddress(),
+            $settings->getOpeningHours(),
+            $settings->isLandingEnabled(),
             $settings->getCreatedAt()?->format('Y-m-d H:i:s'),
             $settings->getUpdatedAt()?->format('Y-m-d H:i:s')
         );

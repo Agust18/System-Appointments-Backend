@@ -15,6 +15,12 @@ final readonly class TenantSettingsResponse
         public ?string $frontendUrl,
         public ?string $receptionEmail,
         public bool $receptionEmailEnabled,
+        public ?string $contactPhone,
+        public ?string $contactWhatsapp,
+        public ?string $contactEmail,
+        public ?string $address,
+        public ?string $openingHours,
+        public bool $landingEnabled,
         public ?string $createdAt,
         public ?string $updatedAt,
     ) {}
