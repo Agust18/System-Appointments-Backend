@@ -5,13 +5,11 @@ namespace App\Services\Appointment\Validations;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentActionForbiddenException;
 use App\Exception\Appointment\AppointmentNotModifiableException;
 use App\Exception\Appointment\AppointmentServiceRequiredException;
 use App\Exception\Appointment\InvalidStatusTransitionException;
-use App\Exception\Appointment\MedicalCanOnlyChangeStatusException;
-use App\Exception\Appointment\MedicalCanOnlyCompleteException;
 use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
-use App\Exception\Appointment\PatientCanOnlyCancelException;
 use App\Exception\Validation\ValidationException;
 use App\Services\User\UserFinderService;
 use DateTime;
@@ -44,11 +42,11 @@ final class AppointmentUpdateValidatorService
                 $request->getFecha() !== null ||
                 $request->getHora() !== null
             ) {
-                throw new MedicalCanOnlyChangeStatusException();
+                throw AppointmentActionForbiddenException::medicalCanOnlyChangeStatus();
             }
 
             if (!in_array($requestedStatus, ['completed', 'cancelled'], true)) {
-                throw new MedicalCanOnlyCompleteException();
+                throw AppointmentActionForbiddenException::medicalCanOnlyComplete();
             }
         }
 
@@ -63,7 +61,7 @@ final class AppointmentUpdateValidatorService
                 $request->getHora() !== null ||
                 $request->getNota() !== null
             ) {
-                throw new PatientCanOnlyCancelException();
+                throw AppointmentActionForbiddenException::patientCanOnlyCancel();
             }
 
             if (new DateTime($appointment->getFecha()->format('Y-m-d') . ' ' . $appointment->getHora()->format('H:i:s')) < new DateTime()) {

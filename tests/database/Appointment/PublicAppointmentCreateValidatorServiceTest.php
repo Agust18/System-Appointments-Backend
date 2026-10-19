@@ -2,9 +2,8 @@
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
 use App\Dto\Request\Patient\GuestPatientRequest;
-use App\Exception\Appointment\AppointmentNotPast;
-use App\Exception\Appointment\DoctorNotAvailableDayException;
-use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Appointment\AppointmentInPastException;
+use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
 use App\Exception\Appointment\ServiceNotAvailableException;
@@ -109,7 +108,7 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
     {
         [$medicalId, $serviceId] = $this->validScenario();
 
-        $this->expectException(AppointmentNotPast::class);
+        $this->expectException(AppointmentInPastException::class);
         $this->validator->validate($this->request($medicalId, $serviceId, '09:00', '2020-01-06'));
     }
 
@@ -136,7 +135,7 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
         [$medicalId, $serviceId] = $this->seedMedicalWithService(30);
         $this->seedSchedule($medicalId, 2, '09:00:00', '12:00:00'); // solo martes
 
-        $this->expectException(DoctorNotAvailableDayException::class);
+        $this->expectException(DoctorNotAvailableException::class);
         $this->validator->validate($this->request($medicalId, $serviceId));
     }
 
@@ -144,7 +143,7 @@ final class PublicAppointmentCreateValidatorServiceTest extends BookingServiceTe
     {
         [$medicalId, $serviceId] = $this->validScenario();
 
-        $this->expectException(DoctorNotAvailableTimeException::class);
+        $this->expectException(DoctorNotAvailableException::class);
         $this->validator->validate($this->request($medicalId, $serviceId, '11:45'));
     }
 }

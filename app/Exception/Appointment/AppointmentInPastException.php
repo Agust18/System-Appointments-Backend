@@ -3,7 +3,7 @@ namespace App\Exception\Appointment;
 
 use Exception;
 
-class AppointmentNotPast extends Exception
+class AppointmentInPastException extends Exception
 {
     public function __construct()
     {

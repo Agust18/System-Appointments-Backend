@@ -4,7 +4,7 @@ use App\Constants\Role;
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
 use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
-use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\PublicBookingLimitExceededException;
 use App\Exception\Patient\PublicBookingIdentityException;
@@ -258,8 +258,8 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
 
         try {
             $this->service->create($this->request($medicalId, $serviceId, '11:45'));
-            $this->fail('Se esperaba DoctorNotAvailableTimeException');
-        } catch (DoctorNotAvailableTimeException) {
+            $this->fail('Se esperaba DoctorNotAvailableException');
+        } catch (DoctorNotAvailableException) {
             // esperado
         }
 

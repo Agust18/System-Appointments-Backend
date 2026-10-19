@@ -11,13 +11,7 @@ use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
 
-/**
- * Escritura atómica de turnos: alta (book) y edición de horario (reschedule).
- * Lo usan el panel autenticado y la reserva pública.
- *
- * Lock advisory por (médico, fecha) + transacción + validación de servicio,
- * cálculo de bloque y chequeo de solapamiento; recién después persiste.
- */
+
 final class AppointmentBookingService
 {
     private const LOCK_TIMEOUT_SECONDS = 10;
@@ -64,25 +58,10 @@ final class AppointmentBookingService
     public function reschedule(Appointment $appointment, AppointmentUpdateRequest $request, int $id): Appointment
     {
         // Valores finales: los que vengan en el request pisan a los actuales.
-        $finalMedicalId = $request->getMedicalId();
-        if ($finalMedicalId === null) {
-            $finalMedicalId = $appointment->getMedicalId();
-        }
-
-        $finalServiceId = $request->getServiceId();
-        if ($finalServiceId === null) {
-            $finalServiceId = $appointment->getServiceId();
-        }
-
-        $finalFecha = $request->getFecha();
-        if ($finalFecha === null) {
-            $finalFecha = $appointment->getFecha()->format('Y-m-d');
-        }
-
-        $finalHora = $request->getHora();
-        if ($finalHora === null) {
-            $finalHora = $appointment->getHora()->format('H:i:s');
-        }
+        $finalMedicalId = $request->getMedicalId() ?? $appointment->getMedicalId();
+        $finalServiceId = $request->getServiceId() ?? $appointment->getServiceId();
+        $finalFecha = $request->getFecha() ?? $appointment->getFecha()->format('Y-m-d');
+        $finalHora = $request->getHora() ?? $appointment->getHora()->format('H:i:s');
 
         // Recalcula bloque y verifica solapamiento excluyendo el propio turno que se edita.
         return $this->runLocked(

@@ -1,9 +1,8 @@
 <?php
 namespace App\Services\Appointment\Validations;
 
-use App\Exception\Appointment\AppointmentNotPast;
-use App\Exception\Appointment\DoctorNotAvailableDayException;
-use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Appointment\AppointmentInPastException;
+use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Services\Appointment\ServiceBlockResolverService;
 use DateTime;
@@ -29,7 +28,7 @@ final class AppointmentSlotValidatorService
         $now = new DateTime();
         $appointmentDateTime = new DateTime($fecha . ' ' . substr($hora, 0, 5) . ':00');
         if ($appointmentDateTime < $now) {
-            throw new AppointmentNotPast;
+            throw new AppointmentInPastException();
         }
 
         // Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
@@ -40,7 +39,7 @@ final class AppointmentSlotValidatorService
         $activeRanges = $this->medicalScheduleModel->findActiveRangesByMedicalAndDay($medicalId, $dayOfWeek);
 
         if (empty($activeRanges)) {
-            throw new DoctorNotAvailableDayException($doctorName, $dayOfWeek);
+            throw DoctorNotAvailableException::onDay($doctorName, $dayOfWeek);
         }
 
         //Validar que el bloque completo [hora_inicio, hora_fin] quepa en al menos un rango del día
@@ -63,7 +62,7 @@ final class AppointmentSlotValidatorService
         }
 
         if (!$fitsInRange) {
-            throw new DoctorNotAvailableTimeException(
+            throw DoctorNotAvailableException::outsideHours(
                 $doctorName,
                 implode(', ', $rangosTexto),
                 $horaInicioStr
