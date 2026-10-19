@@ -49,7 +49,11 @@ final class AppointmentReminderService
                     'failures' => ["No se pudo procesar el Tenant: {$e->getMessage()}"],
                 ];
             } finally {
-                $previous !== null ? TenantContext::set($previous) : TenantContext::clear();
+                if ($previous !== null) {
+                    TenantContext::set($previous);
+                } else {
+                    TenantContext::clear();
+                }
             }
         }
 

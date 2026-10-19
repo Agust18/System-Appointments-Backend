@@ -39,10 +39,7 @@ final readonly class PatientUpdateRequest
         return $this->email;
     }
 
-    /**
-     * Datos de contacto del paciente, que viven en users. Devuelve null si el
-     * request no trae ninguno, para no tocar al usuario.
-     */
+  
     public function toUserUpdaterRequest(): ?UserUpdaterRequest
     {
         if ($this->firstName === null && $this->lastName === null && $this->phone === null && $this->email === null) {

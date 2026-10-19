@@ -20,9 +20,6 @@ final class TenantConfigFinderService
         $this->converter = new TenantSettingsToTenantConfigResponseConverter();
     }
 
-    /**
-     * La configuración del Tenant del contexto actual. Lee del contexto, no recibe parámetro.
-     */
     public function find(): TenantSettings
     {
         $settings = $this->tenantSettingsModel->find();

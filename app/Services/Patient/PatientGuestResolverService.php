@@ -69,7 +69,11 @@ final class PatientGuestResolverService
 
             // Una solicitud concurrente con el mismo email (otro DNI) pasó el chequeo y
             // ganó el UNIQUE: para quien reserva es el caso C.
-            throw $isDuplicate ? new PublicBookingIdentityException() : $e;
+            if ($isDuplicate) {
+                throw new PublicBookingIdentityException();
+            }
+
+            throw $e;
         } finally {
             $this->releaseLock($lockName);
         }

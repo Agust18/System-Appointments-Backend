@@ -2,6 +2,8 @@
 
 namespace App\Dto\Request\Platform;
 
+use App\Support\IdentityNormalizer;
+
 final readonly class TenantSettingsUpdateRequest
 {
     private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled',
@@ -9,7 +11,6 @@ final readonly class TenantSettingsUpdateRequest
     private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail',
         'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours'];
 
-   
     public function __construct(
         private ?string $name,
         private ?string $replyToEmail,
@@ -25,7 +26,6 @@ final readonly class TenantSettingsUpdateRequest
         private array $presentFields = [],
     ) {}
 
-  
     public static function sanitize(array $parameters): array
     {
         $data = array_intersect_key($parameters, array_flip(self::FIELDS));
@@ -34,8 +34,7 @@ final readonly class TenantSettingsUpdateRequest
             if (is_string($value)) {
                 $value = trim($value);
                 if ($field === 'contactWhatsapp') {
-                    // Solo dígitos con código de país: "+54 9 11 1234-5678" -> "5491112345678".
-                    $value = preg_replace('/\D+/', '', $value);
+                    $value = IdentityNormalizer::whatsapp($value) ?? '';
                 }
                 $data[$field] = ($value === '' && in_array($field, self::CLEARABLE, true)) ? null : $value;
             }

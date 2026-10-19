@@ -4,12 +4,6 @@ namespace App\Dto\Request\Platform;
 
 use App\Constants\Role;
 use App\Dto\Request\User\UserRequest;
-
-/**
- * Alta de un Tenant junto con su primer ADMIN. La contraseña del ADMIN es opcional: si falta, nace
- * sin contraseña y la elige con el link del email de bienvenida. `frontendUrl` es obligatorio: arma
- * los links de los emails del Tenant.
- */
 final readonly class TenantRequest
 {
     public function __construct(

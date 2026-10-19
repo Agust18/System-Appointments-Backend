@@ -9,10 +9,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-/**
- * POST /public/appointments (sin auth). Solo lee los campos del contrato: cualquier
- * `status` o `patientId` que venga en el body se ignora.
- */
+
 final class PublicAppointmentPostController extends ResourceController
 {
     private PublicAppointmentCreatorService $creatorService;
@@ -49,7 +46,7 @@ final class PublicAppointmentPostController extends ResourceController
             (int) $parameters->serviceId,
             $parameters->fecha,
             $parameters->hora,
-            ($parameters->nota ?? null) ?: null
+            empty($parameters->nota) ? null : $parameters->nota
         );
     }
 }

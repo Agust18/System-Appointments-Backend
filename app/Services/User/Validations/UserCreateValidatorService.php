@@ -22,7 +22,7 @@ final class UserCreateValidatorService
 
     public function validate(UserRequest $request): void
     {
-        // Sin email (paciente cargado por recepción) no hay con quién chocar.
+
         $existeUser = $request->getEmail() !== null
             ? $this->userModel->findByEmail($request->getEmail())
             : null;

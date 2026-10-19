@@ -3,10 +3,7 @@ namespace App\Dto\Request\Patient;
 
 use App\Validation\IdentityRules;
 
-/**
- * Datos de identidad que declara quien reserva sin cuenta. Llegan ya
- * normalizados (IdentityNormalizer): el DNI y el teléfono solo con dígitos.
- */
+
 final readonly class GuestPatientRequest
 {
     public function __construct(

@@ -27,10 +27,13 @@ final class ServiceBlockResolverService
 
     public function resolve(int $medicalId, ?int $serviceId): ServiceDuration
     {
-        $service = $serviceId !== null ? $this->serviceModel->find($serviceId) : null;
-        $medicalService = $serviceId !== null
-            ? $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId)
-            : null;
+        $service = null;
+        $medicalService = null;
+
+        if ($serviceId !== null) {
+            $service = $this->serviceModel->find($serviceId);
+            $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
+        }
 
         $this->serviceOfferValidator->validate($service, $medicalService);
 

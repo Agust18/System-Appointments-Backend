@@ -20,8 +20,7 @@ final class SpecialtiesSearcherService
     /**
      * @return SpecialtyResponse[]
      */
-   
-
+    
     public function searchResponses(SpecialtyFilterRequest $request): array
     {
         $entities = $this->specialtyModel->search($request);
