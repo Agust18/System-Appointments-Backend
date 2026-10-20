@@ -59,38 +59,38 @@ $routes->group('platform', static function ($routes) use ($platformLogin, $platf
 
 
 //Users
-$routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'adminOnly']]);
-$routes->get("users/(:num)", 'User\UserGetController::find/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->put("users/(:num)", "User\UserPutController::do/$1", ['filter' => ['auth', 'adminOnly']]);
-$routes->delete("users/(:num)", "User\UserDeleteController::do/$1", ['filter' => ['auth', 'adminOnly']]);
-$routes->get("users", "User\UsersGetController::search", ['filter' => ['auth', 'adminOnly']]);
+$routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'role:admin']]);
+$routes->get("users/(:num)", 'User\UserGetController::find/$1', ['filter' => ['auth', 'role:admin']]);
+$routes->put("users/(:num)", "User\UserPutController::do/$1", ['filter' => ['auth', 'role:admin']]);
+$routes->delete("users/(:num)", "User\UserDeleteController::do/$1", ['filter' => ['auth', 'role:admin']]);
+$routes->get("users", "User\UsersGetController::search", ['filter' => ['auth', 'role:admin']]);
 
 //Medicals
-$routes->post('medicals', 'Medical\MedicalPostController::create',  ['filter' => ['auth', 'adminOrReception']]);
+$routes->post('medicals', 'Medical\MedicalPostController::create',  ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('medicals/available', 'Medical\MedicalAvailableGetController::search', ['filter' => 'auth']);
 $routes->get('medicals/(:num)', 'Medical\MedicalGetController::find/$1',  ['filter' => ['auth', 'medicalViewPermission']]);
-$routes->put('medicals/(:num)', 'Medical\MedicalPutController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
-$routes->delete('medicals/(:num)', 'Medical\MedicalDeleteController::do/$1',  ['filter' => ['auth', 'adminOnly']]);
-$routes->get('medicals', 'Medical\MedicalsGetController::search', ['filter' => ['auth', 'adminOrReception']]);
+$routes->put('medicals/(:num)', 'Medical\MedicalPutController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->delete('medicals/(:num)', 'Medical\MedicalDeleteController::do/$1',  ['filter' => ['auth', 'role:admin']]);
+$routes->get('medicals', 'Medical\MedicalsGetController::search', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('medicals/user/(:num)', 'Medical\MedicalGetController::findByUser/$1', ['filter' => ['auth', 'medicalViewPermission']]);
 
 //Patients
-$routes->post('patients', 'Patient\PatientPostController::create', ['filter' => ['auth', 'adminOrReception']]);
+$routes->post('patients', 'Patient\PatientPostController::create', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('patients/(:num)', 'Patient\PatientGetController::find/$1', ['filter' => ['auth', 'patientViewPermission']]);
-$routes->put('patients/(:num)', 'Patient\PatientPutController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
-$routes->delete('patients/(:num)', 'Patient\PatientDeleteController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'adminReceptionOrMedical']]);
+$routes->put('patients/(:num)', 'Patient\PatientPutController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->delete('patients/(:num)', 'Patient\PatientDeleteController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'role:admin,reception,medical']]);
 
 //Specialty
-$routes->post('specialties', 'Specialty\SpecialtyPostController::create', ['filter' => ['auth', 'adminOnly']]);
+$routes->post('specialties', 'Specialty\SpecialtyPostController::create', ['filter' => ['auth', 'role:admin']]);
 $routes->get('specialties/(:num)', 'Specialty\SpecialtyGetController::find/$1', ['filter' => 'auth']);
-$routes->put('specialties/(:num)', 'Specialty\SpecialtyPutController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->delete('specialties/(:num)', 'Specialty\SpecialtyDeleteController::do/$1', ['filter' => ['auth', 'adminOnly']]);
+$routes->put('specialties/(:num)', 'Specialty\SpecialtyPutController::do/$1', ['filter' => ['auth', 'role:admin']]);
+$routes->delete('specialties/(:num)', 'Specialty\SpecialtyDeleteController::do/$1', ['filter' => ['auth', 'role:admin']]);
 $routes->get('specialties', 'Specialty\SpecialtiesGetController::search', ['filter' => 'auth']);
 
 //appointment
-$routes->post('appointments', 'Appointment\AppointmentPostController::create', ['filter' => ['auth', 'appointmentCreatePermission']]);
-$routes->post('appointments/(:num)/access-code', 'Appointment\AppointmentAccessCodePostController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
+$routes->post('appointments', 'Appointment\AppointmentPostController::create', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->post('appointments/(:num)/access-code', 'Appointment\AppointmentAccessCodePostController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability', ['filter' => 'auth']);
 $routes->get('appointments/(:num)', 'Appointment\AppointmentGetController::find/$1', ['filter' => ['auth', 'appointmentViewPermission']]);
 $routes->put('appointments/(:num)', 'Appointment\AppointmentPutController::do/$1', ['filter' => ['auth', 'appointmentPermission']]);
@@ -100,34 +100,34 @@ $routes->get('appointments', 'Appointment\AppointmentsGetController::search', ['
 //stats
 $routes->get('appointments/stats', 'Appointment\AppointmentStatsGetController::get', ['filter' => 'auth']);
 //metrics
-$routes->get('metrics/kpis', 'Metrics\MetricsKpisGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/by-medical', 'Metrics\MetricsByMedicalGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/monthly-trend', 'Metrics\MetricsMonthlyTrendGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/top-services', 'Metrics\MetricsTopServicesGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/top-specialties', 'Metrics\MetricsTopSpecialtiesGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-$routes->get('metrics/recent-appointments', 'Metrics\MetricsRecentAppointmentsGetController::get', ['filter' => ['auth', 'adminOrReception']]);
+$routes->get('metrics/kpis', 'Metrics\MetricsKpisGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/by-medical', 'Metrics\MetricsByMedicalGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/monthly-trend', 'Metrics\MetricsMonthlyTrendGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/top-services', 'Metrics\MetricsTopServicesGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/top-specialties', 'Metrics\MetricsTopSpecialtiesGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('metrics/recent-appointments', 'Metrics\MetricsRecentAppointmentsGetController::get', ['filter' => ['auth', 'role:admin,reception']]);
 
 
 // Medical Schedules
-$routes->post('medical-schedules', 'MedicalSchedule\MedicalSchedulePostController::create', ['filter' => ['auth', 'adminOrReception']]);
+$routes->post('medical-schedules', 'MedicalSchedule\MedicalSchedulePostController::create', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('medical-schedules/medical/(:num)', 'MedicalSchedule\MedicalScheduleGetController::findByMedical/$1', ['filter' => 'auth']);
 $routes->get('medical-schedules/(:num)', 'MedicalSchedule\MedicalScheduleGetController::find/$1', ['filter' => 'auth']);
-$routes->put('medical-schedules/(:num)', 'MedicalSchedule\MedicalSchedulePutController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
-$routes->delete('medical-schedules/(:num)', 'MedicalSchedule\MedicalScheduleDeleteController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
+$routes->put('medical-schedules/(:num)', 'MedicalSchedule\MedicalSchedulePutController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->delete('medical-schedules/(:num)', 'MedicalSchedule\MedicalScheduleDeleteController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('medical-schedules', 'MedicalSchedule\MedicalSchedulesGetController::search', ['filter' => 'auth']);
 
 // Services
 $routes->get('services', 'Service\ServicesGetController::search', ['filter' => 'auth']);
 $routes->get('services/(:num)', 'Service\ServiceGetController::find/$1', ['filter' => 'auth']);
-$routes->post('services', 'Service\ServicePostController::create', ['filter' => ['auth', 'adminOnly']]);
-$routes->put('services/(:num)', 'Service\ServicePutController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->delete('services/(:num)', 'Service\ServiceDeleteController::do/$1', ['filter' => ['auth', 'adminOnly']]);
+$routes->post('services', 'Service\ServicePostController::create', ['filter' => ['auth', 'role:admin']]);
+$routes->put('services/(:num)', 'Service\ServicePutController::do/$1', ['filter' => ['auth', 'role:admin']]);
+$routes->delete('services/(:num)', 'Service\ServiceDeleteController::do/$1', ['filter' => ['auth', 'role:admin']]);
 
 // Medical Services
 $routes->get('medicals/(:num)/services', 'MedicalService\MedicalServiceGetController::findByMedical/$1', ['filter' => 'auth']);
-$routes->post('medicals/(:num)/services', 'MedicalService\MedicalServicePostController::assignService/$1', ['filter' => ['auth', 'adminOrReception']]);
-$routes->delete('medicals/(:num)/services/(:num)', 'MedicalService\MedicalServiceDeleteController::do/$1/$2', ['filter' => ['auth', 'adminOrReception']]);
+$routes->post('medicals/(:num)/services', 'MedicalService\MedicalServicePostController::assignService/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->delete('medicals/(:num)/services/(:num)', 'MedicalService\MedicalServiceDeleteController::do/$1/$2', ['filter' => ['auth', 'role:admin,reception']]);
 
 //passwords 
 $routes->post('forgot-password','Auth\ForgotPasswordPostController::requestReset');
