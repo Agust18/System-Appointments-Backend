@@ -33,10 +33,8 @@ que los Filters cortan la cadena con Response, no con excepciones).
 | Filter | Acceso |
 |---|---|
 | `auth` | Cualquier usuario autenticado |
-| `adminOnly` | Solo ADMIN |
-| `adminOrReception` | ADMIN o RECEPTION. Antes existía `receptionUserCreate` como filtro separado para `POST /patients`, pero se unificó acá al comprobarse que eran funcionalmente idénticos (mismo chequeo de rol, mismo 403); no verifica coherencia entre el recurso y el `roleId` del body |
+| `role:{roles}` | Solo los roles listados en la ruta, por nombre de `Role::NAMES`: `role:admin`, `role:admin,reception`, `role:admin,reception,medical`. Reemplaza a los viejos `adminOnly`, `adminOrReception`, `adminReceptionOrMedical` y `appointmentCreatePermission`. Un nombre desconocido o una ruta sin argumentos no deja pasar a nadie (falla cerrado); 403 como `Response`. No verifica coherencia entre el recurso y el `roleId` del body |
 | `appointmentPermission` | Admin/recepción sin restricción; médico solo modifica sus propios turnos (vía `PermissionsService::canEditAppointment()`), nunca elimina. Cualquier otro rol: 403 |
-| `appointmentCreatePermission` | ADMIN y RECEPTION pueden crear turnos; MEDICAL no |
 | `appointmentViewPermission` | Admin/recepción sin restricción; el médico solo ve sus turnos, vía `PermissionsService::canViewAppointment()` |
 | `medicalViewPermission` | Admin/recepción sin restricción; el médico solo ve su propio perfil, por `/medicals/{id}` o por `/medicals/user/{userId}` |
 | `patientViewPermission` | Admin/recepción sin restricción; el paciente ya no es usuario (no hay `/patients/user/{id}`); médico ve pacientes con los que tuvo al menos un turno, vía `PermissionsService::canViewPatient()` → `AppointmentModel::hasRelationWithPatient()` (query `EXISTS`, no trae todos los turnos) |
