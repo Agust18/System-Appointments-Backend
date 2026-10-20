@@ -17,7 +17,9 @@ Sin header `Authorization`. Todos pasan por `cors` y después por `throttle` (el
 | `GET /public/medicals/available?specialtyId=` | 60/min | Médicos con `users.is_active = 1` (`medicals` no tiene `is_active`) |
 | `GET /public/medicals/{id}/services` | 60/min | Servicios del médico (duración y precio efectivos) |
 | `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Controller propio, `PublicAppointmentAvailabilityGetController` (no acepta `excludeAppointmentId`, que es solo de la ruta autenticada) |
-| `POST /public/appointments` | 5/min | `201` con `PublicAppointmentResponse` (`id, fecha, hora, medicoNombre, servicioNombre, status`) |
+| `POST /public/appointments` | 5/min | `201` con `PublicAppointmentCreatedResponse` (`id, fecha, hora, medicoNombre, servicioNombre, status` + `accessCode` y `accessToken` en claro, **una sola vez**) |
+| `POST /public/appointments/lookup` | 10/min | `{dni, code}` o `{token}` → `PublicAppointmentResponse` del turno (sin credenciales) |
+| `POST /public/appointments/cancel` | 5/min | Mismas credenciales → cancela y devuelve el turno con `status: cancelled` |
 | `OPTIONS /public/*` | no gasta cupo | Preflight CORS |
 
 Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ítems.
@@ -50,9 +52,21 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 - **Throttle por IP** (`app/Filters/Throttle.php`, `throttle:{capacidad},{segundos}`): token bucket sobre el cache de CodeIgniter. "60 por minuto" = ráfaga de 60 y después 1 por segundo; "5 por minuto" = ráfaga de 5 y después 1 cada 12 s. Cada combinación IP + método + límite tiene su bucket, así que los GET no gastan el cupo del POST. Al excederse devuelve `429` con `Retry-After` (segundos). El preflight `OPTIONS` no consume cupo.
 - **`cors` antes que `throttle`** en la lista de filtros de la ruta: el 429 se arma sobre la respuesta a la que `cors` ya agregó sus headers; sin ellos el navegador no deja leer el 429.
 - **IP real**: sin `app.trustedProxies` se usa `REMOTE_ADDR`. Detrás de un proxy es obligatorio configurarlo, y el proxy debe **sobrescribir** el header (no agregarle), porque se toma la primera IP.
-- **Bloqueo por DNI** (`PublicIdentityAttemptLimiter`): hoy **sin uso** (la reserva ya no compara teléfonos). Se reutilizará en `/consulta` (fase 3, `bitacora/pendiente/paciente-sin-usuario.md`).
+- **Bloqueo por DNI** (`PublicIdentityAttemptLimiter`): lo usa `/consulta` (ver abajo). 5 fallos por DNI y Tenant bloquean 1 h; un acierto limpia el contador.
 - **Falla abierto**: si el cache activo es `DummyHandler` (p. ej. `writable/cache` sin permisos) el throttle y el bloqueo por DNI no limitan, sin ningún error. `Throttle` deja un `critical` en el log en cada request.
 - **CORS** solo en `/public/*` y solo para `cors.allowedOrigins` / `cors.allowedOriginsPatterns`. Sin orígenes configurados no se envía ningún header. Limitación conocida: `exposedHeaders` está vacío, así que con el SPA en otro dominio el navegador no puede leer `Retry-After` (ver `bitacora/pendiente/cors-exponer-retry-after.md`).
+
+## `/consulta`: consultar y cancelar un turno (sin cuenta)
+
+El paciente entra con **DNI + código** o con el **token del link** del email (`{frontend_url}/consulta?t=...`). Las credenciales son **por turno**.
+
+- **Emisión**: `AppointmentAccessService::issue()` genera un código de 8 caracteres sin ambiguos (`ABCDEFGHJKMNPQRSTUVWXYZ23456789`) y un token de 32 bytes en hex. En `appointments` solo se guarda su `SHA-256` (`access_code_hash`, `access_token_hash`, UNIQUE en el token). Se emite **después** de `book()` (fuera del lock) en `PublicAppointmentCreatorService` y `AppointmentCreatorService`; si falla, el turno queda sin credenciales y se regeneran. Los turnos anteriores a la migración tienen `NULL` y no se pueden consultar.
+- **En claro una sola vez**: la respuesta del alta (pública y `POST /appointments`, que devuelve `AppointmentCreatedResponse` con `accessCode`) y el email al paciente. Nadie puede leerlo después: si se pierde, `POST /appointments/{id}/access-code` (`auth` + `adminOrReception`) genera uno nuevo, invalida el código y el token anteriores y, si el paciente tiene email, se lo reenvía. Solo turnos `pending`/`confirmed`.
+- **Resolución** (`PublicAppointmentAccessResolverService`): el código se tolera en minúsculas, con espacios o guiones. Todo fallo es el mismo `PublicBookingIdentityException` (`404` neutral): DNI inexistente, código o token incorrecto, turno de otro Tenant o DNI bloqueado. El acceso por token no tiene DNI que bloquear: lo cubren el throttle por IP y los 256 bits del token. Toda query filtra por `tenant_id`.
+- **Cancelación** (`PublicAppointmentCancellerService`): turnos `pending` o `confirmed` y futuros, sin plazo mínimo. Si ya pasó o no está activo, `AppointmentNotCancellableException` (`409`). El `UPDATE ... WHERE status IN ('pending','confirmed')` es atómico (`cancelIfActive`): dos cancelaciones simultáneas no avisan dos veces. Avisa al paciente (`AppointmentCancelledNotificationService`) y a recepción (`PublicAppointmentCancelledNotificationService`, respeta `reception_email_enabled`).
+- **Emails**: el de reserva (`ConfirmedEmailTemplate`) y el de recepción al alta incluyen el bloque `AppointmentAccessEmailBlock` (link + código). Si el Tenant no tiene `frontend_url`, sale solo con el código (`AppointmentAccessLinkService`). Un turno que pasa a `confirmed` por edición no reemite credenciales.
+- **Pacientes sin email**: no reciben nada; el código se ve en la confirmación de la reserva o, si lo cargó recepción, en la respuesta del alta del panel. Si lo pierden, recepción lo regenera y se lo pasa por teléfono.
+- **No hay reprogramación** en v1: se cancela y se reserva de nuevo.
 
 ## Respuestas de error
 
@@ -61,6 +75,8 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 | `422` | Validación (`errors` por campo) |
 | `409` | Horario ocupado; médico no disponible; tope de 3 turnos |
 | `423` | El profesional está procesando otra reserva (reintentar en segundos) |
+| `404` | `/consulta`: DNI, código o token que no coinciden (siempre el mismo mensaje) |
+| `409` | `/consulta`: el turno ya no se puede cancelar (pasado, cancelado o completado) |
 | `429` | Throttle por IP, con `Retry-After` |
 
 ## Checklist de deploy

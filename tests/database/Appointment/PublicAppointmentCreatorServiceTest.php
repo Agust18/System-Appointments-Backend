@@ -169,7 +169,7 @@ final class PublicAppointmentCreatorServiceTest extends BookingServiceTestCase
         $response = $this->service->create($this->request($medicalId, $serviceId));
 
         $this->assertSame(
-            ['id', 'fecha', 'hora', 'medicoNombre', 'servicioNombre', 'status'],
+            ['id', 'fecha', 'hora', 'medicoNombre', 'servicioNombre', 'status', 'accessCode', 'accessToken'],
             array_keys(get_object_vars($response))
         );
         $this->assertStringStartsWith('medico_', $response->medicoNombre);

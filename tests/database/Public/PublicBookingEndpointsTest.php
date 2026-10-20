@@ -312,7 +312,10 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
 
         $result->assertStatus(201);
         $json = $this->decode($result);
-        $this->assertSame(['id', 'fecha', 'hora', 'medicoNombre', 'servicioNombre', 'status'], array_keys($json));
+        $this->assertSame(
+            ['id', 'fecha', 'hora', 'medicoNombre', 'servicioNombre', 'status', 'accessCode', 'accessToken'],
+            array_keys($json)
+        );
         $this->assertSame('confirmed', $json['status']);
         $this->assertSame($this->monday, $json['fecha']);
         $this->assertSame('09:30', $json['hora']);

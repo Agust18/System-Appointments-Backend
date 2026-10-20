@@ -4,6 +4,7 @@ namespace App\Services\Appointment\Notification;
 
 use App\Email\Appointment\ConfirmedEmailTemplate;
 use App\Email\Appointment\ReceptionNewAppointmentEmailTemplate;
+use App\Entity\Appointment\AppointmentAccess;
 use App\Entity\Appointment\Projection\AppointmentProjection;
 use App\Models\Appointment\AppointmentModel;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
@@ -19,6 +20,7 @@ final class PublicAppointmentCreatedNotificationService
     private ReceptionNewAppointmentEmailTemplate $receptionTemplate;
     private TenantEmailSettingsResolverService $settingsResolver;
     private AppointmentEmailDispatcherService $dispatcher;
+    private AppointmentAccessLinkService $linkService;
 
     public function __construct()
     {
@@ -27,9 +29,10 @@ final class PublicAppointmentCreatedNotificationService
         $this->receptionTemplate = new ReceptionNewAppointmentEmailTemplate();
         $this->settingsResolver  = new TenantEmailSettingsResolverService();
         $this->dispatcher        = new AppointmentEmailDispatcherService();
+        $this->linkService       = new AppointmentAccessLinkService();
     }
 
-    public function notify(int $appointmentId): void
+    public function notify(int $appointmentId, AppointmentAccess $access): void
     {
         $projection = $this->appointmentModel->findProjection($appointmentId);
         if ($projection === null || $projection->getStatus() !== 'confirmed') {
@@ -39,7 +42,7 @@ final class PublicAppointmentCreatedNotificationService
         $this->dispatcher->send(
             $projection->getEmail(),
             'Tu turno fue creado y confirmado',
-            $this->patientTemplate->render($projection)
+            $this->patientTemplate->render($projection, $this->linkService->url($access->token), $access->code)
         );
 
         $this->notifyReception($projection);

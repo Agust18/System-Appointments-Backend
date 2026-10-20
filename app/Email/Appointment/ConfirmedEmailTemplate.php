@@ -6,13 +6,18 @@ use App\Entity\Appointment\Projection\AppointmentProjection;
 
 final class ConfirmedEmailTemplate
 {
-    public function render(AppointmentProjection $projection): string
+    /**
+     * @param string|null $consultaUrl link a `/consulta?t=...` (null si el Tenant no tiene frontend_url)
+     * @param string|null $accessCode  código de `/consulta`; null cuando el turno no emite credenciales nuevas
+     */
+    public function render(AppointmentProjection $projection, ?string $consultaUrl = null, ?string $accessCode = null): string
     {
         $paciente  = htmlspecialchars($projection->getPacienteNombre(), ENT_QUOTES, 'UTF-8');
         $medico    = htmlspecialchars($projection->getMedicoNombre(),   ENT_QUOTES, 'UTF-8');
         $servicio  = htmlspecialchars($projection->getServicioNombre(), ENT_QUOTES, 'UTF-8');
         $fecha     = $projection->getFecha()->format('d/m/Y');
         $hora      = $projection->getHora()->format('H:i');
+        $acceso    = AppointmentAccessEmailBlock::render($consultaUrl, $accessCode);
 
         return <<<HTML
         <!DOCTYPE html>
@@ -43,6 +48,7 @@ final class ConfirmedEmailTemplate
                 </tr>
             </table>
             <p>Por favor, presentate 10 minutos antes de tu turno.</p>
+            {$acceso}
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
             <p style="color: #888; font-size: 12px;">
                 Si tenés alguna consulta, comunicate con nosotros por nuestros canales de atención.

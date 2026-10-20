@@ -1,10 +1,10 @@
 <?php
 namespace App\Services\Appointment;
 
-use App\Converter\Appointment\Projection\AppointmentProjectionToPublicAppointmentResponseConverter;
+use App\Converter\Appointment\Projection\AppointmentProjectionToPublicAppointmentCreatedResponseConverter;
 use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Dto\Response\Appointment\PublicAppointmentResponse;
+use App\Dto\Response\Appointment\PublicAppointmentCreatedResponse;
 use App\Exception\Appointment\PublicBookingLimitExceededException;
 use App\Models\Appointment\AppointmentModel;
 use App\Services\Appointment\Notification\PublicAppointmentCreatedNotificationService;
@@ -26,7 +26,8 @@ final class PublicAppointmentCreatorService
     private AppointmentBookingService $bookingService;
     private PublicAppointmentCreatedNotificationService $notificationService;
     private AppointmentProjectionFinderService $projectionFinder;
-    private AppointmentProjectionToPublicAppointmentResponseConverter $converter;
+    private AppointmentAccessService $accessService;
+    private AppointmentProjectionToPublicAppointmentCreatedResponseConverter $converter;
 
     public function __construct()
     {
@@ -36,10 +37,11 @@ final class PublicAppointmentCreatorService
         $this->bookingService = new AppointmentBookingService();
         $this->notificationService = new PublicAppointmentCreatedNotificationService();
         $this->projectionFinder = new AppointmentProjectionFinderService();
-        $this->converter = new AppointmentProjectionToPublicAppointmentResponseConverter();
+        $this->accessService = new AppointmentAccessService();
+        $this->converter = new AppointmentProjectionToPublicAppointmentCreatedResponseConverter();
     }
 
-    public function create(PublicAppointmentRequest $request): PublicAppointmentResponse
+    public function create(PublicAppointmentRequest $request): PublicAppointmentCreatedResponse
     {
         $this->validator->validate($request);
 
@@ -60,8 +62,11 @@ final class PublicAppointmentCreatorService
             self::INITIAL_STATUS
         ));
 
-        $this->notificationService->notify($appointment->getId());
+        // Fuera del lock de reserva: si falla, el turno queda sin código y recepción lo regenera.
+        $access = $this->accessService->issue($appointment->getId());
 
-        return $this->converter->convert($this->projectionFinder->find($appointment->getId()));
+        $this->notificationService->notify($appointment->getId(), $access);
+
+        return $this->converter->convert($this->projectionFinder->find($appointment->getId()), $access);
     }
 }

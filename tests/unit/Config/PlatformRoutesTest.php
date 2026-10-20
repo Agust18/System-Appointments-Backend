@@ -116,6 +116,33 @@ final class PlatformRoutesTest extends CIUnitTestCase
         $this->assertLessThan(array_search('throttle:60,60', $before, true), array_search('cors', $before, true));
     }
 
+    public function testConsultaRoutesArePublicButCorsThrottledAndHaveTenant(): void
+    {
+        $expected = [
+            'public/appointments/lookup' => 'throttle:10,60',
+            'public/appointments/cancel' => 'throttle:5,60',
+        ];
+
+        foreach ($expected as $uri => $throttle) {
+            $before = $this->before('POST', $uri);
+
+            $this->assertContains('tenant', $before, $uri);
+            $this->assertNotContains('auth', $before, $uri);
+            $this->assertContains('cors', $before, $uri);
+            $this->assertContains($throttle, $before, $uri);
+            $this->assertLessThan(array_search($throttle, $before, true), array_search('cors', $before, true), $uri);
+        }
+    }
+
+    public function testRegeneratingAnAccessCodeRequiresAdminOrReception(): void
+    {
+        $before = $this->before('POST', 'appointments/7/access-code');
+
+        $this->assertContains('tenant', $before);
+        $this->assertContains('auth', $before);
+        $this->assertContains('adminOrReception', $before);
+    }
+
     public function testTheTenantCannotEditItsOwnConfig(): void
     {
         // La configuración la carga solo el panel (/platform/tenants/{id}/settings): GET es la única ruta de tenant/config.
