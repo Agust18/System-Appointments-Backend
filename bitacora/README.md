@@ -12,8 +12,10 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (27)
+## ✅ Hecho (29)
 
+- [Unificar los filtros de RBAC: filtro `role:...` y `PermissionsService` como única fuente de propiedad](hecho/unificar-filtros-rbac.md)
+- [Paciente sin usuario: ficha propia por DNI y `/consulta` para consultar y cancelar (fases 1-3)](hecho/paciente-sin-usuario.md)
 - [Contrato: PUT de turnos con fecha/hora vacías (422) y `excludeAppointmentId` en disponibilidad](hecho/contrato-put-appointments-vacios-y-exclude-availability.md)
 - [Permisos: recepción edita médicos; el médico cancela y deja nota](hecho/permisos-recepcion-medicos-y-medico-nota-cancelar.md)
 - [Micro-deuda: guard de servicio requerido en AppointmentUpdateValidatorService](hecho/micro-deuda-guard-service-required.md)

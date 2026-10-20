@@ -82,4 +82,4 @@ El paciente entra con **DNI + código** o con el **token del link** del email (`
 ## Checklist de deploy
 
 Los endpoints `/public/*` **no deben exponerse a internet** hasta completar el checklist de `bitacora/pendiente/deploy-*.md`. Resumen:
-`app.trustedProxies`, `writable/cache` escribible, cache compartido si hay varias instancias, `cors.*`, migraciones probadas en una copia (UNIQUE de `users.dni` y `patients.user_id`), `EMAIL_*` y `reception.email`.
+`app.trustedProxies`, `writable/cache` escribible, cache compartido si hay varias instancias, `cors.*`, migraciones probadas en una copia (UNIQUE de `users.dni` y `UNIQUE(tenant_id, dni)` de `patients`), `EMAIL_*` y `reception.email`.

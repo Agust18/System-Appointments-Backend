@@ -1,6 +1,6 @@
 # Unificar los filtros de RBAC
 
-- **Estado:** ✅ Hecho (parte 1 en PR #11, parte 2 en `refactor/permisos-propiedad-rbac`) (hacer **después** de la fase 2 de `paciente-sin-usuario.md`)
+- **Estado:** ✅ Hecho (parte 1 en PR #11, parte 2 en `refactor/permisos-propiedad-rbac`)
 - **Repo:** backend
 - **Esfuerzo:** ~1–2 días
 - **Fecha:** 2026-10-20

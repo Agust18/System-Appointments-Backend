@@ -15,4 +15,4 @@
   - ~~`SlotGeneratorService`: `if ($candidateEnd > $rangeEndMinutes) continue;` es inalcanzable por la condición del `for`.~~ **Hecho 09/10/2026** (además el generador compara en minutos y extrae `overlapsAny()`).
   - `AppointmentAvailabilityBatchService`: el `try/catch` alrededor de `SlotGenerator` (función pura) no se alcanza.
   - `AppointmentDeleteValidatorService`: constructor vacío.
-  - `AppointmentUpdaterService`: hace `find($id)` dos veces (estado previo y a modificar); alcanza con un `clone`.
+  - ~~`AppointmentUpdaterService`: hace `find($id)` dos veces (estado previo y a modificar); alcanza con un `clone`.~~ **Hecho** en `refactor/permisos-propiedad-rbac` (ver `hecho/unificar-filtros-rbac.md`).
