@@ -2,7 +2,6 @@
 
 use App\Constants\Role;
 use App\Exception\Appointment\MedicalNotAvailableException;
-use App\Exception\Patient\PublicBookingIdentityException;
 use App\Exception\Validation\ValidationException;
 use CodeIgniter\Config\Factories;
 use CodeIgniter\Test\FeatureTestTrait;
@@ -124,17 +123,14 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
 
     private function seedExistingPatient(int $dni, string $email, ?string $phone): int
     {
-        $this->db->table('users')->insert(['tenant_id' => 1,
-            'first_name' => 'existente_' . uniqid(),
-            'last_name'  => 'Original',
+        $this->db->table('patients')->insert(['tenant_id' => 1,
+            'first_name' => 'Original',
+            'last_name'  => 'Registrado',
             'email'      => $email,
             'phone'      => $phone,
-            'password'   => null,
             'dni'        => $dni,
-            'role_id'    => Role::PATIENT,
+            'birth_date' => null,
         ]);
-        $userId = (int) $this->db->insertID();
-        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => null]);
 
         return (int) $this->db->insertID();
     }
@@ -322,7 +318,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
         $this->assertSame($this->monday, $json['fecha']);
         $this->assertSame('09:30', $json['hora']);
         $this->seeInDatabase('appointments', ['id' => $json['id'], 'status' => 'confirmed', 'hora' => '09:30:00']);
-        $this->seeInDatabase('users', ['dni' => 30123456, 'password' => null]);
+        $this->seeInDatabase('patients', ['dni' => 30123456]);
         $this->assertStringNotContainsString('30123456', $result->getJSON());
         $this->assertStringNotContainsString('juana@test.com', $result->getJSON());
     }
@@ -354,7 +350,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
         ]));
 
         $result->assertStatus(201);
-        $this->seeInDatabase('users', [
+        $this->seeInDatabase('patients', [
             'dni'   => 30123456,
             'phone' => '2325506499',
             'email' => 'juana@test.com',
@@ -364,7 +360,7 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
     public function testInvalidBodyIsRejectedWith422AndCreatesNothing(): void
     {
         [$medicalId, $serviceId] = $this->bookableScenario();
-        $usersBefore = (int) $this->db->table('users')->countAllResults();
+        $patientsBefore = (int) $this->db->table('patients')->countAllResults();
 
         try {
             $this->book($this->bookingPayload($medicalId, $serviceId, ['dni' => '123', 'hora' => '9:30']));
@@ -375,23 +371,26 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
             $this->assertArrayHasKey('hora', $e->getErrors());
         }
 
-        $this->assertSame($usersBefore, (int) $this->db->table('users')->countAllResults());
+        $this->assertSame($patientsBefore, (int) $this->db->table('patients')->countAllResults());
         $this->assertSame(0, $this->countAppointments());
     }
 
-    public function testPhoneMismatchIsRejectedWith409(): void
+    public function testExistingDniIsReusedWithoutTouchingTheRecordWhateverTheTypedPhoneIs(): void
     {
         [$medicalId, $serviceId] = $this->bookableScenario();
-        $this->seedExistingPatient(30123456, 'existente@test.com', '1144445555');
+        $patientId = $this->seedExistingPatient(30123456, 'existente@test.com', '1144445555');
 
-        try {
-            $this->book($this->bookingPayload($medicalId, $serviceId));
-            $this->fail('Se esperaba PublicBookingIdentityException');
-        } catch (PublicBookingIdentityException $e) {
-            $this->assertSame(409, $e->getCode());
-        }
+        $result = $this->book($this->bookingPayload($medicalId, $serviceId));
 
-        $this->assertSame(0, $this->countAppointments());
+        $result->assertStatus(201);
+        $this->seeInDatabase('appointments', ['id' => $this->decode($result)['id'], 'patient_id' => $patientId]);
+        $this->seeInDatabase('patients', [
+            'id'         => $patientId,
+            'first_name' => 'Original',
+            'email'      => 'existente@test.com',
+            'phone'      => '1144445555',
+        ]);
+        $this->seeNumRecords(1, 'patients', []);
     }
 
     // ------------------------------------------------------------------- CORS

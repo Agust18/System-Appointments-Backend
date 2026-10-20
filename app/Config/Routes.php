@@ -7,16 +7,7 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 $routes->post('login', 'Auth\UserLoginController::login');
-$routes->post('patients/register', 'Patient\PatientPublicPostController::create');
 
-// Reserva pública de turnos (sin auth). El filtro 'cors' solo aplica a este grupo; sin orígenes
-// configurados (cors.allowedOrigins en el .env) no agrega headers. La ruta OPTIONS existe para que
-// el preflight del navegador llegue al filtro, que lo responde antes de tocar ningún controller
-// (y por eso no consume cupo de throttle).
-//
-// 'throttle:{capacidad},{segundos}' limita por IP. 'cors' tiene que ir ANTES que 'throttle': el 429
-// se arma sobre la misma respuesta a la que 'cors' ya le agregó sus headers, y sin ellos el navegador
-// no deja leerlo. Lecturas: 60 por minuto; reserva (POST): 5 por minuto.
 $publicRead = ['filter' => ['cors', 'throttle:60,60']];
 $publicBooking = ['filter' => ['cors', 'throttle:5,60']];
 
@@ -32,9 +23,7 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 
-// Configuración pública del Tenant (nombre; luego branding y módulos) para la pantalla de login, por eso
-// SIN 'auth' (excepción acordada a la regla de las rutas de Tenant). Solo devuelve campos seguros para publicar.
-// Igual que /public/*: 'cors' antes que 'throttle' y OPTIONS para el preflight.
+
 $routes->group('tenant', static function ($routes) use ($publicRead) {
     $routes->options('(:any)', static function () {
     }, ['filter' => 'cors']);
@@ -42,11 +31,7 @@ $routes->group('tenant', static function ($routes) use ($publicRead) {
     $routes->get('config', 'Tenant\TenantConfigGetController::find', $publicRead);
 });
 
-// Panel de plataforma (SuperAdmin, sin Tenant). El filtro global 'tenant' NO corre acá (ver Filters.php).
-// 'platformAdminOnly' REEMPLAZA a 'auth': valida el token contra platform_admin_tokens, no contra users.
-// 'cors:platform' usa el perfil Config\Cors::$platform (PUT y Authorization) y va antes que el resto, para
-// que también el 401/403/429 salgan con los headers CORS. El login no lleva token: se limita por IP.
-// No hay DELETE: los datos de un Tenant se conservan (se suspende con PUT).
+
 $platformLogin = ['filter' => ['cors:platform', 'throttle:10,60']];
 $platformPrivate = ['filter' => ['cors:platform', 'platformAdminOnly']];
 
@@ -65,6 +50,10 @@ $routes->group('platform', static function ($routes) use ($platformLogin, $platf
     $routes->get('tenants/(:num)/settings', 'Platform\TenantSettingsGetController::find/$1', $platformPrivate);
     $routes->put('tenants/(:num)/settings', 'Platform\TenantSettingsPutController::do/$1', $platformPrivate);
 });
+
+
+
+
 
 //Users
 $routes->post("users", 'User\UserPostController::create', ['filter' => ['auth', 'adminOnly']]);
@@ -85,7 +74,6 @@ $routes->get('medicals/user/(:num)', 'Medical\MedicalGetController::findByUser/$
 //Patients
 $routes->post('patients', 'Patient\PatientPostController::create', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('patients/(:num)', 'Patient\PatientGetController::find/$1', ['filter' => ['auth', 'patientViewPermission']]);
-$routes->get('patients/user/(:num)', 'Patient\PatientGetController::findByUser/$1', ['filter' => ['auth', 'patientViewPermission']]);
 $routes->put('patients/(:num)', 'Patient\PatientPutController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 $routes->delete('patients/(:num)', 'Patient\PatientDeleteController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'adminReceptionOrMedical']]);

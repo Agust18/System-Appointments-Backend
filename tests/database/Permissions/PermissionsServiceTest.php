@@ -55,7 +55,7 @@ final class PermissionsServiceTest extends CIUnitTestCase
     private function seedPatient(int $userId): int
     {
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 
@@ -94,23 +94,7 @@ final class PermissionsServiceTest extends CIUnitTestCase
         $this->assertTrue($this->service->canViewPatient(Role::RECEPTION, 999, $patientId));
     }
 
-    public function testCanViewPatientOwnerTrue(): void
-    {
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
 
-        $this->assertTrue($this->service->canViewPatient(Role::PATIENT, $patientUserId, $patientId));
-    }
-
-    public function testCanViewPatientOtherPatientFalse(): void
-    {
-        $ownUserId = $this->seedUser();
-        $otherUserId = $this->seedUser();
-        $otherPatientId = $this->seedPatient($otherUserId);
-        $this->seedPatient($ownUserId);
-
-        $this->assertFalse($this->service->canViewPatient(Role::PATIENT, $ownUserId, $otherPatientId));
-    }
 
     public function testCanViewPatientMedicalWithRelationTrue(): void
     {
@@ -138,33 +122,7 @@ final class PermissionsServiceTest extends CIUnitTestCase
 
     // canViewAppointment
 
-    public function testCanViewAppointmentOwnerPatientTrue(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
 
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        $appointment = $this->seedAppointment($medicalId, $patientId);
-
-        $this->assertTrue($this->service->canViewAppointment(Role::PATIENT, $patientUserId, $appointment));
-    }
-
-    public function testCanViewAppointmentOtherPatientFalse(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $otherUserId = $this->seedUser();
-        $this->seedPatient($otherUserId);
-
-        $appointment = $this->seedAppointment($medicalId, $patientId);
-
-        $this->assertFalse($this->service->canViewAppointment(Role::PATIENT, $otherUserId, $appointment));
-    }
 
     public function testCanViewAppointmentOwnerMedicalTrue(): void
     {
@@ -239,47 +197,8 @@ final class PermissionsServiceTest extends CIUnitTestCase
 
     // canCancelAppointment
 
-    public function testCanCancelAppointmentOwnerPatientConfirmedTrue(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
 
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
 
-        $appointment = $this->seedAppointment($medicalId, $patientId, 'confirmed');
-
-        $this->assertTrue($this->service->canCancelAppointment(Role::PATIENT, $patientUserId, $appointment));
-    }
-
-    public function testCanCancelAppointmentOwnerPatientNotConfirmedFalse(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        foreach (['pending', 'completed', 'cancelled'] as $status) {
-            $appointment = $this->seedAppointment($medicalId, $patientId, $status);
-            $this->assertFalse($this->service->canCancelAppointment(Role::PATIENT, $patientUserId, $appointment), $status);
-        }
-    }
-
-    public function testCanCancelAppointmentOtherPatientFalse(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $otherUserId = $this->seedUser();
-        $this->seedPatient($otherUserId);
-
-        $appointment = $this->seedAppointment($medicalId, $patientId, 'pending');
-
-        $this->assertFalse($this->service->canCancelAppointment(Role::PATIENT, $otherUserId, $appointment));
-    }
 
     public function testCanCancelAppointmentMedicalAlwaysFalse(): void
     {

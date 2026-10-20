@@ -56,7 +56,7 @@ final class PatientViewPermissionTest extends CIUnitTestCase
     private function seedPatient(int $userId): int
     {
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 
@@ -118,35 +118,7 @@ final class PatientViewPermissionTest extends CIUnitTestCase
         $this->assertSame(403, $result->getStatusCode());
     }
 
-    public function testPatientCanViewOwnProfile(): void
-    {
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
 
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
-
-        $result = $this->filter->before($this->requestFor("patients/{$patientId}"));
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testPatientCannotViewOtherPatientProfile(): void
-    {
-        $ownUserId = $this->seedUser();
-        $this->seedPatient($ownUserId);
-
-        $otherUserId = $this->seedUser();
-        $otherPatientId = $this->seedPatient($otherUserId);
-
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $ownUserId);
-
-        $result = $this->filter->before($this->requestFor("patients/{$otherPatientId}"));
-
-        $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-        $this->assertSame(403, $result->getStatusCode());
-    }
 
     public function testUnknownPatientReturns404(): void
     {
@@ -178,45 +150,6 @@ final class PatientViewPermissionTest extends CIUnitTestCase
         $this->assertTrue($model->hasRelationWithPatient($medicalUserId, $patientId));
     }
 
-    public function testPatientCanViewOwnProfileByUserId(): void
-    {
-        $patientUserId = $this->seedUser();
-        $this->seedPatient($patientUserId);
 
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
 
-        $result = $this->filter->before($this->requestFor("patients/user/{$patientUserId}"));
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testMedicalWithAppointmentCanViewPatientByUserId(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        $this->seedAppointment($medicalId, $patientId);
-
-        session()->set('roleId', Role::MEDICAL);
-        session()->set('userId', $medicalUserId);
-
-        $result = $this->filter->before($this->requestFor("patients/user/{$patientUserId}"));
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testUnknownPatientByUserIdReturns404(): void
-    {
-        session()->set('roleId', Role::MEDICAL);
-        session()->set('userId', 1);
-
-        $result = $this->filter->before($this->requestFor('patients/user/999999'));
-
-        $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-        $this->assertSame(404, $result->getStatusCode());
-    }
 }

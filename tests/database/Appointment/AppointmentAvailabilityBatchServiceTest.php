@@ -86,7 +86,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
         $patientUserId = $this->db->insertID();
 
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $patientUserId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
         $patientId = $this->db->insertID();

@@ -5,8 +5,8 @@ use Exception;
 
 class PatientAlreadyExistsException extends Exception
 {
-    public function __construct(int $userId)
+    public function __construct(int $dni)
     {
-        parent::__construct("El usuario con ID {$userId} ya tiene un perfil de paciente", 409);
+        parent::__construct("Ya existe un paciente con el DNI {$dni}", 409);
     }
 }

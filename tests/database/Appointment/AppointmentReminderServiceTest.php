@@ -84,7 +84,7 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         ]);
         $medicalId = $this->db->insertID();
 
-        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'user_id' => $patientUser, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => "paciente-{$tag}@test.com", 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
         $patientId = $this->db->insertID();
 
         $this->db->table('appointments')->insert([
@@ -110,7 +110,7 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
 
     public function testPatientsWithoutEmailAreLeftOutOfTheReminders(): void
     {
-        $this->db->table('users')->where('email', 'paciente-a@test.com')->update(['email' => null]);
+        $this->db->table('patients')->where('email', 'paciente-a@test.com')->update(['email' => null]);
 
         TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
 

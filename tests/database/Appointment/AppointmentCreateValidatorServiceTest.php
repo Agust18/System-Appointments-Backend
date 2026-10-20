@@ -3,15 +3,13 @@
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentRequest;
 use App\Exception\Appointment\AppointmentInPastException;
-use App\Exception\Appointment\CannotCreateAppointmentForOtherPatientException;
 use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Exception\Appointment\InvalidInitialStatusException;
 use App\Exception\Appointment\MedicalCannotCreateAppointmentException;
 use App\Exception\Appointment\MedicalNotAvailableException;
 use App\Exception\Appointment\MedicalServiceNotOfferedException;
-use App\Exception\Appointment\PatientCannotBeMedicalException;
 use App\Exception\Appointment\ServiceNotAvailableException;
-use App\Exception\Patient\UserNotPatientException;
+use App\Exception\Patient\PatientNotFoundException;
 use App\Services\Appointment\Validations\AppointmentCreateValidatorService;
 
 require_once __DIR__ . '/BookingServiceTestCase.php';
@@ -63,7 +61,7 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         ]);
         $userId = (int) $this->db->insertID();
 
-        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => 1, 'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
 
         return [(int) $this->db->insertID(), $userId];
     }
@@ -135,42 +133,8 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
     }
 
-    public function testPatientCanCreateOwnConfirmedAppointment(): void
-    {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService();
-        $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
-        [$patientId, $userId] = $this->seedPatientUser();
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $userId);
 
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'confirmed'));
-        $this->addToAssertionCount(1);
-    }
 
-    public function testPatientCannotCreateWithNonConfirmedStatus(): void
-    {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService();
-        $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
-        [$patientId, $userId] = $this->seedPatientUser();
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $userId);
-
-        $this->expectException(InvalidInitialStatusException::class);
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId, '09:00', 'pending'));
-    }
-
-    public function testPatientCannotCreateForAnotherPatient(): void
-    {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService();
-        $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
-        [$otherPatientId] = $this->seedPatientUser();
-        [, $myUserId] = $this->seedPatientUser();
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $myUserId);
-
-        $this->expectException(CannotCreateAppointmentForOtherPatientException::class);
-        $this->validator->validate($this->request($medicalId, $otherPatientId, $serviceId, '09:00', 'confirmed'));
-    }
 
     // --------------------------------------------------------------- médico
 
@@ -190,28 +154,15 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
 
     // ------------------------------------------------------------- paciente
 
-    public function testPatientUserWithoutPatientRoleIsRejected(): void
-    {
-        [$medicalId, $serviceId] = $this->seedMedicalWithService();
-        $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
-        [$patientId] = $this->seedPatientUser(null);
 
-        $this->expectException(UserNotPatientException::class);
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId));
-    }
 
-    public function testMedicalCannotBeTheirOwnPatient(): void
+    public function testUnknownPatientIsRejected(): void
     {
         [$medicalId, $serviceId] = $this->seedMedicalWithService();
         $this->seedSchedule($medicalId, 1, '09:00:00', '12:00:00');
 
-        $medicalUserId = (int) $this->db->table('medicals')->where('id', $medicalId)->get()->getRow()->user_id;
-        $this->db->table('users')->where('id', $medicalUserId)->update(['role_id' => Role::PATIENT]);
-        $this->db->table('patients')->insert(['tenant_id' => 1, 'user_id' => $medicalUserId, 'birth_date' => '1980-01-01']);
-        $patientId = (int) $this->db->insertID();
-
-        $this->expectException(PatientCannotBeMedicalException::class);
-        $this->validator->validate($this->request($medicalId, $patientId, $serviceId));
+        $this->expectException(PatientNotFoundException::class);
+        $this->validator->validate($this->request($medicalId, 999999, $serviceId));
     }
 
     // ---------------------------------------------------------------- fecha

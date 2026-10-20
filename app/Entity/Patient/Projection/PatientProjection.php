@@ -8,7 +8,6 @@ final class PatientProjection
 {
     public function __construct(
         private int $id,
-        private int $userId,
         private string $pacienteNombre,
         private ?string $phone,
         private ?string $dni,
@@ -22,10 +21,6 @@ final class PatientProjection
     public function getId(): ?int
     {
         return $this->id;
-    }
-    public function getUserId(): int
-    {
-        return $this->userId;
     }
     public function getPacienteNombre(): string
     {

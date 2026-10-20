@@ -6,22 +6,18 @@ use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentFilterRequest;
 use App\Dto\Request\PaginationRequest;
 use App\Exception\Medical\MedicalNotFoundExceptionByUserException;
-use App\Exception\Patient\PatientNotFoundExceptionByUserException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\Medical\MedicalModel;
-use App\Models\Patient\PatientModel;
 
 final class AppointmentStatsService
 {
     private AppointmentModel $appointmentModel;
     private MedicalModel $medicalModel;
-    private PatientModel $patientModel;
 
     public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
         $this->medicalModel = new MedicalModel();
-        $this->patientModel = new PatientModel();
     }
 
     public function getStats(int $roleId, int $userId, ?string $fecha = null): array
@@ -38,13 +34,6 @@ final class AppointmentStatsService
             $medicalId = $medical->getId();
         }
 
-        if ($roleId === Role::PATIENT) {
-            $patient = $this->patientModel->findByUserId($userId);
-            if ($patient === null) {
-                throw new PatientNotFoundExceptionByUserException($userId);
-            }
-            $patientId = $patient->getId();
-        }
 
         $filters = new AppointmentFilterRequest(
             pagination: new PaginationRequest(1, 10),

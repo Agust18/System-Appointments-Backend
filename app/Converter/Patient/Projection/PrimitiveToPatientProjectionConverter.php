@@ -11,7 +11,6 @@ final class PrimitiveToPatientProjectionConverter
     {
         return new PatientProjection(
             id: $primitive->id,
-            userId: $primitive->user_id,
             pacienteNombre: $primitive->paciente_nombre,
             phone: $primitive->phone ?? null,
             dni: $primitive->dni ?? null,
