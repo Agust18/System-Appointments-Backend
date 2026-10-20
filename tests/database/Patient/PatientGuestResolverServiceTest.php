@@ -1,7 +1,7 @@
 <?php
 
 use App\Constants\Role;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Entity\Tenant\Tenant;
 use App\Exception\Patient\PublicBookingIdentityException;
 use App\Exception\Patient\PublicIdentityLockTimeoutException;
@@ -67,15 +67,15 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         string $email = 'nuevo@test.com',
         string $phone = self::PHONE,
         string $firstName = 'Juana'
-    ): PublicPatientRequest {
+    ): GuestPatientRequest {
         // Nombre único: el down() de ReplaceUsernameWithFirstLastName reconstruye
         // users.username (UNIQUE) desde nombre + apellido al refrescar la base.
-        return new PublicPatientRequest($firstName . '_' . uniqid(), 'Pérez', $email, $phone, $dni);
+        return new GuestPatientRequest($firstName . '_' . uniqid(), 'Pérez', $email, $phone, $dni);
     }
 
     private function seedUser(
         int $dni = self::DNI,
-        string $email = 'existente@test.com',
+        ?string $email = 'existente@test.com',
         ?string $phone = self::PHONE,
         ?int $roleId = Role::PATIENT,
         bool $active = true,
@@ -180,6 +180,26 @@ final class PatientGuestResolverServiceTest extends CIUnitTestCase
         $this->seeNumRecords(1, 'patients', []);
         $this->assertSame($before, $this->db->table('users')->where('id', $userId)->get()->getRowArray());
         $this->assertIdentityLockReleased();
+    }
+
+    public function testUserWithoutEmailGetsTheTypedEmailWhenThePhoneMatches(): void
+    {
+        $userId = $this->seedUser(self::DNI, null);
+
+        $this->resolver->resolve($this->request(self::DNI, 'nuevo@test.com'));
+
+        $this->seeInDatabase('users', ['id' => $userId, 'email' => 'nuevo@test.com']);
+    }
+
+    public function testUserWithoutEmailBooksButKeepsNoEmailWhenTheTypedOneIsTaken(): void
+    {
+        $this->seedUser(40123456, 'ocupado@test.com', '1144440000');
+        $userId = $this->seedUser(self::DNI, null);
+
+        $patient = $this->resolver->resolve($this->request(self::DNI, 'ocupado@test.com'));
+
+        $this->assertNotNull($patient->getId());
+        $this->seeInDatabase('users', ['id' => $userId, 'email' => null]);
     }
 
     public function testStoredPhoneWithSeparatorsStillMatches(): void

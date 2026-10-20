@@ -72,6 +72,7 @@ final class PermissionsService
         return false;
     }
 
+    
     public function canCancelAppointment(int $roleId, int $userId, Appointment $appointment): bool
     {
         if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
@@ -82,7 +83,7 @@ final class PermissionsService
             $patient = $this->patientModel->findByUserId($userId);
             return $patient !== null
                 && $appointment->getPatientId() === $patient->getId()
-                && $appointment->getStatus() === 'pending';
+                && $appointment->getStatus() === 'confirmed';
         }
 
         return false;

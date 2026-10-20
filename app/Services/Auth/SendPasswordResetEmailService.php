@@ -1,36 +1,34 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
 use App\Dto\Request\Email\EmailRequest;
 use App\Email\EmailSenderService;
-use App\Email\User\UserEmailTemplateRendererPassword;
+use App\Email\User\AccountActivationEmailTemplate;
+use App\Email\User\PasswordResetEmailTemplate;
 use App\Entity\User\User;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 
 final class SendPasswordResetEmailService
 {
     private PasswordResetTokenService $tokenService;
-    /** @var callable(EmailRequest): mixed */
-    private $sender;
-    private UserEmailTemplateRendererPassword $templateRenderer;
+    private PasswordResetEmailTemplate $resetTemplate;
+    private AccountActivationEmailTemplate $activationTemplate;
     private TenantEmailSettingsResolverService $settingsResolver;
+    private EmailSenderService $emailSender;
 
-    /**
-     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
-     *        por defecto envía con EmailSenderService.
-     */
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
-        $this->settingsResolver = new TenantEmailSettingsResolverService();
-        $this->tokenService = new PasswordResetTokenService();
-        $this->sender = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
-        $this->templateRenderer = new UserEmailTemplateRendererPassword();
+        $this->settingsResolver   = new TenantEmailSettingsResolverService();
+        $this->tokenService       = new PasswordResetTokenService();
+        $this->resetTemplate      = new PasswordResetEmailTemplate();
+        $this->activationTemplate = new AccountActivationEmailTemplate();
+        $this->emailSender        = new EmailSenderService();
     }
 
     public function send(User $user): void
     {
-        // Antes del token: sin frontend_url no se genera uno que quede huérfano.
+      
         $frontendUrl = $this->settingsResolver->frontendUrl();
 
         $token = $this->tokenService->generateForUser($user->getId());
@@ -39,17 +37,19 @@ final class SendPasswordResetEmailService
         // Sin contraseña no hay nada que "restablecer": el mismo link sirve para crear la cuenta.
         if ($user->hasAccount()) {
             $subject = 'Restablecer contraseña';
-            $body = $this->templateRenderer->renderPasswordResetBody($user, $url);
+            $body = $this->resetTemplate->render($user, $url);
         } else {
             $subject = 'Activá tu cuenta';
-            $body = $this->templateRenderer->renderAccountActivationBody($user, $url);
+            $body = $this->activationTemplate->render($user, $url);
         }
 
-        ($this->sender)(new EmailRequest(
+        $request = new EmailRequest(
             to: $user->getEmail(),
             subject: $subject,
             body: $body,
             replyTo: $this->settingsResolver->replyTo(),
-        ));
+        );
+
+        $this->emailSender->send($request);
     }
 }

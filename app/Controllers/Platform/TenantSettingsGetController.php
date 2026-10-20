@@ -6,9 +6,7 @@ use App\Services\Platform\Tenant\TenantSettingsFinderService;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-/**
- * GET /platform/tenants/{id}/settings: configuración completa del Tenant (datos internos incluidos).
- */
+
 final class TenantSettingsGetController extends ResourceController
 {
     private TenantSettingsFinderService $tenantSettingsFinderService;

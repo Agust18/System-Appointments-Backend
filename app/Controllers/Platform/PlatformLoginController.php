@@ -33,6 +33,9 @@ final class PlatformLoginController extends ResourceController
 
         $parameters = (object) $parameters;
 
-        return new PlatformLoginRequest($parameters->email, $parameters->password);
+        return new PlatformLoginRequest(
+            $parameters->email,
+            $parameters->password
+        );
     }
 }

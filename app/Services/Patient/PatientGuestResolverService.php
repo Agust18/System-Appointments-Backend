@@ -3,7 +3,7 @@ namespace App\Services\Patient;
 
 use App\Constants\Role;
 use App\Dto\Request\Patient\PatientDataRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Entity\Patient\Patient;
 use App\Entity\User\User;
 use App\Exception\Patient\PatientCannotBeCreatedException;
@@ -18,27 +18,6 @@ use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Database;
 
-/**
- * Resuelve el paciente de una reserva pública: reutiliza el que ya existe o
- * crea un usuario sin cuenta (password NULL) con su paciente. Nunca modifica
- * los datos de un usuario existente.
- *
- * Reglas (el teléfono es el segundo factor que acompaña al DNI):
- *  - A. DNI y email nuevos: se crea usuario sin cuenta + paciente.
- *  - B/E. DNI existente y teléfono coincide: se usa su paciente.
- *  - D. DNI existente, teléfono coincide, sin paciente: se crea el paciente.
- *  - B'. DNI existente con otro teléfono, sin teléfono, de otro rol o inactivo: se rechaza.
- *  - C. DNI nuevo pero el email es de otro usuario: se rechaza.
- * B' y C devuelven la misma excepción para no revelar cuál de las dos ocurrió.
- *
- * Los rechazos por teléfono se cuentan por DNI (PublicIdentityAttemptLimiter): al llegar al
- * límite el DNI queda bloqueado y se responde lo mismo sin consultar la base.
- *
- * Tiene su propio lock + transacción. NO debe llamarse desde dentro de otra
- * transacción: AppointmentSlotLockService libera su GET_LOCK en un `finally`, y
- * con transacciones anidadas (el commit interno no commitea) liberaría el lock
- * antes del commit real. La reserva del turno corre después, por separado.
- */
 final class PatientGuestResolverService
 {
     private const LOCK_TIMEOUT_SECONDS = 10;
@@ -57,7 +36,7 @@ final class PatientGuestResolverService
         $this->attemptLimiter = new PublicIdentityAttemptLimiter();
     }
 
-    public function resolve(PublicPatientRequest $request): Patient
+    public function resolve(GuestPatientRequest $request): Patient
     {
         // DNI bloqueado por demasiados teléfonos incorrectos: mismo 409 neutral, sin tocar la base.
         if ($this->attemptLimiter->isBlocked($request->getDni())) {
@@ -90,13 +69,17 @@ final class PatientGuestResolverService
 
             // Una solicitud concurrente con el mismo email (otro DNI) pasó el chequeo y
             // ganó el UNIQUE: para quien reserva es el caso C.
-            throw $isDuplicate ? new PublicBookingIdentityException() : $e;
+            if ($isDuplicate) {
+                throw new PublicBookingIdentityException();
+            }
+
+            throw $e;
         } finally {
             $this->releaseLock($lockName);
         }
     }
 
-    private function findOrCreate(PublicPatientRequest $request): Patient
+    private function findOrCreate(GuestPatientRequest $request): Patient
     {
         $user = $this->userModel->findByDni($request->getDni());
 
@@ -105,7 +88,7 @@ final class PatientGuestResolverService
             : $this->reuseExistingIdentity($user, $request);
     }
 
-    private function createNewIdentity(PublicPatientRequest $request): Patient
+    private function createNewIdentity(GuestPatientRequest $request): Patient
     {
         if ($this->userModel->findByEmail($request->getEmail()) !== null) {
             $this->reject('email_belongs_to_other_user', $request);
@@ -123,7 +106,7 @@ final class PatientGuestResolverService
         return $this->createPatient($user->getId());
     }
 
-    private function reuseExistingIdentity(User $user, PublicPatientRequest $request): Patient
+    private function reuseExistingIdentity(User $user, GuestPatientRequest $request): Patient
     {
         if ($user->getRoleId() !== Role::PATIENT) {
             $this->reject('dni_belongs_to_non_patient', $request);
@@ -141,14 +124,30 @@ final class PatientGuestResolverService
             $this->reject('phone_mismatch', $request);
         }
 
+        $this->completeMissingEmail($user, $request);
+
         return $this->patientModel->findByUserId($user->getId()) ?? $this->createPatient($user->getId());
+    }
+
+    /**
+     * Paciente cargado sin email por recepción: DNI y teléfono ya coincidieron, así que se guarda
+     * el email que escribió. Si ese email es de otro usuario, el turno se reserva igual sin guardarlo.
+     */
+    private function completeMissingEmail(User $user, GuestPatientRequest $request): void
+    {
+        if ($user->hasEmail() || $this->userModel->findByEmail($request->getEmail()) !== null) {
+            return;
+        }
+
+        $user->completeEmail($request->getEmail());
+        $this->userModel->update($user);
     }
 
     /**
      * Un usuario sin teléfono guardado nunca coincide: completarlo desde la reserva
      * pública permitiría apropiarse de un DNI ajeno conociendo solo el DNI.
      */
-    private function phoneMatches(User $user, PublicPatientRequest $request): bool
+    private function phoneMatches(User $user, GuestPatientRequest $request): bool
     {
         $storedPhone = IdentityNormalizer::phone($user->getPhone());
 
@@ -160,7 +159,7 @@ final class PatientGuestResolverService
         return $this->patientModel->insert(Patient::fromRequest($userId, new PatientDataRequest(null)));
     }
 
-    private function reject(string $reason, PublicPatientRequest $request): never
+    private function reject(string $reason, GuestPatientRequest $request): never
     {
         // DNI hasheado: el log no debe contener datos personales.
         log_message('notice', sprintf(

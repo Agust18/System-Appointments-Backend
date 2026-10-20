@@ -6,14 +6,18 @@ Para enviar: instanciar `EmailRequest` (destinatario, asunto, cuerpo HTML) y
 llamar a `EmailSenderService::send()`. Si falla, lanza
 `EmailCannotBeSendedException` (500).
 
-Templates HTML: `UserEmailTemplateRenderer` y `UserEmailTemplateRendererPassword`
-en `app/Email/User/`.
+Templates HTML: una clase por mail, con un único `render()`.
+- `app/Email/User/`: `EmailVerificationEmailTemplate`, `PasswordResetEmailTemplate`,
+  `AccountActivationEmailTemplate` (reset para usuarios con cuenta, activación para los
+  que no tienen contraseña; `SendPasswordResetEmailService` elige con `hasAccount()`).
+- `app/Email/Platform/`: `TenantAdminWelcomeEmailTemplate`.
+- `app/Email/Appointment/`: ver "Avisos de turnos".
 
 ## Verificación de email
 
 El flag `isVerified` (parámetro `$isVerified` en los Creator Services) decide
 si el usuario nace verificado y si se dispara el email de verificación
-(`SendVerificationEmailService`, `app/Services/auth/`).
+(`SendVerificationEmailService`, `app/Services/Auth/`).
 
 | Endpoint | Controller | `isVerified` | Envía email |
 |---|---|---|---|
@@ -32,6 +36,17 @@ Si el DNI es de un usuario sin cuenta (mismo email guardado, rol paciente, activ
 `PatientPublicRegisterService` fija la contraseña del body (solo la contraseña; nombre y
 teléfono no se tocan), crea el paciente si falta y envía el mismo email de verificación
 (el usuario queda `is_verified = 0` y no puede iniciar sesión hasta verificar).
+Si ese usuario **no tiene email** (lo cargó recepción sin email), se le guarda el del body
+(`409` si es de otro usuario) y el link de verificación va a ese email.
+
+## Pacientes sin email
+
+`users.email` admite NULL, pero **solo el alta de pacientes por panel** (`POST /patients`)
+lo deja vacío; el resto de los flujos lo sigue exigiendo (los médicos y el personal inician
+sesión con él). A un paciente sin email no se le envía nada: `AppointmentEmailDispatcherService`
+ignora un destinatario `null` y `findUpcomingIn24Hours()` lo excluye del recordatorio. El aviso
+a recepción no cambia. El email se completa después desde el panel (`PUT /patients/{id}`; no se
+puede borrar: un `""` se normaliza a `null` y no cambia nada), la reserva pública o el registro.
 
 ### Por qué es intencional
 
@@ -50,12 +65,17 @@ consultorio, así que nacen verificados y no requieren el paso extra.
 - Un Tenant nuevo nace con `frontend_url` NULL: hay que cargarlo con `PUT /platform/tenants/{id}/settings` antes de que sus usuarios se registren o pidan reset.
 - Tests: los que llegan a esos envíos siembran la config con `Tests\Support\Database\SeedsTenantEmailSettings`.
 
-## Avisos de turnos (`AppointmentNotificationService`)
+## Avisos de turnos (`app/Services/Appointment/Notification/`)
 
-| Método | Quién lo llama | Emails |
+Un Service por aviso. Todos terminan en `AppointmentEmailDispatcherService::send()`, que agrega el `replyTo` del Tenant y loguea sin cortar el flujo si el envío falla. Las plantillas HTML (una por mail, con un único `render()`) viven en `app/Email/Appointment/`.
+
+| Service (`notify()`) | Quién lo llama | Emails |
 |---|---|---|
-| `notifyOnCreate()` | `AppointmentCreatorService` (admin/recepción/paciente logueado) | Paciente: "Tu turno fue confirmado" (solo si nace `confirmed`) |
-| `notifyOnPublicCreate()` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
+| `AppointmentConfirmedNotificationService` | `AppointmentCreatorService` (admin/recepción/paciente logueado) y `AppointmentUpdateNotificationService` | Paciente: "Tu turno fue confirmado" (solo si el turno está `confirmed`) |
+| `PublicAppointmentCreatedNotificationService` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
+| `AppointmentUpdateNotificationService` | `AppointmentUpdaterService` (`PUT /appointments/{id}`) | Decide según el estado previo: cancelado, confirmado o reprogramado (fecha, hora o médico distintos). Recibe el turno **sin modificar** |
+| `AppointmentCancelledNotificationService` / `AppointmentRescheduledNotificationService` | `AppointmentUpdateNotificationService` | Paciente: "Tu turno fue cancelado" / "Tu turno fue reprogramado" |
+| `AppointmentReminderService` | `SendAppointmentRemindersCommand` | Recordatorio 24 h antes (`ReminderEmailTemplate`). Tiene su propio envío porque cuenta los fallos por turno |
 
 Un turno público se identifica por el servicio que lo crea, no por un campo ni por el status
 (un turno de admin también puede nacer `confirmed`). El email al paciente va al email

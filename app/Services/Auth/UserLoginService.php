@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
 use App\Converter\User\UserToUserResponseConverter;
 use App\Dto\Request\Auth\UserLoginRequest;

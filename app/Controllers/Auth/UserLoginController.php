@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\UserLoginRequest;
-use App\Services\auth\UserLoginService;
+use App\Services\Auth\UserLoginService;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;

@@ -4,41 +4,25 @@ namespace App\Services\Appointment;
 use App\Dto\Request\Appointment\AppointmentAvailabilityRequest;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
-use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
-use App\Services\Appointment\Validations\AppointmentAvailabilityDateValidatorService;
-use App\Services\Appointment\Validations\AppointmentAvailabilityQueryValidatorService;
-use App\Services\Appointment\Validations\AppointmentServiceOfferValidatorService;
-use App\Exception\Appointment\MedicalNotAvailableException;
-use App\Services\Medical\MedicalFinderService;
-use App\Services\User\UserFinderService;
+use App\Services\Appointment\Validations\AppointmentAvailabilityValidatorService;
+use App\Services\Appointment\Validations\AppointmentMedicalActiveValidatorService;
 
 final class AppointmentAvailabilityService
 {
     private MedicalScheduleModel $medicalScheduleModel;
-    private ServiceModel $serviceModel;
-    private MedicalServiceModel $medicalServiceModel;
     private AppointmentModel $appointmentModel;
-    private AppointmentAvailabilityQueryValidatorService $queryValidator;
-    private AppointmentAvailabilityDateValidatorService $dateValidator;
-    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
-    private ServiceDurationCalculatorService $durationCalculator;
+    private AppointmentAvailabilityValidatorService $validator;
+    private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
+    private ServiceBlockResolverService $blockResolver;
     private SlotGeneratorService $slotGenerator;
-    private MedicalFinderService $medicalFinderService;
-    private UserFinderService $userFinderService;
 
     public function __construct()
     {
-        $this->medicalFinderService = new MedicalFinderService();
-        $this->userFinderService = new UserFinderService();
         $this->medicalScheduleModel = new MedicalScheduleModel();
-        $this->serviceModel = new ServiceModel();
-        $this->medicalServiceModel = new MedicalServiceModel();
         $this->appointmentModel = new AppointmentModel();
-        $this->queryValidator = new AppointmentAvailabilityQueryValidatorService();
-        $this->dateValidator = new AppointmentAvailabilityDateValidatorService();
-        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
-        $this->durationCalculator = new ServiceDurationCalculatorService();
+        $this->validator = new AppointmentAvailabilityValidatorService();
+        $this->medicalActiveValidator = new AppointmentMedicalActiveValidatorService();
+        $this->blockResolver = new ServiceBlockResolverService();
         $this->slotGenerator = new SlotGeneratorService();
     }
 
@@ -53,22 +37,15 @@ final class AppointmentAvailabilityService
         $serviceId = $request->getServiceId();
         $fecha = $request->getFecha();
 
-        $this->queryValidator->validate($medicalId, $serviceId);
-        $this->dateValidator->validate($fecha);
+        $this->validator->validateQuery($medicalId, $serviceId);
+        $this->validator->validateDate($fecha);
+        $this->validator->validateExcludeAppointmentId($request->getRawExcludeAppointmentId());
 
         //médico con usuario inactivo no ofrece horarios (mismo criterio que el alta del turno).
-        $medical = $this->medicalFinderService->find($medicalId);
-        if (!$this->userFinderService->find($medical->getUserId())->getIsActive()) {
-            throw new MedicalNotAvailableException();
-        }
+        $this->medicalActiveValidator->validate($medicalId);
 
-        //obtiene el servicio y la asignación del médico, y valida que estén disponibles
-        $service = $this->serviceModel->find($serviceId);
-        $medicalService = $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId);
-        $this->serviceOfferValidator->validate($service, $medicalService);
-
-        //calcula duración efectiva del servicio y bloque total
-        $duration = $this->durationCalculator->calculate($service, $medicalService);
+        //valida que el servicio esté disponible y calcula duración efectiva y bloque total
+        $duration = $this->blockResolver->resolve($medicalId, $serviceId);
 
         //obtiene rangos activos de atención para el día de la semana
         $dayOfWeek = (int) date('N', strtotime($fecha));
@@ -78,7 +55,7 @@ final class AppointmentAvailabilityService
             return [];
         }
 
-        $existingAppointments = $this->appointmentModel->findActiveHoursByMedicalAndFecha($medicalId, $fecha);
+        $existingAppointments = $this->appointmentModel->findActiveHoursByMedicalAndFecha($medicalId, $fecha, $request->getExcludeAppointmentId());
 
         return $this->slotGenerator->generate(
             $activeRanges,

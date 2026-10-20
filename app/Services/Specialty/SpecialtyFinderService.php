@@ -22,7 +22,7 @@ final class SpecialtyFinderService
     {
         $specialty = $this->specialtyModel->find($id);
 
-        if (!$specialty) {
+        if ($specialty === null) {
             throw new SpecialtyNotFoundException($id);
         }
 

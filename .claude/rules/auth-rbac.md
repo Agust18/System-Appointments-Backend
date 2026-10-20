@@ -3,9 +3,25 @@
 ## Roles (`app/Constants/Role.php`)
 ADMIN=1, MEDICAL=2, PATIENT=3, RECEPTION=4.
 
+## Los roles no tienen CRUD
+No existe `/roles`: la tabla `roles` es global (sin `tenant_id`) y un rol sin
+código que lo respalde no tiene funciones. Los roles los agrega el
+desarrollador, en un mismo cambio:
+1. Constante en `App\Constants\Role` **y** su entrada en `Role::NAMES` (id => nombre).
+   `RolesSeeder` y `Role::isValid()` leen de `NAMES`: es la única lista.
+2. Sembrarlo: `php spark db:seed RolesSeeder` (o una migración). La FK
+   `users.role_id` apunta a `roles.id`.
+3. Constante y etiqueta en `constants/role.js` del frontend (`ROLES` + `ROLE_OPTIONS`).
+4. Permisos: Filters y `PermissionsService`.
+
+El `roleId` al crear/editar usuarios se valida en memoria con
+`Role::isValid()` (`RoleNotFoundException`, 404); no consulta la tabla. Por eso
+**el seeder tiene que correr en el deploy**: sin la fila, el `INSERT` falla por
+la FK y responde `UserCannotBeCreatedException` (500).
+
 ## Cómo funciona el token
 El filter `Auth` (`app/Filters/Auth.php`) lee el header `HTTP_AUTHORIZATION`,
-lo valida con `TokenValidatorService` y guarda en sesión:
+lo valida con `AuthTokenValidatorService` y guarda en sesión:
 - `session()->get('userId')`
 - `session()->get('roleId')` (usar constantes de `App\Constants\Role`)
 
@@ -19,7 +35,7 @@ que los Filters cortan la cadena con Response, no con excepciones).
 | `auth` | Cualquier usuario autenticado |
 | `adminOnly` | Solo ADMIN |
 | `adminOrReception` | ADMIN o RECEPTION. Antes existía `receptionUserCreate` como filtro separado para `POST /patients`, pero se unificó acá al comprobarse que eran funcionalmente idénticos (mismo chequeo de rol, mismo 403); no verifica coherencia entre el recurso y el `roleId` del body (eso se valida fail-fast en `PatientQuickCreatorService`/`MedicalQuickCreatorService`, ver abajo) |
-| `appointmentPermission` | Admin/recepción sin restricción; paciente solo cancela su turno pendiente (vía `PermissionsService::canCancelAppointment()`); médico solo modifica sus propios turnos (vía `PermissionsService::canEditAppointment()`), nunca elimina |
+| `appointmentPermission` | Admin/recepción sin restricción; paciente solo cancela su turno `confirmed` (vía `PermissionsService::canCancelAppointment()`; el validator exige que mande solo `status: cancelled` y que el turno no haya pasado); médico solo modifica sus propios turnos (vía `PermissionsService::canEditAppointment()`), nunca elimina |
 | `appointmentCreatePermission` | ADMIN, RECEPTION y PATIENT pueden crear turnos; MEDICAL no |
 | `appointmentViewPermission` | Admin/recepción sin restricción; paciente/médico solo ven turnos propios, vía `PermissionsService::canViewAppointment()` |
 | `medicalViewPermission` | Admin/recepción sin restricción; paciente puede ver cualquier médico por `/medicals/{id}` pero **no** por `/medicals/user/{userId}` (esa ruta es solo para que el médico consulte su propio perfil — asimetría intencional); médico solo ve su propio perfil por cualquiera de las dos rutas |
@@ -74,4 +90,4 @@ rutas en el futuro, hay que ajustar el trait en un solo lugar.
 ## Namespaces
 - `app/Controllers/Auth/` — login, verify-email, forgot-password, reset-password. No siguen CRUD estándar.
 - `app/Controllers/User/` — CRUD de usuarios (adminOnly).
-- `app/Services/auth/` (minúscula) — Services de auth (login, token validation, verificación, reset).
+- `app/Services/Auth/` — Services de auth (login, token validation, verificación, reset).

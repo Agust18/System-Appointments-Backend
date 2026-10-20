@@ -5,6 +5,8 @@ namespace App\Services\Appointment;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentFilterRequest;
 use App\Dto\Request\PaginationRequest;
+use App\Exception\Medical\MedicalNotFoundExceptionByUserException;
+use App\Exception\Patient\PatientNotFoundExceptionByUserException;
 use App\Models\Appointment\AppointmentModel;
 use App\Models\Medical\MedicalModel;
 use App\Models\Patient\PatientModel;
@@ -27,14 +29,21 @@ final class AppointmentStatsService
         $medicalId = null;
         $patientId = null;
 
+        // Sin fila propia el filtro quedaría en null (= sin filtro): falla cerrado.
         if ($roleId === Role::MEDICAL) {
             $medical = $this->medicalModel->findByUserId($userId);
-            $medicalId = $medical?->getId();
+            if ($medical === null) {
+                throw new MedicalNotFoundExceptionByUserException($userId);
+            }
+            $medicalId = $medical->getId();
         }
 
         if ($roleId === Role::PATIENT) {
             $patient = $this->patientModel->findByUserId($userId);
-            $patientId = $patient?->getId();
+            if ($patient === null) {
+                throw new PatientNotFoundExceptionByUserException($userId);
+            }
+            $patientId = $patient->getId();
         }
 
         $filters = new AppointmentFilterRequest(

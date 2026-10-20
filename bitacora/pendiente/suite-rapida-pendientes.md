@@ -3,7 +3,7 @@
 - **Estado:** ⏳ Pendiente (la mejora principal ya está hecha)
 - **Repo:** backend
 - **Fecha:** 07/10/2026
-- **Relacionado:** `multitenant-traspaso.md` (sección 0), `suite-lenta-refactor-tests.md`
+- **Relacionado:** historial de `multitenant-traspaso.md` en git (sección 0), `suite-lenta-refactor-tests.md`
 
 ## Qué se hizo
 `tests/_support/Database/FastDatabaseTestTrait.php` reemplaza a `DatabaseTestTrait` en 33 archivos (los 32 que lo usaban directo más `BookingServiceTestCase`, que cubre a sus 8 subclases). Rollback + migrate completo una vez por clase y cada vez que la huella del esquema (columnas, tipos, nulabilidad, índices) no coincide; entre tests solo `TRUNCATE` de datos y reinserción del Tenant 1 (`demo`). Las 3 clases que alteran el esquema a mano conservan `DatabaseTestTrait` y refresh completo (`PatientSchemaMigrationTest`, `NormalizeUserIdentityMigrationTest`, `AddTenantIdToAppointmentsAndTokensMigrationTest`). No se tocó ninguna migración.

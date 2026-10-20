@@ -3,7 +3,7 @@
 namespace App\Services\Appointment;
 
 use App\Dto\Request\Email\EmailRequest;
-use App\Email\Appointment\AppointmentEmailTemplateRenderer;
+use App\Email\Appointment\ReminderEmailTemplate;
 use App\Email\EmailSenderService;
 use App\Entity\Tenant\Tenant;
 use App\Models\Appointment\AppointmentModel;
@@ -12,37 +12,23 @@ use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Tenancy\TenantContext;
 use Throwable;
 
-/**
- * Recordatorios por email de los turnos de las próximas 24 horas.
- *
- * Corre sin request (CLI), así que no hay Tenant: recorre los Tenants activos (los suspendidos se
- * saltean), fija el TenantContext de cada uno, envía solo los turnos de ese Tenant y lo limpia al
- * terminar (restaura el que hubiera antes). Un fallo en un envío o en un Tenant se registra y no
- * corta a los demás.
- */
+
 final class AppointmentReminderService
 {
     private AppointmentModel $appointmentModel;
     private TenantModel $tenantModel;
-    private AppointmentEmailTemplateRenderer $renderer;
-    /** @var callable(EmailRequest): mixed */
-    private $sender;
+    private ReminderEmailTemplate $template;
+    private EmailSenderService $emailSender;
 
-    /**
-     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
-     *        por defecto envía con EmailSenderService.
-     */
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->appointmentModel = new AppointmentModel();
         $this->tenantModel      = new TenantModel();
-        $this->renderer         = new AppointmentEmailTemplateRenderer();
-        $this->sender           = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
+        $this->template         = new ReminderEmailTemplate();
+        $this->emailSender      = new EmailSenderService();
     }
 
-    /**
-     * @return list<array{tenant: Tenant, found: int, sent: int, errors: int, failures: list<string>}>
-     */
+    
     public function sendToAllActiveTenants(): array
     {
         $results = [];
@@ -63,18 +49,17 @@ final class AppointmentReminderService
                     'failures' => ["No se pudo procesar el Tenant: {$e->getMessage()}"],
                 ];
             } finally {
-                $previous !== null ? TenantContext::set($previous) : TenantContext::clear();
+                if ($previous !== null) {
+                    TenantContext::set($previous);
+                } else {
+                    TenantContext::clear();
+                }
             }
         }
 
         return $results;
     }
 
-    /**
-     * Envía los recordatorios del Tenant que esté en el TenantContext.
-     *
-     * @return array{found: int, sent: int, errors: int, failures: list<string>}
-     */
     public function sendForCurrentTenant(): array
     {
         $appointments = $this->appointmentModel->findUpcomingIn24Hours();
@@ -82,17 +67,20 @@ final class AppointmentReminderService
         $sent     = 0;
         $failures = [];
 
-        // Una instancia por Tenant: el resolver guarda la fila que lee.
-        $replyTo = (new TenantEmailSettingsResolverService())->replyTo();
+        // Una instancia por Tenant: lee la configuración del Tenant actual del TenantContext.
+        $settingsResolver = new TenantEmailSettingsResolverService();
+        $replyTo = $settingsResolver->replyTo();
 
         foreach ($appointments as $projection) {
             try {
-                ($this->sender)(new EmailRequest(
-                    to:      $projection->getEmail(),
+                $request = new EmailRequest(
+                    to: $projection->getEmail(),
                     subject: 'Recordatorio: tenés un turno mañana',
-                    body:    $this->renderer->renderReminderBody($projection),
+                    body: $this->template->render($projection),
                     replyTo: $replyTo,
-                ));
+                );
+
+                $this->emailSender->send($request);
                 $sent++;
             } catch (Throwable $e) {
                 log_message('error', "Recordatorio del turno {$projection->getId()} no enviado: {$e->getMessage()}");

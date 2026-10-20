@@ -9,3 +9,5 @@
 ## Detalle
 
 - ✅ **R6 — Booking atómico extraído**: nuevo Service delegado `AppointmentSlotLockService::run()` (lock `GET_LOCK` + transacción + validación de servicio + bloque + solapamiento + persistencia inyectada). `AppointmentBookingService` y `AppointmentUpdateBookingService` quedan como adaptadores finos. 22 tests de caracterización escritos antes del refactor (`tests/database/Appointment/`), idénticos antes y después. Suite: 242 tests OK. Endpoints verificados a mano: POST 200, PUT 200, solapamiento 409.
+
+- **Actualización 09/10/2026:** `AppointmentSlotLockService` y `AppointmentUpdateBookingService` se fusionaron en `AppointmentBookingService` (`book()` / `reschedule()` sobre un `runLocked()` privado). Ver [refactor de Services de Appointment](refactor-services-appointment.md).

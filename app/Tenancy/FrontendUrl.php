@@ -2,19 +2,11 @@
 
 namespace App\Tenancy;
 
-/**
- * URL base del frontend de un Tenant (la que arma los links de los emails). Solo se admite un
- * origen: esquema + host + puerto opcional. Sin userinfo (`https://sur.com@evil.com`), path, query
- * ni fragment, porque los emails le agregan su propio path.
- */
 final class FrontendUrl
 {
     public const MAX_LENGTH = 255;
 
-    /**
-     * La URL normalizada (esquema y host en minúsculas, sin `/` final) o null si no es válida.
-     * `http` solo se acepta con $allowHttp (fuera de producción).
-     */
+    
     public static function normalize(string $url, bool $allowHttp): ?string
     {
         $url = trim($url);

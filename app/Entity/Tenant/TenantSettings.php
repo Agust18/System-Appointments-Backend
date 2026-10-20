@@ -14,24 +14,36 @@ final class TenantSettings
         private ?string $frontendUrl,
         private ?string $receptionEmail,
         private bool $receptionEmailEnabled,
-        private ?string $primaryColor,
-        private ?string $secondaryColor,
+        private ?string $contactPhone,
+        private ?string $contactWhatsapp,
+        private ?string $contactEmail,
+        private ?string $address,
+        private ?string $openingHours,
+        private bool $landingEnabled,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {}
 
-    /**
-     * Configuración inicial de un Tenant recién creado: el nombre visible parte del nombre del
-     * Tenant, `frontend_url` es el que se pide en el alta y todo lo demás queda sin configurar.
-     */
+
     public static function defaultsFor(Tenant $tenant, ?string $frontendUrl = null): self
     {
-        return new self($tenant->getId(), $tenant->getName(), null, $frontendUrl, null, true, null, null, new DateTime(), new DateTime());
+        return new self(
+            $tenant->getId(),
+            $tenant->getName(),
+            null, $frontendUrl,
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            new DateTime(),
+            new DateTime()
+        );
     }
 
-    /**
-     * Aplica solo los campos presentes en el request (ya validado por TenantSettingsUpdateValidatorService).
-     */
     public function modify(TenantSettingsUpdateRequest $request): void
     {
         if ($request->has('name')) {
@@ -51,14 +63,23 @@ final class TenantSettings
         if ($request->has('receptionEmailEnabled')) {
             $this->receptionEmailEnabled = $request->getReceptionEmailEnabled();
         }
-
-        if ($request->has('primaryColor')) {
-            $color = $request->getPrimaryColor();
-            $this->primaryColor = $color === null ? null : strtoupper($color);
+        if ($request->has('contactPhone')) {
+            $this->contactPhone = $request->getContactPhone();
         }
-        if ($request->has('secondaryColor')) {
-            $color = $request->getSecondaryColor();
-            $this->secondaryColor = $color === null ? null : strtoupper($color);
+        if ($request->has('contactWhatsapp')) {
+            $this->contactWhatsapp = $request->getContactWhatsapp();
+        }
+        if ($request->has('contactEmail')) {
+            $this->contactEmail = $request->getContactEmail();
+        }
+        if ($request->has('address')) {
+            $this->address = $request->getAddress();
+        }
+        if ($request->has('openingHours')) {
+            $this->openingHours = $request->getOpeningHours();
+        }
+        if ($request->has('landingEnabled')) {
+            $this->landingEnabled = $request->getLandingEnabled();
         }
 
         $this->updatedAt = new DateTime();
@@ -94,14 +115,34 @@ final class TenantSettings
         return $this->receptionEmailEnabled;
     }
 
-    public function getPrimaryColor(): ?string
+    public function getContactPhone(): ?string
     {
-        return $this->primaryColor;
+        return $this->contactPhone;
     }
 
-    public function getSecondaryColor(): ?string
+    public function getContactWhatsapp(): ?string
     {
-        return $this->secondaryColor;
+        return $this->contactWhatsapp;
+    }
+
+    public function getContactEmail(): ?string
+    {
+        return $this->contactEmail;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getOpeningHours(): ?string
+    {
+        return $this->openingHours;
+    }
+
+    public function isLandingEnabled(): bool
+    {
+        return $this->landingEnabled;
     }
 
     public function getCreatedAt(): ?DateTime

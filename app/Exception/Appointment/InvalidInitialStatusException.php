@@ -7,6 +7,6 @@ class InvalidInitialStatusException extends Exception
 {
     public function __construct(string $rol)
     {
-        parent::__construct("Los {$rol} solo pueden crear turnos con estado \"Pendiente\"", 403);
+        parent::__construct("Los {$rol} solo pueden crear turnos con estado \"Confirmado\"", 403);
     }
 }

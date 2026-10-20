@@ -1,17 +1,11 @@
 <?php
 namespace App\Dto\Request\Appointment;
 
-use App\Dto\Request\Patient\PublicPatientRequest;
-
-/**
- * Reserva de turno sin cuenta. No tiene `status` ni `patientId`: el estado lo fija
- * el servicio y el paciente se resuelve a partir de la identidad declarada.
- * `hora` se espera como HH:MM (el formato de los slots de disponibilidad).
- */
+use App\Dto\Request\Patient\GuestPatientRequest;
 final readonly class PublicAppointmentRequest
 {
     public function __construct(
-        private PublicPatientRequest $patient,
+        private GuestPatientRequest $patient,
         private int $medicalId,
         private int $serviceId,
         private string $fecha,
@@ -19,7 +13,7 @@ final readonly class PublicAppointmentRequest
         private ?string $nota = null,
     ) {}
 
-    public function getPatient(): PublicPatientRequest
+    public function getPatient(): GuestPatientRequest
     {
         return $this->patient;
     }
@@ -51,12 +45,9 @@ final readonly class PublicAppointmentRequest
 
     public static function rules(): array
     {
-        return array_merge(PublicPatientRequest::rules(), [
+        return array_merge(GuestPatientRequest::rules(), [
             'medicalId' => 'required|is_natural_no_zero',
             'serviceId' => 'required|is_natural_no_zero',
-            // Largo exacto: sin él "2026-10-5" o "9:30" pasarían valid_date, y el nombre del lock
-            // del booking (appt_lock_{id}_{fecha}) y la comparación de horas por string dependen
-            // del formato canónico con ceros.
             'fecha'     => 'required|exact_length[10]|valid_date[Y-m-d]',
             'hora'      => 'required|exact_length[5]|valid_date[H:i]',
             'nota'      => 'permit_empty|string|max_length[500]',
@@ -65,7 +56,7 @@ final readonly class PublicAppointmentRequest
 
     public static function messages(): array
     {
-        return array_merge(PublicPatientRequest::messages(), [
+        return array_merge(GuestPatientRequest::messages(), [
             'medicalId' => [
                 'required'           => 'Elegí el profesional que te va a atender.',
                 'is_natural_no_zero' => 'El profesional no es válido.',

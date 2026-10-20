@@ -74,7 +74,7 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
         ]);
     }
 
-    private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): void
+    private function seedAppointment(int $medicalId, string $fecha, string $hora, string $horaFin): int
     {
         $this->db->table('users')->insert(['tenant_id' => 1,
             'first_name' => 'paciente_' . uniqid(),
@@ -99,6 +99,8 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
             'hora_fin'   => $horaFin,
             'status'     => 'confirmed',
         ]);
+
+        return (int) $this->db->insertID();
     }
 
     public function testFourteenDayRangeOnlyIncludesAttendedDaysAndExcludesOverlaps(): void
@@ -125,6 +127,34 @@ final class AppointmentAvailabilityBatchServiceTest extends CIUnitTestCase
 
         // segundo lunes: sin turnos, todos los slots libres
         $this->assertSame(['09:00', '09:30', '10:00'], $response->data['2026-11-09']);
+    }
+
+    public function testExcludeAppointmentIdFreesTheOwnSlotInRange(): void
+    {
+        [$medicalId, $serviceId] = $this->seedMedicalWithService(30, 0);
+        $from = '2026-11-02'; // lunes
+        $to = '2026-11-09';
+        $this->seedSchedule($medicalId, 1, '09:00:00', '10:30:00');
+
+        $propio = $this->seedAppointment($medicalId, $from, '09:30:00', '10:00:00');
+        $this->seedAppointment($medicalId, $to, '09:00:00', '09:30:00');
+
+        $sin = $this->service->getAvailableSlotsBatch(new AppointmentAvailabilityBatchRequest($medicalId, $serviceId, $from, $to));
+        $this->assertSame(['09:00', '10:00'], $sin->data[$from]);
+
+        $con = $this->service->getAvailableSlotsBatch(new AppointmentAvailabilityBatchRequest($medicalId, $serviceId, $from, $to, $propio));
+        $this->assertSame(['09:00', '09:30', '10:00'], $con->data[$from]);
+        $this->assertSame(['09:30', '10:00'], $con->data[$to]); // el turno ajeno sigue ocupando
+    }
+
+    public function testInvalidExcludeAppointmentIdThrowsValidationException(): void
+    {
+        try {
+            $this->service->getAvailableSlotsBatch(new AppointmentAvailabilityBatchRequest(1, 1, '2026-11-02', '2026-11-03', 0));
+            $this->fail('Se esperaba ValidationException.');
+        } catch (ValidationException $e) {
+            $this->assertSame(['excludeAppointmentId'], array_keys($e->getErrors()));
+        }
     }
 
     public function testAttendedDayWithoutFreeSlotsAppearsAsEmptyArray(): void

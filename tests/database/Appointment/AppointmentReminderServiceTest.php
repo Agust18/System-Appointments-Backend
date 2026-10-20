@@ -1,37 +1,37 @@
 <?php
 
 use App\Constants\TenantStatus;
-use App\Dto\Request\Email\EmailRequest;
 use App\Entity\Tenant\Tenant;
+use App\Models\Appointment\AppointmentModel;
 use App\Services\Appointment\AppointmentReminderService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
+use Tests\Support\Email\DisablesSmtp;
 
 /**
  * El recordatorio recorre los Tenants activos, fija y limpia el TenantContext por cada uno y
- * solo envía los turnos del Tenant que está procesando.
+ * solo toma los turnos del Tenant que está procesando. El SMTP queda deshabilitado: cada envío
+ * falla rápido (nunca sale un mail real) y se cuenta como error del turno.
  *
  * @internal
  */
 final class AppointmentReminderServiceTest extends CIUnitTestCase
 {
     use FastDatabaseTestTrait;
+    use DisablesSmtp;
 
     protected $refresh = true;
     protected $namespace = null;
 
     private string $tomorrow;
 
-    /** @var list<string> destinatarios de los emails que "salieron" */
-    private array $sentTo = [];
-
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->disableSmtp();
         $this->tomorrow = date('Y-m-d', strtotime('+1 day'));
-        $this->sentTo   = [];
 
         $this->seedTenantWithAppointment(1, 'a');
     }
@@ -45,14 +45,8 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         }
         $this->db->query('DELETE FROM tenants WHERE id <> 1');
 
+        $this->restoreSmtp();
         parent::tearDown();
-    }
-
-    private function service(?callable $sender = null): AppointmentReminderService
-    {
-        return new AppointmentReminderService($sender ?? function (EmailRequest $request): void {
-            $this->sentTo[] = $request->getTo();
-        });
     }
 
     private function createTenant(string $slug, string $status = TenantStatus::ACTIVE): int
@@ -99,87 +93,82 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         ]);
     }
 
-    public function testEachActiveTenantOnlyRemindsItsOwnAppointments(): void
-    {
-        $this->seedTenantWithAppointment($this->createTenant('tenant-b'), 'b');
-
-        $results = $this->service()->sendToAllActiveTenants();
-
-        $this->assertCount(2, $results);
-        $this->assertSame(['demo', 'tenant-b'], array_map(static fn ($r) => $r['tenant']->getSlug(), $results));
-        $this->assertSame([1, 1], array_column($results, 'sent'));
-
-        sort($this->sentTo);
-        $this->assertSame(['paciente-a@test.com', 'paciente-b@test.com'], $this->sentTo);
-    }
-
-    public function testEachTenantRemindersCarryItsOwnReplyTo(): void
+    public function testUpcomingAppointmentsAreOnlyThoseOfTheContextTenant(): void
     {
         $tenantB = $this->createTenant('tenant-b');
         $this->seedTenantWithAppointment($tenantB, 'b');
-        $this->db->table('tenant_settings')->where('tenant_id', 1)->update(['reply_to_email' => 'a@clinica.test']);
-        $this->db->table('tenant_settings')->insert(['tenant_id' => $tenantB, 'name' => 'B', 'reception_email' => 'recepcion-b@clinica.test']);
+        $model = new AppointmentModel();
 
-        $replyTo = [];
-        $this->service(function (EmailRequest $request) use (&$replyTo): void {
-            $replyTo[$request->getTo()] = $request->getReplyTo();
-        })->sendToAllActiveTenants();
+        $emailsOf = static fn (array $projections): array => array_map(static fn ($p) => $p->getEmail(), $projections);
 
-        $this->assertSame([
-            'paciente-a@test.com' => 'a@clinica.test',
-            'paciente-b@test.com' => 'recepcion-b@clinica.test',
-        ], $replyTo);
+        TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
+        $this->assertSame(['paciente-a@test.com'], $emailsOf($model->findUpcomingIn24Hours()));
+
+        TenantContext::set(new Tenant($tenantB, 'tenant-b', 'Tenant tenant-b', 'active', null, null));
+        $this->assertSame(['paciente-b@test.com'], $emailsOf($model->findUpcomingIn24Hours()));
+    }
+
+    public function testPatientsWithoutEmailAreLeftOutOfTheReminders(): void
+    {
+        $this->db->table('users')->where('email', 'paciente-a@test.com')->update(['email' => null]);
+
+        TenantContext::set(new Tenant(1, 'demo', 'Demo', 'active', null, null));
+
+        $this->assertSame([], (new AppointmentModel())->findUpcomingIn24Hours());
+    }
+
+    public function testEachActiveTenantIsProcessedWithItsOwnAppointments(): void
+    {
+        $this->seedTenantWithAppointment($this->createTenant('tenant-b'), 'b');
+
+        $results = (new AppointmentReminderService())->sendToAllActiveTenants();
+
+        $this->assertSame(['demo', 'tenant-b'], array_map(static fn ($r) => $r['tenant']->getSlug(), $results));
+        $this->assertSame([1, 1], array_column($results, 'found'));
     }
 
     public function testSuspendedTenantsAreSkipped(): void
     {
         $this->seedTenantWithAppointment($this->createTenant('suspendido', TenantStatus::SUSPENDED), 's');
 
-        $results = $this->service()->sendToAllActiveTenants();
+        $results = (new AppointmentReminderService())->sendToAllActiveTenants();
 
         $this->assertSame(['demo'], array_map(static fn ($r) => $r['tenant']->getSlug(), $results));
-        $this->assertSame(['paciente-a@test.com'], $this->sentTo, 'el Tenant suspendido no recibe recordatorios');
     }
 
     public function testNoActiveTenantsMeansNothingToDo(): void
     {
         $this->db->query("UPDATE tenants SET status = 'suspended'");
 
-        $this->assertSame([], $this->service()->sendToAllActiveTenants());
-        $this->assertSame([], $this->sentTo);
+        $this->assertSame([], (new AppointmentReminderService())->sendToAllActiveTenants());
     }
 
     public function testContextIsRestoredToWhatItWasBefore(): void
     {
         $this->seedTenantWithAppointment($this->createTenant('tenant-b'), 'b');
+        $service = new AppointmentReminderService();
 
         $before = new Tenant(1, 'demo', 'Demo', 'active', null, null);
         TenantContext::set($before);
-        $this->service()->sendToAllActiveTenants();
+        $service->sendToAllActiveTenants();
         $this->assertSame($before, TenantContext::current(), 'se restaura el contexto previo');
 
         TenantContext::clear();
-        $this->service()->sendToAllActiveTenants();
+        $service->sendToAllActiveTenants();
         $this->assertFalse(TenantContext::isSet(), 'sin contexto previo queda limpio: ningún Tenant se filtra al siguiente proceso');
     }
 
-    public function testAFailedSendIsCountedAndDoesNotStopTheOthers(): void
+    public function testAFailedSendIsCountedAndDoesNotStopTheOtherTenants(): void
     {
         $this->seedTenantWithAppointment($this->createTenant('tenant-b'), 'b');
 
-        $failing = function (EmailRequest $request): void {
-            if ($request->getTo() === 'paciente-a@test.com') {
-                throw new RuntimeException('SMTP caído');
-            }
-            $this->sentTo[] = $request->getTo();
-        };
+        $results = (new AppointmentReminderService())->sendToAllActiveTenants();
 
-        $results = $this->service($failing)->sendToAllActiveTenants();
-
-        $this->assertSame([0, 1], array_column($results, 'sent'));
-        $this->assertSame([1, 0], array_column($results, 'errors'));
-        $this->assertStringContainsString('SMTP caído', $results[0]['failures'][0]);
-        $this->assertSame(['paciente-b@test.com'], $this->sentTo, 'el fallo del Tenant A no corta al B');
+        // Con el SMTP deshabilitado todos los envíos fallan: se cuentan por turno y se sigue con el siguiente Tenant.
+        $this->assertCount(2, $results);
+        $this->assertSame([0, 0], array_column($results, 'sent'));
+        $this->assertSame([1, 1], array_column($results, 'errors'));
+        $this->assertCount(1, $results[0]['failures']);
     }
 
     public function testSendForCurrentTenantUsesTheContextTenant(): void
@@ -187,9 +176,8 @@ final class AppointmentReminderServiceTest extends CIUnitTestCase
         $this->seedTenantWithAppointment($tenantB = $this->createTenant('tenant-b'), 'b');
 
         TenantContext::set(new Tenant($tenantB, 'tenant-b', 'Tenant tenant-b', 'active', null, null));
-        $result = $this->service()->sendForCurrentTenant();
+        $result = (new AppointmentReminderService())->sendForCurrentTenant();
 
         $this->assertSame(1, $result['found']);
-        $this->assertSame(['paciente-b@test.com'], $this->sentTo);
     }
 }

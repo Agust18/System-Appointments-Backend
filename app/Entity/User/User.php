@@ -12,7 +12,7 @@ final class User
         private ?int $id,
         private string $firstName,
         private string $lastName,
-        private string $email,
+        private ?string $email,
         private ?string $phone,
         private ?string $password,
         private int $dni,
@@ -65,11 +65,7 @@ final class User
      */
     public function completeAsAccountless(UserUpdaterRequest $request): void
     {
-        $this->firstName = $request->getFirstName() ?? $this->firstName;
-        $this->lastName = $request->getLastName() ?? $this->lastName;
-        $this->email = $request->getEmail() ?? $this->email;
-        $this->phone = $request->getPhone() ?? $this->phone;
-        $this->password = $request->getPassword() ? password_hash($request->getPassword(), PASSWORD_BCRYPT) : $this->password;
+        $this->modify($request);
         $this->isVerified = true;
     }
 
@@ -107,9 +103,25 @@ final class User
         return trim("{$this->firstName} {$this->lastName}");
     }
 
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function hasEmail(): bool
+    {
+        return $this->email !== null;
+    }
+
+    /*
+      Un paciente cargado sin email lo completa desde la web (reserva o registro).
+      Nunca reemplaza un email que ya tenía.
+     */
+    public function completeEmail(string $email): void
+    {
+        if ($this->email === null) {
+            $this->email = $email;
+        }
     }
 
     public function getPhone(): ?string

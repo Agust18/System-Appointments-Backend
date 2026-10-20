@@ -2,6 +2,7 @@
 namespace App\Dto\Request\Patient;
 
 use App\Dto\Request\User\UserUpdaterRequest;
+use App\Validation\IdentityRules;
 
 final readonly class PatientUpdateRequest
 {
@@ -38,10 +39,7 @@ final readonly class PatientUpdateRequest
         return $this->email;
     }
 
-    /**
-     * Datos de contacto del paciente, que viven en users. Devuelve null si el
-     * request no trae ninguno, para no tocar al usuario.
-     */
+  
     public function toUserUpdaterRequest(): ?UserUpdaterRequest
     {
         if ($this->firstName === null && $this->lastName === null && $this->phone === null && $this->email === null) {
@@ -60,35 +58,19 @@ final readonly class PatientUpdateRequest
     {
         return [
             'birthDate' => 'permit_empty|valid_date[Y-m-d]',
-            'firstName' => 'permit_empty|min_length[2]|max_length[100]',
-            'lastName'  => 'permit_empty|min_length[2]|max_length[100]',
-            'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
-            'email'     => 'permit_empty|valid_email',
+            'firstName' => IdentityRules::optional(IdentityRules::FIRST_NAME),
+            'lastName'  => IdentityRules::optional(IdentityRules::LAST_NAME),
+            'phone'     => IdentityRules::optional(IdentityRules::PHONE),
+            'email'     => IdentityRules::optional(IdentityRules::EMAIL),
         ];
     }
 
     public static function messages(): array
     {
-        return [
+        return array_merge(IdentityRules::messages(), [
             'birthDate' => [
                 'valid_date' => 'La fecha debe tener el formato Y-m-d (por ejemplo, 1990-05-20).',
             ],
-            'firstName' => [
-                'min_length' => 'El nombre es muy corto.',
-                'max_length' => 'El nombre es muy largo.',
-            ],
-            'lastName' => [
-                'min_length' => 'El apellido es muy corto.',
-                'max_length' => 'El apellido es muy largo.',
-            ],
-            'phone' => [
-                'is_natural' => 'El teléfono solo puede tener números.',
-                'min_length' => 'El número de teléfono es muy corto.',
-                'max_length' => 'El número de teléfono es muy largo.',
-            ],
-            'email' => [
-                'valid_email' => 'Ese email no es válido.',
-            ],
-        ];
+        ]);
     }
 }

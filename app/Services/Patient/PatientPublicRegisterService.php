@@ -7,9 +7,10 @@ use App\Dto\Request\Patient\PatientRequest;
 use App\Dto\Response\Patient\PatientResponse;
 use App\Entity\Patient\Patient;
 use App\Entity\User\User;
+use App\Exception\User\EmailAlreadyRegisteredException;
 use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use CodeIgniter\Database\BaseConnection;
@@ -61,6 +62,16 @@ final class PatientPublicRegisterService
         $this->db->transBegin();
 
         try {
+            // Paciente cargado sin email: se registra con el que escribe. El link de verificación
+            // va a ese email, así que no puede entrar hasta probar que es suyo.
+            if (!$user->hasEmail()) {
+                $email = $request->getUserRequest()->getEmail();
+                if ($this->userModel->findByEmail($email) !== null) {
+                    throw new EmailAlreadyRegisteredException();
+                }
+                $user->completeEmail($email);
+            }
+
             $user->setPasswordFromRegistration($request->getUserRequest()->getPassword());
             $this->userModel->update($user);
 
@@ -91,7 +102,7 @@ final class PatientPublicRegisterService
             || $user->hasAccount()
             || $user->getRoleId() !== Role::PATIENT
             || !$user->getIsActive()
-            || $user->getEmail() !== $userRequest->getEmail()
+            || ($user->hasEmail() && $user->getEmail() !== $userRequest->getEmail())
         ) {
             return null;
         }

@@ -4,7 +4,6 @@ use App\Dto\Request\Appointment\AppointmentFilterRequest;
 use App\Dto\Request\Medical\MedicalFilterRequest;
 use App\Dto\Request\MedicalSchedule\MedicalScheduleFilterRequest;
 use App\Dto\Request\PaginationRequest;
-use App\Dto\Request\Role\RoleFilterRequest;
 use App\Dto\Request\Service\ServiceFilterRequest;
 use App\Dto\Request\Specialty\SpecialtyFilterRequest;
 use App\Dto\Request\User\UserFilterRequest;
@@ -32,7 +31,6 @@ final class FilterRequestValidationTest extends CIUnitTestCase
             'patients'         => [PatientFilterRequest::class],
             'services'         => [ServiceFilterRequest::class],
             'specialties'      => [SpecialtyFilterRequest::class],
-            'roles'            => [RoleFilterRequest::class],
             'medicalSchedules' => [MedicalScheduleFilterRequest::class],
         ];
     }

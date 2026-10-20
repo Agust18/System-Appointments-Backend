@@ -1,7 +1,7 @@
 <?php
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Exception\Validation\ValidationException;
 use App\Validation\RequestValidator;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -51,7 +51,7 @@ final class PublicAppointmentRequestValidationTest extends CIUnitTestCase
     {
         $this->assertSame(
             [],
-            array_diff_key(PublicPatientRequest::rules(), PublicAppointmentRequest::rules())
+            array_diff_key(GuestPatientRequest::rules(), PublicAppointmentRequest::rules())
         );
     }
 
@@ -124,7 +124,7 @@ final class PublicAppointmentRequestValidationTest extends CIUnitTestCase
 
     public function testGettersExposeTheData(): void
     {
-        $patient = new PublicPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456);
+        $patient = new GuestPatientRequest('Juana', 'Pérez', 'juana@example.com', '2325506499', 30123456);
         $request = new PublicAppointmentRequest($patient, 1, 2, '2026-10-05', '09:30', 'Nota');
 
         $this->assertSame($patient, $request->getPatient());

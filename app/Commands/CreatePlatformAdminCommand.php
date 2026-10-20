@@ -11,11 +11,7 @@ use App\Validation\RequestValidator;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
-/**
- * Único camino para crear un platform_admin (no hay endpoint: nadie tendría con qué autenticarse
- * para usarlo). La contraseña no se pasa por argumento para que no quede en el historial del shell:
- * se pide por prompt, o se genera con --generate-password y se muestra una sola vez.
- */
+
 class CreatePlatformAdminCommand extends BaseCommand
 {
     protected $group       = 'Platform';
@@ -72,10 +68,7 @@ class CreatePlatformAdminCommand extends BaseCommand
         return EXIT_SUCCESS;
     }
 
-    /**
-     * Con `php spark` las opciones se leen con CLI::getOption(); con el helper `command()` (tests)
-     * llegan dentro de $params.
-     */
+    
     private function option(array $params, string $name): ?string
     {
         $value = $params[$name] ?? CLI::getOption($name);

@@ -13,7 +13,7 @@ use App\Exception\User\MissingRoleIdException;
 use App\Exception\User\RoleMismatchException;
 use App\Models\Patient\PatientModel;
 use App\Models\User\UserModel;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Patient\Validations\PatientCreateValidatorService;
 use App\Services\Patient\Validations\PatientUpdateValidatorService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
@@ -71,9 +71,6 @@ final class PatientCreatorService
         $this->db->transBegin();
 
         try {
-            // Solo el alta de recepción (isVerified) reutiliza un usuario sin cuenta que
-            // ya existía por una reserva pública. El registro público nunca lo hace acá:
-            // se resuelve en PatientPublicRegisterService, que no acepta contraseñas.
             $accountless = $isVerified ? $this->findAccountlessPatientUser($request) : null;
 
             if ($accountless !== null) {
@@ -118,11 +115,7 @@ final class PatientCreatorService
         return $user;
     }
 
-    /**
-     * Completa los datos de un usuario sin cuenta (y de su paciente, si ya tenía)
-     * en lugar de crear otros. Una cuenta real nunca llega acá: su DNI sigue
-     * dando 409 (DniAlreadyRegisteredException) y se edita con PUT.
-     */
+   
     private function completeAccountlessPatient(User $user, PatientRequest $request): Patient
     {
         $userRequest = $request->getUserRequest();

@@ -1,10 +1,13 @@
 <?php
 namespace App\Dto\Request\User;
+
+use App\Validation\IdentityRules;
+
 final readonly class UserRequest{
     public function __construct(
         private string $firstName,
         private string $lastName,
-        private string $email,
+        private ?string $email,
         private ?string $phone,
         private ?string $password,
         private int $dni,
@@ -23,10 +26,13 @@ final readonly class UserRequest{
         return $this->lastName;
     }
 
-    public function getEmail():string
+    /**
+     * Null solo en el alta de pacientes por panel (PatientPostController): el resto
+     * de los flujos exige el email en sus reglas.
+     */
+    public function getEmail(): ?string
     {
         return $this->email;
-
     }
 
     public function getPhone(): ?string
@@ -59,56 +65,26 @@ final readonly class UserRequest{
     public static function rules(bool $passwordRequired = true): array
     {
         return [
-            'firstName' => 'required|min_length[2]|max_length[100]',
-            'lastName'  => 'required|min_length[2]|max_length[100]',
-            'email'     => 'required|valid_email',
-            'phone'     => 'permit_empty|is_natural|min_length[10]|max_length[15]',
-            'password'  => ($passwordRequired ? 'required' : 'permit_empty') . '|min_length[8]',
-            'dni'       => 'required|is_natural_no_zero|min_length[7]|max_length[8]',
+            'firstName' => IdentityRules::required(IdentityRules::FIRST_NAME),
+            'lastName'  => IdentityRules::required(IdentityRules::LAST_NAME),
+            'email'     => IdentityRules::required(IdentityRules::EMAIL),
+            'phone'     => IdentityRules::optional(IdentityRules::PHONE),
+            'password'  => $passwordRequired
+                ? IdentityRules::required(IdentityRules::PASSWORD)
+                : IdentityRules::optional(IdentityRules::PASSWORD),
+            'dni'       => IdentityRules::required(IdentityRules::DNI),
             'roleId'    => 'required|in_list[1,2,3,4]',
         ];
     }
 
     public static function messages(): array
     {
-        return [
-            'firstName' => [
-                'required'   => 'Ingresá el nombre.',
-                'min_length' => 'El nombre es muy corto.',
-                'max_length' => 'El nombre es muy largo.',
-            ],
-            'lastName' => [
-                'required'   => 'Ingresá el apellido.',
-                'min_length' => 'El apellido es muy corto.',
-                'max_length' => 'El apellido es muy largo.',
-            ],
-            'email' => [
-                'required'    => 'Ingresá un email.',
-                'valid_email' => 'Ese email no es válido.',
-            ],
-            'phone' => [
-                'is_natural' => 'El teléfono solo puede tener números.',
-                'min_length' => 'El número de teléfono es muy corto.',
-                'max_length' => 'El número de teléfono es muy largo.',
-            ],
-            'password' => [
-                'required'   => 'Ingresá una contraseña.',
-                'min_length' => 'La contraseña necesita al menos 8 caracteres.',
-            ],
-            'dni' => [
-                'required'           => 'Ingresá el DNI.',
-                'is_natural_no_zero' => 'El DNI no es válido.',
-                'min_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
-                'max_length'         => 'El DNI debe tener entre 7 y 8 dígitos.',
-            ],
+        return array_merge(IdentityRules::messages(), [
             'roleId' => [
                 'required' => 'Elegí un rol.',
                 'in_list'  => 'Elegí un rol válido.',
             ],
-        ];
+        ]);
     }
-
-
-
 }
 

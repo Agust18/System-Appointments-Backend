@@ -3,7 +3,7 @@
 namespace App\Controllers\Auth;
 
 use App\Dto\Request\Auth\ResendVerificationEmailRequest;
-use App\Services\auth\ResendVerificationEmailService;
+use App\Services\Auth\ResendVerificationEmailService;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;

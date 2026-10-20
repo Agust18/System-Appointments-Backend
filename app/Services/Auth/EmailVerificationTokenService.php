@@ -1,58 +1,23 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
-use App\Entity\UserToken\UserToken;
 use App\Exception\Auth\InvalidVerificationTokenException;
-use App\Models\UserToken\UserTokenModel;
-use DateTime;
 
-final class EmailVerificationTokenService
+final class EmailVerificationTokenService extends AbstractUserTokenService
 {
-    private const TYPE = 'email_verification';
-    private const TTL = '+24 hours';
-
-    private UserTokenModel $tokenModel;
-
-    public function __construct()
+    protected function getType(): string
     {
-        $this->tokenModel = new UserTokenModel();
+        return 'email_verification';
     }
 
-    public function generateForUser(int $userId): UserToken
+    protected function getTtl(): string
     {
-        $this->tokenModel->deleteByUserAndType($userId, self::TYPE);
-
-        $token = new UserToken(
-            null,
-            $userId,
-            bin2hex(random_bytes(32)),
-            self::TYPE,
-            new DateTime(self::TTL),
-            null,
-            new DateTime(),
-        );
-
-        return $this->tokenModel->insert($token);
+        return '+24 hours';
     }
 
-    public function validate(string $value): UserToken
-    {   
-         
-        $token = $this->tokenModel->findByToken($value);
-
-        if (!$token || $token->getType() !== self::TYPE || !$token->isValid()) {
-            throw new InvalidVerificationTokenException();
-        }
-        
-        return $token;
-    }
-
-    public function markAsUsed(UserToken $token): void
+    protected function getInvalidTokenException(): \Throwable
     {
-        $id = $token->getId();
-        if ($id !== null) {
-            $this->tokenModel->markAsUsed($id);
-        }
+        return new InvalidVerificationTokenException();
     }
 }

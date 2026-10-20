@@ -12,7 +12,7 @@ final readonly class AppointmentRequest
         private string $fecha,
         private string $hora,
         private ?string $nota,
-        private string $status = "pending",
+        private string $status = "confirmed",
     ) {
     }
 

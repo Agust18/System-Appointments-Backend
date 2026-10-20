@@ -45,28 +45,29 @@ final class TenantPostController extends ResourceController
         );
     }
 
-    /**
-     * El slug es el subdominio: se guarda en minúsculas y sin espacios. El email y el DNI del ADMIN
-     * se normalizan igual que en el alta de usuarios (IdentityNormalizer trabaja con las claves
-     * `email` y `dni`, acá se llaman `adminEmail` y `adminDni`).
-     */
     private function normalize(array $parameters): array
     {
         if (isset($parameters['slug']) && is_string($parameters['slug'])) {
             $parameters['slug'] = strtolower(trim($parameters['slug']));
         }
 
-        // Vacío = sin contraseña (el ADMIN la elige con el link del email de bienvenida).
         if (array_key_exists('adminPassword', $parameters) && ($parameters['adminPassword'] === '' || $parameters['adminPassword'] === null)) {
             unset($parameters['adminPassword']);
         }
 
-        if (isset($parameters['adminEmail']) && (is_string($parameters['adminEmail']) || is_int($parameters['adminEmail']))) {
-            $parameters['adminEmail'] = IdentityNormalizer::email((string) $parameters['adminEmail']);
+        $identity = array_filter([
+            'dni'   => $parameters['adminDni'] ?? null,
+            'email' => $parameters['adminEmail'] ?? null,
+        ], static fn ($value) => $value !== null);
+
+        $identity = IdentityNormalizer::normalizeInput($identity);
+
+        if (array_key_exists('dni', $identity)) {
+            $parameters['adminDni'] = $identity['dni'];
         }
 
-        if (isset($parameters['adminDni']) && (is_string($parameters['adminDni']) || is_int($parameters['adminDni']))) {
-            $parameters['adminDni'] = IdentityNormalizer::dni((string) $parameters['adminDni']);
+        if (array_key_exists('email', $identity)) {
+            $parameters['adminEmail'] = $identity['email'];
         }
 
         return $parameters;

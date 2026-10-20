@@ -1,7 +1,7 @@
 <?php
 
 use App\Dto\Request\Patient\PatientDataRequest;
-use App\Dto\Request\Patient\PatientPublicRegisterRequest;
+use App\Dto\Request\Patient\PatientSelfRegisterRequest;
 use App\Dto\Request\Patient\PatientUpdateRequest;
 use App\Exception\Validation\ValidationException;
 use App\Validation\RequestValidator;
@@ -110,7 +110,7 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
 
     public function testPublicRegisterValidPayloadPasses(): void
     {
-        RequestValidator::validate($this->validPublicRegisterPayload(), PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+        RequestValidator::validate($this->validPublicRegisterPayload(), PatientSelfRegisterRequest::rules(), PatientSelfRegisterRequest::messages());
         $this->addToAssertionCount(1);
     }
 
@@ -119,7 +119,7 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
         $payload = $this->validPublicRegisterPayload();
         $payload['dni'] = '7123456';
 
-        RequestValidator::validate($payload, PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+        RequestValidator::validate($payload, PatientSelfRegisterRequest::rules(), PatientSelfRegisterRequest::messages());
         $this->addToAssertionCount(1);
     }
 
@@ -129,7 +129,7 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
         unset($payload['firstName']);
 
         $this->expectException(ValidationException::class);
-        RequestValidator::validate($payload, PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+        RequestValidator::validate($payload, PatientSelfRegisterRequest::rules(), PatientSelfRegisterRequest::messages());
     }
 
     public function testPublicRegisterInvalidDniThrows422(): void
@@ -138,7 +138,7 @@ final class PatientDataRequestValidationTest extends CIUnitTestCase
         $payload['dni'] = 'abc123';
 
         try {
-            RequestValidator::validate($payload, PatientPublicRegisterRequest::rules(), PatientPublicRegisterRequest::messages());
+            RequestValidator::validate($payload, PatientSelfRegisterRequest::rules(), PatientSelfRegisterRequest::messages());
             $this->fail('Se esperaba ValidationException');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('dni', $e->getErrors());

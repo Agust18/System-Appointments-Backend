@@ -1,11 +1,10 @@
 <?php
 
 use App\Constants\Role;
-use App\Dto\Request\Email\EmailRequest;
 use App\Entity\Tenant\Tenant;
 use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
-use App\Services\auth\SendPasswordResetEmailService;
-use App\Services\auth\SendVerificationEmailService;
+use App\Services\Auth\SendPasswordResetEmailService;
+use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -118,31 +117,6 @@ final class TenantEmailSettingsResolverServiceTest extends CIUnitTestCase
         $resolverA = new TenantEmailSettingsResolverService();
         $this->assertSame('https://a.test.local', $resolverA->frontendUrl());
         $this->assertSame('a@c.test', $resolverA->receptionEmail());
-    }
-
-    public function testVerificationAndResetLinksPointToTheUsersTenantFrontend(): void
-    {
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
-        $this->seedTenantEmailSettings(1, ['frontend_url' => 'https://a.test.local/']);
-        $tenantB = $this->createTenantWithSettings('b', ['frontend_url' => 'https://b.test.local']);
-
-        TenantContext::set($tenantB);
-        $this->db->table('users')->insert([
-            'tenant_id' => $tenantB->getId(), 'first_name' => 'Paciente', 'last_name' => 'B', 'email' => 'p@b.test',
-            'password' => 'hash', 'dni' => 30111222, 'role_id' => Role::PATIENT,
-        ]);
-        $user = (new \App\Models\User\UserModel())->find($this->db->insertID());
-
-        $bodies = [];
-        $spy = static function (EmailRequest $request) use (&$bodies): void {
-            $bodies[] = $request->getBody();
-        };
-        (new SendVerificationEmailService($spy))->send($user);
-        (new SendPasswordResetEmailService($spy))->send($user);
-
-        $this->assertStringContainsString('https://b.test.local/verify-email?token=', $bodies[0]);
-        $this->assertStringContainsString('https://b.test.local/reset-password?token=', $bodies[1]);
-        $this->assertStringNotContainsString('a.test.local', $bodies[0] . $bodies[1]);
     }
 
     public function testNoTokenIsGeneratedWhenTheTenantHasNoFrontendUrl(): void

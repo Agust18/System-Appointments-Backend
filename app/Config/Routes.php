@@ -28,7 +28,7 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->get('services', 'Service\PublicServicesGetController::search', $publicRead);
     $routes->get('medicals/available', 'Medical\PublicMedicalsGetController::search', $publicRead);
     $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1', $publicRead);
-    $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability', $publicRead);
+    $routes->get('appointments/availability', 'Appointment\PublicAppointmentAvailabilityGetController::getAvailability', $publicRead);
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
 });
 
@@ -77,7 +77,7 @@ $routes->get("users", "User\UsersGetController::search", ['filter' => ['auth', '
 $routes->post('medicals', 'Medical\MedicalPostController::create',  ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('medicals/available', 'Medical\MedicalAvailableGetController::search', ['filter' => 'auth']);
 $routes->get('medicals/(:num)', 'Medical\MedicalGetController::find/$1',  ['filter' => ['auth', 'medicalViewPermission']]);
-$routes->put('medicals/(:num)', 'Medical\MedicalPutController::do/$1', ['filter' => ['auth', 'adminOnly']]);
+$routes->put('medicals/(:num)', 'Medical\MedicalPutController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 $routes->delete('medicals/(:num)', 'Medical\MedicalDeleteController::do/$1',  ['filter' => ['auth', 'adminOnly']]);
 $routes->get('medicals', 'Medical\MedicalsGetController::search', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('medicals/user/(:num)', 'Medical\MedicalGetController::findByUser/$1', ['filter' => ['auth', 'medicalViewPermission']]);
@@ -115,13 +115,6 @@ $routes->get('metrics/top-services', 'Metrics\MetricsTopServicesGetController::g
 $routes->get('metrics/top-specialties', 'Metrics\MetricsTopSpecialtiesGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('metrics/schedule-heatmap', 'Metrics\MetricsScheduleHeatmapGetController::get', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('metrics/recent-appointments', 'Metrics\MetricsRecentAppointmentsGetController::get', ['filter' => ['auth', 'adminOrReception']]);
-
-//roles
-$routes->post('roles', 'Role\RolePostController::create', ['filter' => ['auth', 'adminOnly']]);
-$routes->get('roles/(:num)', 'Role\RoleGetController::find/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->put('roles/(:num)', 'Role\RolePutController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->delete('roles/(:num)', 'Role\RoleDeleteController::do/$1', ['filter' => ['auth', 'adminOnly']]);
-$routes->get('roles', 'Role\RolesGetController::search', ['filter' => ['auth', 'adminOnly']]);
 
 
 // Medical Schedules

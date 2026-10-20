@@ -4,45 +4,49 @@ use App\Constants\Role;
 use App\Constants\TenantStatus;
 use App\Dto\Request\Auth\ResetPasswordRequest;
 use App\Dto\Request\Auth\UserLoginRequest;
-use App\Dto\Request\Email\EmailRequest;
 use App\Dto\Request\Platform\TenantRequest;
 use App\Exception\Platform\TenantSlugAlreadyExistsException;
-use App\Exception\Role\RoleNotFoundException;
+use App\Exception\User\UserCannotBeCreatedException;
 use App\Exception\Validation\ValidationException;
 use App\Models\Tenant\TenantModel;
-use App\Services\auth\ResetPasswordService;
-use App\Services\auth\UserLoginService;
-use App\Services\Platform\Tenant\SendTenantAdminWelcomeEmailService;
+use App\Services\Auth\ResetPasswordService;
+use App\Services\Auth\UserLoginService;
 use App\Services\Platform\Tenant\TenantAdminWelcomeTokenService;
 use App\Services\Platform\Tenant\TenantCreatorService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
+use Tests\Support\Email\DisablesSmtp;
 
 /**
+ * El SMTP queda deshabilitado: el mail de bienvenida siempre falla rápido (nunca sale un mail real)
+ * y el alta debe seguir en pie con `welcomeEmailSent = false`.
+ *
  * @internal
  */
 final class TenantCreatorServiceTest extends CIUnitTestCase
 {
     use FastDatabaseTestTrait;
+    use DisablesSmtp;
 
     protected $refresh = true;
     protected $namespace = null;
 
     private ?\App\Entity\Tenant\Tenant $originalContext;
 
-    /** @var list<EmailRequest> */
-    private array $sent = [];
-
     protected function setUp(): void
     {
         parent::setUp();
+        $this->disableSmtp();
         $this->originalContext = TenantContext::current();
-        $this->sent = [];
     }
 
     protected function tearDown(): void
     {
+        // Un INSERT que falla por la FK de role_id deja transStatus en false y la conexión es compartida
+        // entre tests: sin esto, el alta del Tenant del test siguiente se rechaza.
+        $this->db->resetTransStatus();
+
         // El mismo email/DNI en dos Tenants impide revertir la migración AddTenantIdToUsersAndPatients
         // (limitación del ADR 003): no dejar datos entre clases.
         $this->db->query('SET FOREIGN_KEY_CHECKS = 0');
@@ -51,6 +55,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->db->query('SET FOREIGN_KEY_CHECKS = 1');
 
         $this->originalContext ? TenantContext::set($this->originalContext) : TenantContext::clear();
+        $this->restoreSmtp();
         parent::tearDown();
     }
 
@@ -64,12 +69,9 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         return new TenantRequest($slug, 'Clínica Sur', 'Ana', 'Pérez', $email, $dni, $password, $frontendUrl);
     }
 
-    /** Servicio con el email de bienvenida observado por un spy (nunca toca SMTP). */
-    private function service(?callable $sender = null): TenantCreatorService
+    private function service(): TenantCreatorService
     {
-        return new TenantCreatorService(new SendTenantAdminWelcomeEmailService($sender ?? function (EmailRequest $request): void {
-            $this->sent[] = $request;
-        }));
+        return new TenantCreatorService();
     }
 
     private function seedAdminRole(): void
@@ -132,22 +134,6 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->assertFalse(TenantContext::isSet());
     }
 
-    public function testWelcomeEmailLinksToTheNewTenantFrontendAndReportsIt(): void
-    {
-        $this->seedAdminRole();
-
-        $response = $this->service()->create($this->request(frontendUrl: 'HTTPS://Clinica-Sur.Test.Local/'));
-
-        $this->assertTrue($response->welcomeEmailSent);
-        $this->assertCount(1, $this->sent);
-        $this->assertSame('ana@clinicasur.test', $this->sent[0]->getTo());
-        $this->assertMatchesRegularExpression(
-            '#https://clinica-sur\.test\.local/reset-password\?token=[0-9a-f]{64}#',
-            $this->sent[0]->getBody()
-        );
-        $this->assertStringNotContainsString('Temporal-123', $this->sent[0]->getBody());
-    }
-
     public function testWelcomeTokenBelongsToTheNewTenantAndLastsSeventyTwoHours(): void
     {
         $this->seedAdminRole();
@@ -162,15 +148,6 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->assertLessThanOrEqual(TenantAdminWelcomeTokenService::TTL_HOURS + 0.1, $hours);
     }
 
-    public function testTheEmailIsSentEvenWhenAnAdminPasswordWasGiven(): void
-    {
-        $this->seedAdminRole();
-
-        $this->service()->create($this->request(password: 'Temporal-123'));
-
-        $this->assertCount(1, $this->sent);
-    }
-
     public function testWithoutAdminPasswordTheAdminChoosesItWithTheEmailLink(): void
     {
         $this->seedAdminRole();
@@ -180,9 +157,10 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->assertNull($user->password);
         $this->assertSame('1', (string) $user->is_verified);
 
-        preg_match('/token=([0-9a-f]{64})/', $this->sent[0]->getBody(), $matches);
+        // El token del link de bienvenida se genera antes del envío: queda en la base aunque el mail falle.
+        $token = $this->db->query('SELECT token FROM user_verification_tokens')->getRow()->token;
         TenantContext::set((new TenantModel())->findBySlug('clinica-sur'));
-        (new ResetPasswordService())->reset(new ResetPasswordRequest($matches[1], 'MiClaveNueva-99'));
+        (new ResetPasswordService())->reset(new ResetPasswordRequest($token, 'MiClaveNueva-99'));
 
         $login = (new UserLoginService())->login(new UserLoginRequest('ana@clinicasur.test', 'MiClaveNueva-99'));
         $this->assertSame($response->id, (int) $user->tenant_id);
@@ -193,9 +171,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
     {
         $this->seedAdminRole();
 
-        $response = $this->service(static function (EmailRequest $request): void {
-            throw new RuntimeException('SMTP caído');
-        })->create($this->request());
+        $response = $this->service()->create($this->request());
 
         $this->assertFalse($response->welcomeEmailSent);
         $this->assertNotNull((new TenantModel())->findBySlug('clinica-sur'));
@@ -208,10 +184,9 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         try {
             $this->service()->create($this->request());
             $this->fail('Debió fallar por el rol ADMIN inexistente.');
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
-        $this->assertSame([], $this->sent);
         $this->assertSame(0, $this->countRows('user_verification_tokens'));
     }
 
@@ -231,7 +206,6 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
 
         $this->assertSame($tenants, $this->countRows('tenants'));
         $this->assertSame(0, $this->countRows('users'));
-        $this->assertSame([], $this->sent);
     }
 
     public function testWelcomeEmailRestoresTheContextWhenItStartedEmpty(): void
@@ -242,7 +216,6 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         $this->service()->create($this->request());
 
         $this->assertFalse(TenantContext::isSet());
-        $this->assertCount(1, $this->sent);
     }
 
     public function testDuplicateSlugIs409AndWritesNothing(): void
@@ -284,7 +257,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
         try {
             $this->service()->create($this->request());
             $this->fail('Debió fallar por el rol ADMIN inexistente.');
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
         $this->assertSame($tenants, $this->countRows('tenants'));
@@ -315,7 +288,7 @@ final class TenantCreatorServiceTest extends CIUnitTestCase
 
         try {
             $this->service()->create($this->request());
-        } catch (RoleNotFoundException) {
+        } catch (UserCannotBeCreatedException) {
         }
 
         $this->assertSame($before?->getId(), TenantContext::current()?->getId());

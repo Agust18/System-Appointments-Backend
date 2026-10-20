@@ -2,9 +2,7 @@
 
 namespace App\Dto\Request\Platform;
 
-/**
- * El slug no se modifica: es el subdominio del Tenant y el valor del header X-Tenant.
- */
+
 final readonly class TenantUpdateRequest
 {
     public function __construct(

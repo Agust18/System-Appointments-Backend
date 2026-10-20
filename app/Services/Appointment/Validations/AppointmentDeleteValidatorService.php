@@ -7,11 +7,7 @@ use DateTime;
 
 final class AppointmentDeleteValidatorService
 {
-
-
-    public function __construct()
-    {
-    }
+    public function __construct(){}
 
     public function validate(Appointment $appointment): void
     {

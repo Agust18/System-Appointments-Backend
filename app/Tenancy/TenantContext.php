@@ -19,23 +19,9 @@ final class TenantContext
         self::$tenant = $tenant;
     }
 
-    public static function id(): int
+    public static function clear(): void
     {
-        return self::tenant()->getId();
-    }
-
-    public static function tenant(): Tenant
-    {
-        return self::$tenant ?? throw new TenantNotResolvedException();
-    }
-
-    /**
-     * El Tenant actual o null. Para los procesos que cambian de Tenant (recordatorios, limpieza)
-     * y necesitan restaurar el contexto previo; el código de negocio debe usar id() o tenant().
-     */
-    public static function current(): ?Tenant
-    {
-        return self::$tenant;
+        self::$tenant = null;
     }
 
     public static function isSet(): bool
@@ -43,8 +29,23 @@ final class TenantContext
         return self::$tenant !== null;
     }
 
-    public static function clear(): void
+  
+    public static function current(): ?Tenant
     {
-        self::$tenant = null;
+        return self::$tenant;
+    }
+
+    public static function tenant(): Tenant
+    {
+        if (self::$tenant === null) {
+            throw new TenantNotResolvedException();
+        }
+
+        return self::$tenant;
+    }
+
+    public static function id(): int
+    {
+        return self::tenant()->getId();
     }
 }

@@ -15,7 +15,7 @@ final readonly class AppointmentProjectionResponse
         public string $medicoNombre,
         public string $pacienteNombre,
         public ?string $servicioNombre,
-        public string $paciente_email,
+        public ?string $paciente_email,
 
 
         // Datos del turno

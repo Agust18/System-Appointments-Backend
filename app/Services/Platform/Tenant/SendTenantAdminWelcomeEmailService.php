@@ -4,7 +4,7 @@ namespace App\Services\Platform\Tenant;
 
 use App\Dto\Request\Email\EmailRequest;
 use App\Email\EmailSenderService;
-use App\Email\Platform\TenantAdminWelcomeEmailTemplateRenderer;
+use App\Email\Platform\TenantAdminWelcomeEmailTemplate;
 use App\Models\User\UserModel;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use Throwable;
@@ -18,20 +18,15 @@ final class SendTenantAdminWelcomeEmailService
 {
     private UserModel $userModel;
     private TenantAdminWelcomeTokenService $tokenService;
-    private TenantAdminWelcomeEmailTemplateRenderer $renderer;
-    /** @var callable(EmailRequest): mixed */
-    private $sender;
+    private TenantAdminWelcomeEmailTemplate $template;
+    private EmailSenderService $emailSender;
 
-    /**
-     * @param callable(EmailRequest): mixed|null $sender Punto de observación para tests;
-     *        por defecto envía con EmailSenderService.
-     */
-    public function __construct(?callable $sender = null)
+    public function __construct()
     {
         $this->userModel    = new UserModel();
         $this->tokenService = new TenantAdminWelcomeTokenService();
-        $this->renderer     = new TenantAdminWelcomeEmailTemplateRenderer();
-        $this->sender       = $sender ?? static fn (EmailRequest $request) => (new EmailSenderService())->send($request);
+        $this->template     = new TenantAdminWelcomeEmailTemplate();
+        $this->emailSender  = new EmailSenderService();
     }
 
     /**
@@ -45,18 +40,21 @@ final class SendTenantAdminWelcomeEmailService
                 throw new \RuntimeException("No se encontró el ADMIN {$adminUserId} del Tenant nuevo.");
             }
 
+            // Una instancia por Tenant: lee la configuración del Tenant del TenantContext.
             $settings    = new TenantEmailSettingsResolverService();
             $frontendUrl = $settings->frontendUrl();
 
             $token = $this->tokenService->generateForUser($admin->getId());
             $url   = $frontendUrl . '/reset-password?token=' . urlencode($token->getToken());
 
-            ($this->sender)(new EmailRequest(
-                to:      $admin->getEmail(),
+            $request = new EmailRequest(
+                to: $admin->getEmail(),
                 subject: 'Tu cuenta de administrador está lista',
-                body:    $this->renderer->renderWelcomeBody($admin->getFirstName(), $tenantName, $url, TenantAdminWelcomeTokenService::TTL_HOURS),
+                body: $this->template->render($admin->getFirstName(), $tenantName, $url, TenantAdminWelcomeTokenService::TTL_HOURS),
                 replyTo: $settings->replyTo(),
-            ));
+            );
+
+            $this->emailSender->send($request);
 
             return true;
         } catch (Throwable $e) {

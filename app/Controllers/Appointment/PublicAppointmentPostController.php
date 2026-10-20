@@ -2,17 +2,14 @@
 namespace App\Controllers\Appointment;
 
 use App\Dto\Request\Appointment\PublicAppointmentRequest;
-use App\Dto\Request\Patient\PublicPatientRequest;
+use App\Dto\Request\Patient\GuestPatientRequest;
 use App\Services\Appointment\PublicAppointmentCreatorService;
 use App\Support\IdentityNormalizer;
 use App\Validation\RequestValidator;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 
-/**
- * POST /public/appointments (sin auth). Solo lee los campos del contrato: cualquier
- * `status` o `patientId` que venga en el body se ignora.
- */
+
 final class PublicAppointmentPostController extends ResourceController
 {
     private PublicAppointmentCreatorService $creatorService;
@@ -38,7 +35,7 @@ final class PublicAppointmentPostController extends ResourceController
         $parameters = (object) $parameters;
 
         return new PublicAppointmentRequest(
-            new PublicPatientRequest(
+            new GuestPatientRequest(
                 $parameters->firstName,
                 $parameters->lastName,
                 $parameters->email,
@@ -49,7 +46,7 @@ final class PublicAppointmentPostController extends ResourceController
             (int) $parameters->serviceId,
             $parameters->fecha,
             $parameters->hora,
-            ($parameters->nota ?? null) ?: null
+            empty($parameters->nota) ? null : $parameters->nota
         );
     }
 }

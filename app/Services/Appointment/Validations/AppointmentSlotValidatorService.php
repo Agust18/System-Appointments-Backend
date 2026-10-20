@@ -1,38 +1,22 @@
 <?php
 namespace App\Services\Appointment\Validations;
 
-use App\Exception\Appointment\AppointmentNotPast;
-use App\Exception\Appointment\DoctorNotAvailableDayException;
-use App\Exception\Appointment\DoctorNotAvailableTimeException;
+use App\Exception\Appointment\AppointmentInPastException;
+use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
-use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Service\ServiceModel;
-use App\Services\Appointment\ServiceDurationCalculatorService;
+use App\Services\Appointment\ServiceBlockResolverService;
 use DateTime;
 
-/**
- * Reglas del horario de un turno que no dependen de quién lo pide ni de la
- * sesión: fecha no pasada, servicio activo y ofrecido por el médico, y que el
- * bloque completo entre en la agenda del médico.
- *
- * Lo comparten el flujo autenticado (AppointmentCreateValidatorService) y el de
- * reserva pública (PublicAppointmentCreateValidatorService).
- */
+
 final class AppointmentSlotValidatorService
 {
     private MedicalScheduleModel $medicalScheduleModel;
-    private ServiceModel $serviceModel;
-    private MedicalServiceModel $medicalServiceModel;
-    private ServiceDurationCalculatorService $durationCalculator;
-    private AppointmentServiceOfferValidatorService $serviceOfferValidator;
+    private ServiceBlockResolverService $blockResolver;
 
     public function __construct()
     {
         $this->medicalScheduleModel = new MedicalScheduleModel();
-        $this->serviceModel = new ServiceModel();
-        $this->medicalServiceModel = new MedicalServiceModel();
-        $this->durationCalculator = new ServiceDurationCalculatorService();
-        $this->serviceOfferValidator = new AppointmentServiceOfferValidatorService();
+        $this->blockResolver = new ServiceBlockResolverService();
     }
 
     /**
@@ -44,18 +28,18 @@ final class AppointmentSlotValidatorService
         $now = new DateTime();
         $appointmentDateTime = new DateTime($fecha . ' ' . substr($hora, 0, 5) . ':00');
         if ($appointmentDateTime < $now) {
-            throw new AppointmentNotPast;
+            throw new AppointmentInPastException();
         }
 
         // Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
-        $bloqueTotalMinutes = $this->calculateTotalBlockMinutes($medicalId, $serviceId);
+        $bloqueTotalMinutes = $this->blockResolver->resolve($medicalId, $serviceId)->getTotalBlockMinutes();
 
         //Validar que el médico atienda ese día (múltiples rangos posibles)
         $dayOfWeek = (int) date('N', strtotime($fecha));
         $activeRanges = $this->medicalScheduleModel->findActiveRangesByMedicalAndDay($medicalId, $dayOfWeek);
 
         if (empty($activeRanges)) {
-            throw new DoctorNotAvailableDayException($doctorName, $dayOfWeek);
+            throw DoctorNotAvailableException::onDay($doctorName, $dayOfWeek);
         }
 
         //Validar que el bloque completo [hora_inicio, hora_fin] quepa en al menos un rango del día
@@ -78,23 +62,11 @@ final class AppointmentSlotValidatorService
         }
 
         if (!$fitsInRange) {
-            throw new DoctorNotAvailableTimeException(
+            throw DoctorNotAvailableException::outsideHours(
                 $doctorName,
                 implode(', ', $rangosTexto),
                 $horaInicioStr
             );
         }
-    }
-
-    private function calculateTotalBlockMinutes(int $medicalId, ?int $serviceId): int
-    {
-        $service = $serviceId !== null ? $this->serviceModel->find($serviceId) : null;
-        $medicalService = $serviceId !== null
-            ? $this->medicalServiceModel->findActiveByMedicalAndService($medicalId, $serviceId)
-            : null;
-
-        $this->serviceOfferValidator->validate($service, $medicalService);
-
-        return $this->durationCalculator->calculate($service, $medicalService)->getTotalBlockMinutes();
     }
 }

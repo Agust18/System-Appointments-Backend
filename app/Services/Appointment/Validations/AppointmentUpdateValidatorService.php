@@ -5,30 +5,33 @@ namespace App\Services\Appointment\Validations;
 use App\Constants\Role;
 use App\Dto\Request\Appointment\AppointmentUpdateRequest;
 use App\Entity\Appointment\Appointment;
+use App\Exception\Appointment\AppointmentActionForbiddenException;
+use App\Exception\Appointment\AppointmentNotModifiableException;
 use App\Exception\Appointment\AppointmentServiceRequiredException;
-use App\Exception\Appointment\MedicalNotAvailableException;
-use App\Services\Medical\MedicalFinderService;
+use App\Exception\Appointment\InvalidStatusTransitionException;
+use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
+use App\Exception\Validation\ValidationException;
 use App\Services\User\UserFinderService;
-use Exception;
+use DateTime;
 
 final class AppointmentUpdateValidatorService
 {
-    private MedicalFinderService $medicalFinderService;
-    private UserFinderService $userFinderService;
+    private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
 
     public function __construct()
     {
-        $this->medicalFinderService = new MedicalFinderService();
-        $this->userFinderService = new UserFinderService();
+        $this->medicalActiveValidator = new AppointmentMedicalActiveValidatorService();
     }
     public function validate(AppointmentUpdateRequest $request, Appointment $appointment, int $id): void
     {
+        $this->validateScheduleFieldsNotBlank($request);
+
         $roleId = session()->get('roleId');
         $currentStatus = $appointment->getStatus();
         $requestedStatus = $request->getStatus();
 
         if (in_array($currentStatus, ['completed', 'cancelled'], true)) {
-            throw new Exception('No se puede modificar un turno completado o cancelado', 409);
+            throw new AppointmentNotModifiableException();
         }
 
         if ($roleId === Role::MEDICAL) {
@@ -37,19 +40,33 @@ final class AppointmentUpdateValidatorService
                 $request->getPatientId() !== null ||
                 $request->getServiceId() !== null ||
                 $request->getFecha() !== null ||
-                $request->getHora() !== null ||
-                $request->getNota() !== null
+                $request->getHora() !== null
             ) {
-                throw new Exception('Los médicos solo pueden modificar el estado del turno', 403);
+                throw AppointmentActionForbiddenException::medicalCanOnlyChangeStatus();
             }
 
-            if ($requestedStatus !== 'completed') {
-                throw new Exception('Los médicos solo pueden marcar el turno como completado', 403);
+            if (!in_array($requestedStatus, ['completed', 'cancelled'], true)) {
+                throw AppointmentActionForbiddenException::medicalCanOnlyComplete();
             }
         }
 
-        if ($roleId === Role::PATIENT && $requestedStatus !== 'cancelled') {
-            throw new Exception('Los pacientes solo pueden cancelar turnos', 403);
+        if ($roleId === Role::PATIENT) {
+            // Solo cancela: ningún otro campo puede viajar con la cancelación.
+            if (
+                $requestedStatus !== 'cancelled' ||
+                $request->getMedicalId() !== null ||
+                $request->getPatientId() !== null ||
+                $request->getServiceId() !== null ||
+                $request->getFecha() !== null ||
+                $request->getHora() !== null ||
+                $request->getNota() !== null
+            ) {
+                throw AppointmentActionForbiddenException::patientCanOnlyCancel();
+            }
+
+            if (new DateTime($appointment->getFecha()->format('Y-m-d') . ' ' . $appointment->getHora()->format('H:i:s')) < new DateTime()) {
+                throw new PastAppointmentCannotBeModifiedException();
+            }
         }
 
         if ($requestedStatus !== null && $requestedStatus !== $currentStatus) {
@@ -59,7 +76,7 @@ final class AppointmentUpdateValidatorService
             ];
 
             if (!in_array($requestedStatus, $allowedTransitions[$currentStatus] ?? [], true)) {
-                throw new Exception('La transición de estado del turno no está permitida', 409);
+                throw new InvalidStatusTransitionException();
             }
         }
 
@@ -67,25 +84,40 @@ final class AppointmentUpdateValidatorService
             $request->getFecha() !== null &&
             $request->getFecha() < date('Y-m-d')
         ) {
-            throw new Exception(
-                'No se puede modificar un turno con fecha pasada',
-                409
-            );
+            throw new PastAppointmentCannotBeModifiedException();
         }
 
         // Reasignar el turno a otro médico: su usuario tiene que estar activo (como en el alta).
         if ($request->getMedicalId() !== null && $request->getMedicalId() !== $appointment->getMedicalId()) {
-            $medical = $this->medicalFinderService->find($request->getMedicalId());
-            if (!$this->userFinderService->find($medical->getUserId())->getIsActive()) {
-                throw new MedicalNotAvailableException();
-            }
+            $this->medicalActiveValidator->validate($request->getMedicalId());
         }
 
         // service_id es nullable en BD y el converter castea NULL a 0: un turno legacy sin servicio llega acá como 0.
-        $finalServiceId = $request->getServiceId() ?? $appointment->getServiceId();
-        if ($finalServiceId === null || $finalServiceId <= 0) {
+        $finalServiceId = $request->getServiceId();
+        if ($finalServiceId === null) {
+            $finalServiceId = $appointment->getServiceId();
+        }
+        if ($finalServiceId <= 0) {
             throw new AppointmentServiceRequiredException();
         }
 
+    }
+
+    /**
+     * fecha/hora ausentes (null) significan "sin cambio"; presentes pero vacías no: llegarían a
+     * reschedule() y romperían el cálculo del bloque (500). El formato de las no vacías lo valida la regla del DTO.
+     */
+    private function validateScheduleFieldsNotBlank(AppointmentUpdateRequest $request): void
+    {
+        $errors = [];
+        if ($request->getFecha() === '') {
+            $errors['fecha'] = 'La fecha no puede estar vacía.';
+        }
+        if ($request->getHora() === '') {
+            $errors['hora'] = 'La hora no puede estar vacía.';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
     }
 }

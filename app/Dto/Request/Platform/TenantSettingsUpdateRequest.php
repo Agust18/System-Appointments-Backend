@@ -2,25 +2,30 @@
 
 namespace App\Dto\Request\Platform;
 
-/**
- * Edición de la configuración de un Tenant desde el panel. Todos los campos son opcionales:
- * uno ausente no se modifica; `null` (o "") limpia `replyToEmail`, `frontendUrl` y `receptionEmail`.
- * Por eso el DTO distingue "ausente" de "null" con has(). El Tenant sale de la URL, nunca del body.
- */
+use App\Support\IdentityNormalizer;
+
 final readonly class TenantSettingsUpdateRequest
 {
-    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled', 'primaryColor', 'secondaryColor'];
-    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail', 'primaryColor', 'secondaryColor'];
-    /** @param array<string, mixed> $data solo los campos presentes en el body */
-    private function __construct(private array $data) {}
+    private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled',
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours', 'landingEnabled'];
+    private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail',
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours'];
 
-    /**
-     * Se queda solo con los campos conocidos (un `tenantId` del body se ignora). Los strings se
-     * recortan y, en los que se pueden limpiar, "" pasa a null.
-     *
-     * @param array<string, mixed> $parameters
-     * @return array<string, mixed>
-     */
+    public function __construct(
+        private ?string $name,
+        private ?string $replyToEmail,
+        private ?string $frontendUrl,
+        private ?string $receptionEmail,
+        private ?bool $receptionEmailEnabled,
+        private ?string $contactPhone,
+        private ?string $contactWhatsapp,
+        private ?string $contactEmail,
+        private ?string $address,
+        private ?string $openingHours,
+        private ?bool $landingEnabled,
+        private array $presentFields = [],
+    ) {}
+
     public static function sanitize(array $parameters): array
     {
         $data = array_intersect_key($parameters, array_flip(self::FIELDS));
@@ -28,6 +33,9 @@ final readonly class TenantSettingsUpdateRequest
         foreach ($data as $field => $value) {
             if (is_string($value)) {
                 $value = trim($value);
+                if ($field === 'contactWhatsapp') {
+                    $value = IdentityNormalizer::whatsapp($value) ?? '';
+                }
                 $data[$field] = ($value === '' && in_array($field, self::CLEARABLE, true)) ? null : $value;
             }
         }
@@ -40,56 +48,85 @@ final readonly class TenantSettingsUpdateRequest
     {
         $data = self::sanitize($parameters);
 
-        if (isset($data['receptionEmailEnabled'])) {
-            $data['receptionEmailEnabled'] = (bool) $data['receptionEmailEnabled'];
-        }
-
-        return new self($data);
+        return new self(
+            $data['name'] ?? null,
+            $data['replyToEmail'] ?? null,
+            $data['frontendUrl'] ?? null,
+            $data['receptionEmail'] ?? null,
+            isset($data['receptionEmailEnabled']) ? (bool) $data['receptionEmailEnabled'] : null,
+            $data['contactPhone'] ?? null,
+            $data['contactWhatsapp'] ?? null,
+            $data['contactEmail'] ?? null,
+            $data['address'] ?? null,
+            $data['openingHours'] ?? null,
+            isset($data['landingEnabled']) ? (bool) $data['landingEnabled'] : null,
+            array_keys($data),
+        );
     }
 
     public function has(string $field): bool
     {
-        return array_key_exists($field, $this->data);
+        return in_array($field, $this->presentFields, true);
     }
 
     public function isEmpty(): bool
     {
-        return $this->data === [];
+        return $this->presentFields === [];
     }
 
     public function getName(): ?string
     {
-        return $this->data['name'] ?? null;
+        return $this->name;
     }
 
     public function getReplyToEmail(): ?string
     {
-        return $this->data['replyToEmail'] ?? null;
+        return $this->replyToEmail;
     }
 
     public function getFrontendUrl(): ?string
     {
-        return $this->data['frontendUrl'] ?? null;
+        return $this->frontendUrl;
     }
 
     public function getReceptionEmail(): ?string
     {
-        return $this->data['receptionEmail'] ?? null;
+        return $this->receptionEmail;
     }
 
     public function getReceptionEmailEnabled(): ?bool
     {
-        return $this->data['receptionEmailEnabled'] ?? null;
+        return $this->receptionEmailEnabled;
     }
 
-    public function getPrimaryColor(): ?string
+    public function getContactPhone(): ?string
     {
-        return $this->data['primaryColor'] ?? null;
+        return $this->contactPhone;
     }
 
-    public function getSecondaryColor(): ?string
+    public function getContactWhatsapp(): ?string
     {
-        return $this->data['secondaryColor'] ?? null;
+        return $this->contactWhatsapp;
+    }
+
+    public function getContactEmail(): ?string
+    {
+        return $this->contactEmail;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function getOpeningHours(): ?string
+    {
+        return $this->openingHours;
+    }
+
+    public function getLandingEnabled(): ?bool
+    {
+        return $this->landingEnabled;
     }
 
     public static function rules(): array
@@ -100,8 +137,12 @@ final readonly class TenantSettingsUpdateRequest
             'frontendUrl'           => 'permit_empty|string|max_length[255]',
             'receptionEmail'        => 'permit_empty|string|valid_email|max_length[255]',
             'receptionEmailEnabled' => 'permit_empty|in_list[0,1]',
-            'primaryColor'          => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
-            'secondaryColor'        => 'permit_empty|string|regex_match[/^#[0-9A-Fa-f]{6}\z/]',
+            'contactPhone'          => 'permit_empty|string|max_length[50]',
+            'contactWhatsapp'       => 'permit_empty|string|max_length[20]',
+            'contactEmail'          => 'permit_empty|string|valid_email|max_length[255]',
+            'address'               => 'permit_empty|string|max_length[255]',
+            'openingHours'          => 'permit_empty|string|max_length[500]',
+            'landingEnabled'        => 'permit_empty|in_list[0,1]',
         ];
     }
 
@@ -130,13 +171,29 @@ final readonly class TenantSettingsUpdateRequest
             'receptionEmailEnabled' => [
                 'in_list' => 'receptionEmailEnabled debe ser true o false.',
             ],
-            'primaryColor' => [
-                'string'      => 'El color principal no es válido.',
-                'regex_match' => 'El color principal debe tener el formato #RRGGBB.',
+            'contactPhone' => [
+                'string'     => 'El teléfono no es válido.',
+                'max_length' => 'El teléfono es muy largo.',
             ],
-            'secondaryColor' => [
-                'string'      => 'El color secundario no es válido.',
-                'regex_match' => 'El color secundario debe tener el formato #RRGGBB.',
+            'contactWhatsapp' => [
+                'string'     => 'El WhatsApp no es válido.',
+                'max_length' => 'El WhatsApp es muy largo (máx. 20 dígitos).',
+            ],
+            'contactEmail' => [
+                'string'      => 'El email de contacto no es válido.',
+                'valid_email' => 'El email de contacto no es válido.',
+                'max_length'  => 'El email de contacto es muy largo.',
+            ],
+            'address' => [
+                'string'     => 'La dirección no es válida.',
+                'max_length' => 'La dirección es muy larga.',
+            ],
+            'openingHours' => [
+                'string'     => 'Los horarios no son válidos.',
+                'max_length' => 'Los horarios son muy largos.',
+            ],
+            'landingEnabled' => [
+                'in_list' => 'landingEnabled debe ser true o false.',
             ],
         ];
     }

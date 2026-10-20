@@ -16,7 +16,7 @@ Sin header `Authorization`. Todos pasan por `cors` y después por `throttle` (el
 | `GET /public/services` | 60/min | Servicios activos |
 | `GET /public/medicals/available?specialtyId=` | 60/min | Médicos con `users.is_active = 1` (`medicals` no tiene `is_active`) |
 | `GET /public/medicals/{id}/services` | 60/min | Servicios del médico (duración y precio efectivos) |
-| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Reusa `AppointmentAvailabilityGetController` |
+| `GET /public/appointments/availability?medicalId=&serviceId=&fecha=` (o `from`/`to`) | 60/min | Slots. Controller propio, `PublicAppointmentAvailabilityGetController` (no acepta `excludeAppointmentId`, que es solo de la ruta autenticada) |
 | `POST /public/appointments` | 5/min | `201` con `PublicAppointmentResponse` (`id, fecha, hora, medicoNombre, servicioNombre, status`) |
 | `OPTIONS /public/*` | no gasta cupo | Preflight CORS |
 
@@ -30,15 +30,15 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 2. **Resolver la identidad** (`PatientGuestResolverService::resolve()`): bloqueo por DNI, `GET_LOCK('public_identity_{tenantId}_{dni}')` y transacción propia. Casos A–E abajo.
 3. **Tope de turnos**: máximo 3 turnos futuros `pending`/`confirmed` por paciente (`MAX_ACTIVE_FUTURE_APPOINTMENTS`). Es un límite blando: sin lock, dos solicitudes simultáneas del mismo paciente pueden pasarlo por uno.
 4. **Reservar** con `AppointmentBookingService::book()` (ver `booking-atomico.md`). El turno nace `confirmed`.
-5. **Avisar** con `AppointmentNotificationService::notifyOnPublicCreate()`: email al paciente y a recepción (ver `email.md`). Fuera de toda transacción y a prueba de fallos.
+5. **Avisar** con `PublicAppointmentCreatedNotificationService::notify()`: email al paciente y a recepción (ver `email.md`). Fuera de toda transacción y a prueba de fallos.
 
-**Los pasos no van en una transacción exterior, a propósito.** `AppointmentSlotLockService` libera su `GET_LOCK` en un `finally`; con una transacción exterior su commit no commitearía y el lock se liberaría antes del commit real, rompiendo la reserva atómica. Cada paso tiene su propio lock + transacción. Si se pierde la carrera por el horario después del paso 2, queda un usuario sin cuenta con su paciente y sin turno: es inofensivo, el próximo intento con el mismo DNI + teléfono lo reutiliza.
+**Los pasos no van en una transacción exterior, a propósito.** `AppointmentBookingService` libera su `GET_LOCK` en un `finally`; con una transacción exterior su commit no commitearía y el lock se liberaría antes del commit real, rompiendo la reserva atómica. Cada paso tiene su propio lock + transacción. Si se pierde la carrera por el horario después del paso 2, queda un usuario sin cuenta con su paciente y sin turno: es inofensivo, el próximo intento con el mismo DNI + teléfono lo reutiliza.
 
 **Nunca llamar a `PatientGuestResolverService` desde dentro de otra transacción**, por el mismo motivo.
 
 ## Identidad: casos A–E (`PatientGuestResolverService`)
 
-El usuario creado nace sin cuenta (`password` NULL, `hasAccount = false`) y nunca se modifican los datos de un usuario existente.
+El usuario creado nace sin cuenta (`password` NULL, `hasAccount = false`) y nunca se modifican los datos de un usuario existente, con una excepción: en B/E, si el usuario **no tiene email** (lo cargó recepción sin email), se le guarda el del formulario, salvo que sea de otro usuario (en ese caso el turno se reserva igual y el email no se guarda).
 
 | Caso | Situación | Resultado |
 |---|---|---|

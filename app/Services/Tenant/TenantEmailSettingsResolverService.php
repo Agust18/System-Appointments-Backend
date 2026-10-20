@@ -7,12 +7,7 @@ use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
 use App\Models\Tenant\TenantSettingsModel;
 use App\Tenancy\TenantContext;
 
-/**
- * Valores de email del Tenant del TenantContext, leídos de `tenant_settings`. Lee la fila una vez
- * por instancia: quien cambie de Tenant (recordatorios) debe crear una instancia por Tenant.
- *
- * Sin fila de settings, solo frontendUrl() falla (rompe el link); lo demás cae a "sin configurar".
- */
+
 final class TenantEmailSettingsResolverService
 {
     private TenantSettingsModel $model;
@@ -85,7 +80,7 @@ final class TenantEmailSettingsResolverService
 
     private function nullIfBlank(?string $value): ?string
     {
-        $value = $value === null ? '' : trim($value);
+        $value = trim($value ?? '');
 
         return $value === '' ? null : $value;
     }

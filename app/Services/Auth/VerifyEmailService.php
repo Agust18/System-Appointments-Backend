@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\auth;
+namespace App\Services\Auth;
 
 use App\Dto\Request\Auth\VerifyEmailRequest;
 use App\Exception\Auth\AlreadyVerifiedException;
@@ -21,9 +21,7 @@ final class VerifyEmailService
     public function verify(VerifyEmailRequest $request): void
     {
         $token = $this->tokenService->validate($request->getToken());
-        
         $user = $this->userModel->find($token->getUserId());
-        
 
         if (!$user) {
             throw new InvalidVerificationTokenException();
@@ -34,7 +32,6 @@ final class VerifyEmailService
         }
 
         $this->userModel->markAsVerified($user->getId());
-        
         $this->tokenService->markAsUsed($token);
     }
 }

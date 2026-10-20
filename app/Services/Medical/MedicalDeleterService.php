@@ -16,7 +16,7 @@ final class MedicalDeleterService
         $this->medicalModel = new MedicalModel();
         $this->appointmentModel = new AppointmentModel();
         $this->medicalFinderService = new MedicalFinderService();
-        
+
 
     }
 
@@ -25,7 +25,8 @@ final class MedicalDeleterService
         $this->medicalFinderService->find($id);
 
         $appointments = $this->appointmentModel->findByMedicalId($id);
-         if (!empty($appointments)) {
+        
+        if (!empty($appointments)) {
             throw new MedicalHasAppointmentsException(count($appointments));
         }
 

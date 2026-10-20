@@ -221,6 +221,7 @@ final class AppointmentModel
      * Turnos de mañana (en 24 hs) con status pending o confirmed, con datos
      * de paciente (email, nombre), médico y servicio para enviar recordatorios.
      * Solo los del Tenant del contexto: el proceso de recordatorios recorre los Tenants activos.
+     * Excluye a los pacientes sin email: no hay a dónde mandarles el recordatorio.
      */
     public function findUpcomingIn24Hours(): array
     {
@@ -239,6 +240,7 @@ final class AppointmentModel
         WHERE A.tenant_id = ?
           AND A.fecha = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
           AND A.status IN ('pending', 'confirmed')
+          AND U_pac.email IS NOT NULL
         ORDER BY A.hora ASC";
 
         $result   = $this->db->query($query, [TenantContext::id()]);
@@ -283,7 +285,7 @@ final class AppointmentModel
      * solapamiento contra cada slot candidato sin repetir el query por
      * cada uno.
      */
-    public function findActiveHoursByMedicalAndFecha(int $medicalId, string $fecha): array
+    public function findActiveHoursByMedicalAndFecha(int $medicalId, string $fecha, ?int $excludeAppointmentId = null): array
     {
         $query = "SELECT hora, COALESCE(hora_fin, ADDTIME(hora, '00:30:00')) as hora_fin
                   FROM appointments
@@ -292,7 +294,15 @@ final class AppointmentModel
                     AND fecha = ?
                     AND status IN ('pending', 'confirmed', 'completed')";
 
-        $result = $this->db->query($query, [$medicalId, TenantContext::id(), $fecha]);
+        $params = [$medicalId, TenantContext::id(), $fecha];
+
+        // Al editar un turno su propio horario no cuenta como ocupado (mismo criterio que hasOverlap).
+        if ($excludeAppointmentId !== null) {
+            $query .= " AND id != ?";
+            $params[] = $excludeAppointmentId;
+        }
+
+        $result = $this->db->query($query, $params);
 
         return $result->getResult();
     }
@@ -303,7 +313,7 @@ final class AppointmentModel
      * disponibilidad). Cada fila trae también `fecha` para poder agrupar
      * en PHP.
      */
-    public function findActiveHoursByMedicalAndFechaRange(int $medicalId, string $from, string $to): array
+    public function findActiveHoursByMedicalAndFechaRange(int $medicalId, string $from, string $to, ?int $excludeAppointmentId = null): array
     {
         $query = "SELECT fecha, hora, COALESCE(hora_fin, ADDTIME(hora, '00:30:00')) as hora_fin
                   FROM appointments
@@ -312,7 +322,14 @@ final class AppointmentModel
                     AND fecha BETWEEN ? AND ?
                     AND status IN ('pending', 'confirmed', 'completed')";
 
-        $result = $this->db->query($query, [$medicalId, TenantContext::id(), $from, $to]);
+        $params = [$medicalId, TenantContext::id(), $from, $to];
+
+        if ($excludeAppointmentId !== null) {
+            $query .= " AND id != ?";
+            $params[] = $excludeAppointmentId;
+        }
+
+        $result = $this->db->query($query, $params);
 
         return $result->getResult();
     }
@@ -340,7 +357,7 @@ final class AppointmentModel
             INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
             INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
             ";
-        $orderQuery = "ORDER BY A.fecha DESC, A.hora DESC ";
+        $orderQuery = "ORDER BY (A.fecha < CURDATE()) ASC, A.fecha ASC, A.hora ASC ";
         $paginationQuery = "LIMIT ?, ? ";
 
         $parameters[] = $request->getPagination()->getOffset();

@@ -40,7 +40,7 @@ final class AppointmentPostController extends ResourceController
             fecha: (string) ($parameters->fecha ?? ''),
             hora: (string) ($parameters->hora ?? ''),
             nota: $parameters->nota ?? null,
-            status: $parameters->status ?? 'pending',
+            status: $parameters->status ?? 'confirmed',
         );
     }
 }

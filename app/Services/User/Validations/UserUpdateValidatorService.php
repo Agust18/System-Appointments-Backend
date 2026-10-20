@@ -1,23 +1,22 @@
 <?php
 namespace App\Services\User\Validations;
 
+use App\Constants\Role;
 use App\Dto\Request\User\UserUpdaterRequest;
 use App\Entity\User\User;
 use App\Exception\Role\RoleNotFoundException;
 use App\Exception\User\DniAlreadyRegisteredException;
 use App\Exception\User\EmailAlreadyRegisteredException;
+use App\Exception\Validation\ValidationException;
 use App\Models\User\UserModel;
-use App\Services\Role\RoleFinderService;
 
 final class UserUpdateValidatorService
 {
     private UserModel $userModel;
-    private RoleFinderService $roleFinderService;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->roleFinderService = new RoleFinderService();
     }
 
     public function validate(User $user, UserUpdaterRequest $request): void
@@ -39,13 +38,20 @@ final class UserUpdateValidatorService
         }
 
         // Validar que el rol exista
-        if ($request->getRoleId() && $request->getRoleId() !== $user->getRoleId()) {
-            $role = $this->roleFinderService->find($request->getRoleId());
-            if (!$role) {
-                throw new RoleNotFoundException($request->getRoleId());
-            }
+        if ($request->getRoleId() && $request->getRoleId() !== $user->getRoleId() && !Role::isValid($request->getRoleId())) {
+            throw new RoleNotFoundException($request->getRoleId());
         }
 
-       
+        // Paciente y médico tienen su propia fila (patients/medicals): cambiar el rol por acá
+        // dejaría un usuario sin perfil o un perfil huérfano.
+        $newRoleId = $request->getRoleId();
+        if ($newRoleId !== null && $newRoleId !== $user->getRoleId()) {
+            $profileRoles = [Role::PATIENT, Role::MEDICAL];
+            if (in_array($newRoleId, $profileRoles, true) || in_array($user->getRoleId(), $profileRoles, true)) {
+                throw new ValidationException([
+                    'roleId' => 'El rol de paciente o médico no se puede asignar ni quitar desde usuarios: usá pacientes o médicos.',
+                ]);
+            }
+        }
     }
 }

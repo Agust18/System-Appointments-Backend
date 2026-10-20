@@ -10,6 +10,6 @@ Solo lenguaje de dominio. Las decisiones técnicas van en `adr/`.
 | **Admin** | Usuario con rol ADMIN dentro de un Tenant. |
 | **Núcleo** | Funciones siempre activas en todo Tenant: login, turnos, pacientes, médicos, servicios, especialidades, horarios. |
 | **Módulo** | Función opcional que el SuperAdmin prende o apaga por Tenant: `public_booking`, `metrics`, `email_notifications` (futuros: `whatsapp`, `family_profiles`). |
-| **Configuración del Tenant** | Valores editables por Tenant desde el panel: `name`, `logo_url`, `primary_color`, `reception_email`, `reception_email_enabled`, `reply_to_email`, `timezone`, `max_active_future_appointments`. |
+| **Configuración del Tenant** | Valores editables por Tenant desde el panel: `name`, `logo_url`, `reception_email`, `reception_email_enabled`, `reply_to_email`, `contact_phone`, `contact_whatsapp`, `contact_email`, `address`, `opening_hours`, `landing_enabled`, `timezone`, `max_active_future_appointments`. |
 | **Tenant suspendido** | Tenant con `status` inactivo (p. ej. falta de pago). Todas sus rutas responden 403; los datos se conservan. |
 | **Usuario sin cuenta** | Paciente creado por reserva pública, sin contraseña (ver `.claude/rules/public-booking.md`). |
