@@ -7,9 +7,9 @@ llamar a `EmailSenderService::send()`. Si falla, lanza
 `EmailCannotBeSendedException` (500).
 
 Templates HTML: una clase por mail, con un único `render()`.
-- `app/Email/User/`: `PasswordResetEmailTemplate` y `AccountActivationEmailTemplate` (reset para
-  usuarios con cuenta, activación para los que no tienen contraseña: el ADMIN de un Tenant nuevo;
-  `SendPasswordResetEmailService` elige con `hasAccount()`).
+- `app/Email/User/`: `PasswordResetEmailTemplate`. `SendPasswordResetEmailService` manda este mismo mail
+  a quien olvidó su contraseña y al ADMIN de un Tenant nuevo que aún no eligió la suya (nace sin contraseña;
+  el link de `/reset-password` sirve para ambos).
 - `app/Email/Platform/`: `TenantAdminWelcomeEmailTemplate`.
 - `app/Email/Appointment/`: ver "Avisos de turnos".
 

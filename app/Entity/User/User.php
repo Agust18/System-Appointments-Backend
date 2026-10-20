@@ -45,15 +45,10 @@ final class User
         return $this->tokenExpirationDate;
     }
 
-   
-    public function hasAccount(): bool
-    {
-        return $this->password !== null;
-    }
-
     public function verifyPassword(string $password): bool
     {
-        if (!$this->hasAccount()) {
+        // El ADMIN de un Tenant nuevo puede nacer sin contraseña (la elige con el link del mail de bienvenida).
+        if ($this->password === null) {
             return false;
         }
 

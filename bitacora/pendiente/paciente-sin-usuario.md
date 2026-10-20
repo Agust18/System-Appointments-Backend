@@ -64,7 +64,7 @@ El paciente deja de ser usuario: no hay cuenta, login ni password. Es una ficha 
 - [x] Borrar `GET /patients/user/{id}` y `findByUser`.
 - [x] `patientViewPermission` → filtro para admin/recepción/médico; sacar la rama PATIENT de `appointmentPermission`, `appointmentCreatePermission`, `appointmentViewPermission`, `medicalViewPermission` y `PermissionsService`.
 - [x] Sacar ramas PATIENT de `AppointmentStatsService`, `AppointmentFilterBuilderService`, `AppointmentUpdateValidatorService`, `UserUpdateValidatorService`, `UserDeleterValidatorService`.
-- [x] Borrar `AccountActivationEmailTemplate`, `User::createWithoutAccount/hasAccount/completeAsAccountless` y excepciones sin uso (`UserNotPatientException`, `PatientNotFoundExceptionByUserException`, `CannotCreateAppointmentForOtherPatientException`, `PatientCannotBeMedicalException`). **Desvío:** `hasAccount()` y `AccountActivationEmailTemplate` SE QUEDAN (los usa el ADMIN de un Tenant nuevo sin contraseña); `PublicBookingIdentityException` y `PublicIdentityLockTimeoutException` se quedan para la fase 3.
+- [x] Borrar `AccountActivationEmailTemplate`, `User::createWithoutAccount/hasAccount/completeAsAccountless` y excepciones sin uso (`UserNotPatientException`, `PatientNotFoundExceptionByUserException`, `CannotCreateAppointmentForOtherPatientException`, `PatientCannotBeMedicalException`). **Decisión posterior:** también se borraron `User::hasAccount()`, `AccountActivationEmailTemplate`, la bifurcación de `SendPasswordResetEmailService` y el campo `hasAccount` de `UserResponse` (el mail de reset es único; `verifyPassword` comprueba `password === null`). Se quedan `PublicBookingIdentityException` y `PublicIdentityLockTimeoutException` se quedan para la fase 3.
 - [x] Borrar `Role::PATIENT` (+ `NAMES`, `RolesSeeder`) y los `users` rol 3.
 - [x] `PublicIdentityAttemptLimiter` queda solo para `/consulta` (fase 3).
 - [x] Tests: borrar/reescribir los de registro, resolver y permisos de paciente (ver lista abajo). 120 tests de base de datos + 335 unitarios corridos; solo fallan los previos ajenos (CORS x3, `ServiceDuration` x2, hora con espacios, `excludeAppointmentId` x3).
@@ -76,7 +76,7 @@ El paciente deja de ser usuario: no hay cuenta, login ni password. Es una ficha 
 - [x] `useAppointmentsPage`: borrar la resolución de paciente (`/patients/user/{id}`) y la cancelación de paciente.
 - [x] `LoginModal` sin "Crear cuenta"; `Navbar` sin "Registrarse"; `TopBar` siempre a `/login`.
 - [x] `BookingErrorPanel`/`StepPatient`: sacar el CTA "Iniciar sesión".
-- [x] Badge "Sin cuenta" en `UserColumns`; email opcional de `UserForm`. **Desvío:** el badge "Sin cuenta" se queda (lo usa el staff sin contraseña); el email de `UserForm` vuelve a ser obligatorio.
+- [x] Badge "Sin cuenta" en `UserColumns`; email opcional de `UserForm`. **Decisión posterior:** el badge "Sin cuenta" también se borró (junto con `hasAccount`); el email de `UserForm` vuelve a ser obligatorio.
 - [x] Ajustar `publicRoutes.test.jsx` y `Navbar.test.jsx`.
 
 **Agregado en la fase 2 (acordado con el usuario)**
@@ -84,7 +84,6 @@ El paciente deja de ser usuario: no hay cuenta, login ni password. Es una ficha 
 - [x] `POST /patients` pasó a body plano (`firstName, lastName, email?, phone, dni, birthDate?`); se quitó la adaptación `{user, patient}`. Frontend: `toPatientPayload`, `PatientCreateForm` (alta sin contraseña/rol/activo).
 - [x] Frontend: se quitó el flujo de alta de paciente desde Usuarios (`useQuickCreatePatient`); recepción solo crea profesionales desde ahí.
 - [x] Migración `RemovePatientRoleAndUsers`: borra los `users` rol 3 y la fila 3 de `roles` (el id 3 no se reutiliza). `Role::inListRule()` arma el `in_list` de `roleId` desde `Role::NAMES`.
-- Mejora futura (fuera de esta tarea): decidir el flujo del ADMIN de un Tenant nuevo sin contraseña. Hoy `hasAccount()`, `AccountActivationEmailTemplate` y el badge "Sin cuenta" existen solo por ese caso; si se exigiera `adminPassword` al crear el Tenant, se podrían borrar.
 - Pendiente cosmético: CSS `.btn-register-public` y el `openLogin` del Navbar quedaron sin uso en el frontend.
 
 ## Fase 3 — `/consulta` v1 (consultar y cancelar)

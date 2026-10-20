@@ -17,24 +17,22 @@ final class UserEntityTest extends CIUnitTestCase
         );
     }
 
-    public function testUserWithPasswordHasAccountAndCanVerifyIt(): void
+    public function testUserWithPasswordCanVerifyIt(): void
     {
         $user = $this->userWithPassword('contrasenia123');
 
-        $this->assertTrue($user->hasAccount());
         $this->assertTrue($user->verifyPassword('contrasenia123'));
         $this->assertFalse($user->verifyPassword('otra-contrasenia'));
     }
 
-    public function testConvertFromRequestWithoutPasswordCreatesAccountlessUser(): void
+    public function testConvertFromRequestWithoutPasswordLeavesItNull(): void
     {
         $user = $this->userWithPassword(null);
 
-        $this->assertFalse($user->hasAccount());
         $this->assertNull($user->getPassword());
     }
 
-    public function testAccountlessUserNeverVerifiesAnyPassword(): void
+    public function testUserWithoutPasswordNeverVerifiesAnyPassword(): void
     {
         $user = $this->userWithPassword(null);
 

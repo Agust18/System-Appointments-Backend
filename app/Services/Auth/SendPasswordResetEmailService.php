@@ -4,7 +4,6 @@ namespace App\Services\Auth;
 
 use App\Dto\Request\Email\EmailRequest;
 use App\Email\EmailSenderService;
-use App\Email\User\AccountActivationEmailTemplate;
 use App\Email\User\PasswordResetEmailTemplate;
 use App\Entity\User\User;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
@@ -13,7 +12,6 @@ final class SendPasswordResetEmailService
 {
     private PasswordResetTokenService $tokenService;
     private PasswordResetEmailTemplate $resetTemplate;
-    private AccountActivationEmailTemplate $activationTemplate;
     private TenantEmailSettingsResolverService $settingsResolver;
     private EmailSenderService $emailSender;
 
@@ -22,7 +20,6 @@ final class SendPasswordResetEmailService
         $this->settingsResolver   = new TenantEmailSettingsResolverService();
         $this->tokenService       = new PasswordResetTokenService();
         $this->resetTemplate      = new PasswordResetEmailTemplate();
-        $this->activationTemplate = new AccountActivationEmailTemplate();
         $this->emailSender        = new EmailSenderService();
     }
 
@@ -34,19 +31,11 @@ final class SendPasswordResetEmailService
         $token = $this->tokenService->generateForUser($user->getId());
         $url = $frontendUrl . '/reset-password?token=' . urlencode($token->getToken());
 
-        // Sin contraseña no hay nada que "restablecer": el mismo link sirve para crear la cuenta.
-        if ($user->hasAccount()) {
-            $subject = 'Restablecer contraseña';
-            $body = $this->resetTemplate->render($user, $url);
-        } else {
-            $subject = 'Activá tu cuenta';
-            $body = $this->activationTemplate->render($user, $url);
-        }
-
+        // El mismo mail y link sirven para quien olvidó su contraseña y para el ADMIN que aún no eligió la suya.
         $request = new EmailRequest(
             to: $user->getEmail(),
-            subject: $subject,
-            body: $body,
+            subject: 'Restablecer contraseña',
+            body: $this->resetTemplate->render($user, $url),
             replyTo: $this->settingsResolver->replyTo(),
         );
 
