@@ -62,9 +62,15 @@ arma sobre la respuesta a la que `cors` ya agregó sus headers.
 fallidos con DNI + código bloquean ese DNI una hora, con el mismo error neutral. Ver `public-booking.md`.
 
 ## `PermissionsService` (`app/Services/Permissions/PermissionsService.php`)
-Centraliza las reglas de rol + ownership que antes estaban duplicadas entre
-Filters. Expone `canViewPatient()`, `canViewAppointment()`, `canEditAppointment()` y
-`canDeleteAppointment()`. Todas reciben `$roleId` y
+Única fuente de las reglas de propiedad (qué puede ver o editar cada rol). Los
+filtros `appointmentPermission`, `appointmentViewPermission`, `medicalViewPermission`
+y `patientViewPermission` solo resuelven la entidad y le preguntan a este Service.
+Expone `hasFullAccess()` (ADMIN y RECEPTION), `canViewPatient()`, `canViewMedical()`,
+`canViewAppointment()`, `canEditAppointment()` y `canDeleteAppointment()`. Qué roles
+entran a cada endpoint se declara en `Routes.php` con `role:...`; acá solo vive la
+propiedad de los datos. Los builders de filtros de listados
+(`AppointmentFilterBuilderService`, `PatientFilterBuilderService`, `AppointmentStatsService`)
+restringen la lista al médico y no preguntan "¿puede ver este?", así que siguen aparte. Todas reciben `$roleId` y
 `$userId` de la sesión explícitos (no los lee de `session()` internamente),
 para mantenerse testeable sin mockear sesión.
 

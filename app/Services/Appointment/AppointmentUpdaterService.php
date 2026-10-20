@@ -29,7 +29,8 @@ final class AppointmentUpdaterService
     {
         $previousAppointment = $this->appointmentFinderService->find($id);
 
-        $appointment = $this->appointmentFinderService->find($id);
+        // Copia de trabajo: reschedule() modifica el turno y la notificación necesita el estado previo.
+        $appointment = clone $previousAppointment;
 
         $this->validator->validate($request, $appointment, $id);
 

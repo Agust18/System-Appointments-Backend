@@ -1,6 +1,6 @@
 # Unificar los filtros de RBAC
 
-- **Estado:** ⏳ Pendiente (hacer **después** de la fase 2 de `paciente-sin-usuario.md`)
+- **Estado:** ✅ Hecho (parte 1 en PR #11, parte 2 en `refactor/permisos-propiedad-rbac`) (hacer **después** de la fase 2 de `paciente-sin-usuario.md`)
 - **Repo:** backend
 - **Esfuerzo:** ~1–2 días
 - **Fecha:** 2026-10-20
@@ -11,8 +11,8 @@ Sacar el rol PATIENT elimina ramas de `appointmentPermission`, `appointmentCreat
 
 ## Qué sí hacer
 - [x] (hecho en `refactor/unificar-filtros-rbac`) Un filtro `role` con argumentos (`role:admin,reception`, `role:admin,reception,medical`) que reemplace a `adminOnly`, `adminOrReception` y `adminReceptionOrMedical`. Sigue declarándose en la ruta (el permiso se ve en `Routes.php`). Devuelve `Response` 403, nunca lanza excepción.
-- [ ] Una sola fuente para la propiedad de datos (qué turno/médico/paciente puede ver o editar cada rol): `PermissionsService`. Hoy se reparte entre filtros, validators y builders (`session('roleId')` leído en 5 lugares).
-- [ ] Evitar la doble carga: hoy el filtro busca el turno para decidir y el Service lo vuelve a buscar.
+- [x] (hecho en `refactor/permisos-propiedad-rbac`) Una sola fuente para la propiedad de datos (qué turno/médico/paciente puede ver o editar cada rol): `PermissionsService`. Hoy se reparte entre filtros, validators y builders (`session('roleId')` leído en 5 lugares).
+- [x] Evitar la doble carga. Resultó menor de lo previsto: el filtro solo busca el turno para MEDICAL (ADMIN/RECEPTION salen antes) y `GET` usa otra consulta (proyección). La repetición real estaba en `AppointmentUpdaterService` (dos `find` seguidos) y se resolvió con un `clone`. No se guarda estado entre filtro y Service.
 - [x] (hecho: matriz de acceso en `PlatformRoutesTest`) Mantener `PlatformRoutesTest` (matriz de filtros por ruta) y extenderlo para verificar el rol exigido por cada ruta de Tenant: es lo que le falta a Sysacad.
 
 ## Qué NO copiar de Sysacad

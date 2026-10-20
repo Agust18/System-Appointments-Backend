@@ -19,12 +19,10 @@ class AppointmentPermission implements FilterInterface
         $response = \Config\Services::response();
 
         $method = strtolower($request->getMethod());
+        $permissionsService = new PermissionsService();
 
         // ADMIN y RECEPCIÓN pueden modificar/eliminar cualquier turno
-        if (in_array($roleId, [
-            Role::ADMIN,
-            Role::RECEPTION
-        ], true)) {
+        if ($permissionsService->hasFullAccess($roleId)) {
             return $request;
         }
 
@@ -41,8 +39,6 @@ class AppointmentPermission implements FilterInterface
             ]);
         }
 
-        $permissionsService = new PermissionsService();
-
         // MÉDICO
         if ($roleId === Role::MEDICAL) {
 
@@ -54,7 +50,7 @@ class AppointmentPermission implements FilterInterface
             }
 
             // Médico no puede eliminar
-            if ($method === 'delete') {
+            if ($method === 'delete' && !$permissionsService->canDeleteAppointment($roleId)) {
                 return $response->setStatusCode(403)->setJSON([
                     "message" => "Los médicos no pueden eliminar turnos. Solo pueden cambiar el estado."
                 ]);
