@@ -10,7 +10,8 @@ use App\Models\Appointment\AppointmentModel;
 use App\Services\Appointment\Notification\PublicAppointmentCreatedNotificationService;
 use App\Services\Appointment\Projection\AppointmentProjectionFinderService;
 use App\Services\Appointment\Validations\PublicAppointmentCreateValidatorService;
-use App\Services\Patient\PatientGuestResolverService;
+use App\Dto\Request\Patient\PatientRequest;
+use App\Services\Patient\PatientCreatorService;
 use DateTime;
 
 final class PublicAppointmentCreatorService
@@ -20,7 +21,7 @@ final class PublicAppointmentCreatorService
     public const MAX_ACTIVE_FUTURE_APPOINTMENTS = 3;
 
     private PublicAppointmentCreateValidatorService $validator;
-    private PatientGuestResolverService $patientResolver;
+    private PatientCreatorService $patientCreator;
     private AppointmentModel $appointmentModel;
     private AppointmentBookingService $bookingService;
     private PublicAppointmentCreatedNotificationService $notificationService;
@@ -30,7 +31,7 @@ final class PublicAppointmentCreatorService
     public function __construct()
     {
         $this->validator = new PublicAppointmentCreateValidatorService();
-        $this->patientResolver = new PatientGuestResolverService();
+        $this->patientCreator = new PatientCreatorService();
         $this->appointmentModel = new AppointmentModel();
         $this->bookingService = new AppointmentBookingService();
         $this->notificationService = new PublicAppointmentCreatedNotificationService();
@@ -42,7 +43,7 @@ final class PublicAppointmentCreatorService
     {
         $this->validator->validate($request);
 
-        $patient = $this->patientResolver->resolve($request->getPatient());
+        $patient = $this->patientCreator->findOrCreateByDni(PatientRequest::fromGuest($request->getPatient()));
 
         if ($this->appointmentModel->countActiveFutureByPatient($patient->getId(), new DateTime())
             >= self::MAX_ACTIVE_FUTURE_APPOINTMENTS) {

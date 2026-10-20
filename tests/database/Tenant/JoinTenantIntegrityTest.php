@@ -3,12 +3,10 @@
 use App\Dto\Request\Medical\MedicalFilterRequest;
 use App\Dto\Request\MedicalSchedule\MedicalScheduleFilterRequest;
 use App\Dto\Request\PaginationRequest;
-use App\Dto\Request\Patient\PatientFilterRequest;
 use App\Entity\Tenant\Tenant;
 use App\Models\Medical\MedicalModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Models\MedicalService\MedicalServiceModel;
-use App\Models\Patient\PatientModel;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
@@ -99,13 +97,6 @@ final class JoinTenantIntegrityTest extends CIUnitTestCase
         return $this->db->insertID();
     }
 
-    private function seedPatient(int $tenantId, int $userId): int
-    {
-        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'user_id' => $userId, 'birth_date' => '1990-01-01']);
-
-        return $this->db->insertID();
-    }
-
     private function seedSchedule(int $tenantId, int $medicalId): int
     {
         $this->db->table('medical_schedules')->insert([
@@ -116,22 +107,6 @@ final class JoinTenantIntegrityTest extends CIUnitTestCase
         return $this->db->insertID();
     }
 
-    public function testPatientProjectionDoesNotLeakAUserOfAnotherTenant(): void
-    {
-        $healthy = $this->seedPatient($this->tenantA, $this->seedUser($this->tenantA));
-        $foreignUser = $this->seedUser($this->tenantB);
-        $crossed = $this->seedPatient($this->tenantA, $foreignUser);
-
-        $model = new PatientModel();
-        $filter = new PatientFilterRequest($this->page());
-
-        $this->assertNotNull($model->findProjection($healthy));
-        $this->assertNull($model->findProjection($crossed));
-        $this->assertNull($model->findByUserIdProjection($foreignUser));
-
-        $this->assertSame(1, $model->countProjection($filter));
-        $this->assertSame([$healthy], array_map(static fn ($p) => $p->getId(), $model->searchProjection($filter)));
-    }
 
     public function testMedicalProjectionDoesNotLeakAUserOrSpecialtyOfAnotherTenant(): void
     {

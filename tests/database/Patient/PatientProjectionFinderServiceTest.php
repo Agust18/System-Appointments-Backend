@@ -35,24 +35,15 @@ final class PatientProjectionFinderServiceTest extends CIUnitTestCase
 
     private function seedPatient(string $email): int
     {
-        $this->db->table('users')->insert(['tenant_id' => 1,
-            'first_name' => 'paciente_' . uniqid(),
-            'last_name'  => 'Apellido',
-            'email'    => $email,
-            'password' => 'hash',
-            'dni'      => random_int(1000000, 9999999),
-        ]);
-        $userId = $this->db->insertID();
-
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => $email, 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 
         return $this->db->insertID();
     }
 
-    public function testFindResponseIncludesUserEmail(): void
+    public function testFindResponseIncludesPatientEmail(): void
     {
         $email = uniqid() . '@test.com';
         $patientId = $this->seedPatient($email);

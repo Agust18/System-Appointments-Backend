@@ -4,7 +4,6 @@ use App\Constants\Role;
 use App\Entity\Tenant\Tenant;
 use App\Exception\Tenant\TenantFrontendUrlNotConfiguredException;
 use App\Services\Auth\SendPasswordResetEmailService;
-use App\Services\Auth\SendVerificationEmailService;
 use App\Services\Tenant\TenantEmailSettingsResolverService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -121,15 +120,15 @@ final class TenantEmailSettingsResolverServiceTest extends CIUnitTestCase
 
     public function testNoTokenIsGeneratedWhenTheTenantHasNoFrontendUrl(): void
     {
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+        $this->db->table('roles')->insert(['id' => Role::RECEPTION, 'name' => 'reception']);
         $this->seedTenantEmailSettings(1, ['frontend_url' => null]);
         $this->db->table('users')->insert([
-            'tenant_id' => 1, 'first_name' => 'Paciente', 'last_name' => 'A', 'email' => 'p@a.test',
-            'password' => 'hash', 'dni' => 30111333, 'role_id' => Role::PATIENT,
+            'tenant_id' => 1, 'first_name' => 'Admin', 'last_name' => 'A', 'email' => 'p@a.test',
+            'password' => 'hash', 'dni' => 30111333, 'role_id' => Role::RECEPTION,
         ]);
         $user = (new \App\Models\User\UserModel())->find($this->db->insertID());
 
-        foreach ([SendVerificationEmailService::class, SendPasswordResetEmailService::class] as $class) {
+        foreach ([SendPasswordResetEmailService::class] as $class) {
             try {
                 (new $class())->send($user);
                 $this->fail("{$class} debía lanzar TenantFrontendUrlNotConfiguredException");

@@ -1,7 +1,6 @@
 <?php
 namespace App\Dto\Request\Patient;
 
-use App\Dto\Request\User\UserUpdaterRequest;
 use App\Validation\IdentityRules;
 
 final readonly class PatientUpdateRequest
@@ -37,21 +36,6 @@ final readonly class PatientUpdateRequest
     public function getEmail(): ?string
     {
         return $this->email;
-    }
-
-  
-    public function toUserUpdaterRequest(): ?UserUpdaterRequest
-    {
-        if ($this->firstName === null && $this->lastName === null && $this->phone === null && $this->email === null) {
-            return null;
-        }
-
-        return new UserUpdaterRequest(
-            firstName: $this->firstName,
-            lastName: $this->lastName,
-            email: $this->email,
-            phone: $this->phone,
-        );
     }
 
     public static function rules(): array

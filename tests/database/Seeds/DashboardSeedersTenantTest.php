@@ -39,11 +39,10 @@ final class DashboardSeedersTenantTest extends CIUnitTestCase
         $this->db->table('tenants')->insert(['slug' => 'tenant-b', 'name' => 'Tenant B']);
         $this->tenantB = $this->db->insertID();
 
-        // Los usuarios del seeder llevan role_id MEDICAL (2) y PATIENT (3): la FK exige que existan.
+        // Los usuarios del seeder llevan role_id MEDICAL (2): la FK exige que exista.
         // Sin ellos el INSERT falla en silencio dentro de la transacción (CI4 no lanza ahí).
         $this->db->table('roles')->insertBatch([
             ['id' => Role::MEDICAL, 'name' => 'medical'],
-            ['id' => Role::PATIENT, 'name' => 'patient'],
         ]);
 
         $this->setSeedSlug(null);
@@ -155,7 +154,7 @@ final class DashboardSeedersTenantTest extends CIUnitTestCase
 
         $this->runSeeder(DashboardDemoSeeder::class);
 
-        $expected = ['users' => 11, 'specialties' => 4, 'services' => 4, 'medicals' => 4, 'patients' => 7];
+        $expected = ['users' => 4, 'specialties' => 4, 'services' => 4, 'medicals' => 4, 'patients' => 7];
         foreach ($expected as $table => $count) {
             $this->assertSame($count, $this->countIn($table, $this->tenantB), "{$table} en el Tenant elegido");
             $this->assertSame(0, $this->countIn($table, 1), "{$table} no debe quedar en el Tenant 1 por el DEFAULT");
@@ -197,15 +196,15 @@ final class DashboardSeedersTenantTest extends CIUnitTestCase
         $this->runSeeder(DashboardDemoSeeder::class);
 
         // Mismos emails, DNI y nombres en dos Tenants: los únicos son por Tenant.
-        $this->assertSame(11, $this->countIn('users', 1));
-        $this->assertSame(11, $this->countIn('users', $this->tenantB));
+        $this->assertSame(4, $this->countIn('users', 1));
+        $this->assertSame(4, $this->countIn('users', $this->tenantB));
 
         $this->runSeeder(DashboardDemoCleanupSeeder::class);
 
         foreach (['users', 'specialties', 'services', 'medicals', 'patients', 'medical_service', 'appointments'] as $table) {
             $this->assertSame(0, $this->countIn($table, $this->tenantB), "{$table} del Tenant limpiado");
         }
-        $this->assertSame(11, $this->countIn('users', 1), 'los datos de seed del otro Tenant siguen intactos');
+        $this->assertSame(4, $this->countIn('users', 1), 'los datos de seed del otro Tenant siguen intactos');
         $this->assertSame(4, $this->countIn('services', 1));
         $this->assertSame(4, $this->countIn('specialties', 1));
     }

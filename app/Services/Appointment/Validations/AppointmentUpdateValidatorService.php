@@ -12,7 +12,6 @@ use App\Exception\Appointment\InvalidStatusTransitionException;
 use App\Exception\Appointment\PastAppointmentCannotBeModifiedException;
 use App\Exception\Validation\ValidationException;
 use App\Services\User\UserFinderService;
-use DateTime;
 
 final class AppointmentUpdateValidatorService
 {
@@ -47,25 +46,6 @@ final class AppointmentUpdateValidatorService
 
             if (!in_array($requestedStatus, ['completed', 'cancelled'], true)) {
                 throw AppointmentActionForbiddenException::medicalCanOnlyComplete();
-            }
-        }
-
-        if ($roleId === Role::PATIENT) {
-            // Solo cancela: ningún otro campo puede viajar con la cancelación.
-            if (
-                $requestedStatus !== 'cancelled' ||
-                $request->getMedicalId() !== null ||
-                $request->getPatientId() !== null ||
-                $request->getServiceId() !== null ||
-                $request->getFecha() !== null ||
-                $request->getHora() !== null ||
-                $request->getNota() !== null
-            ) {
-                throw AppointmentActionForbiddenException::patientCanOnlyCancel();
-            }
-
-            if (new DateTime($appointment->getFecha()->format('Y-m-d') . ' ' . $appointment->getHora()->format('H:i:s')) < new DateTime()) {
-                throw new PastAppointmentCannotBeModifiedException();
             }
         }
 

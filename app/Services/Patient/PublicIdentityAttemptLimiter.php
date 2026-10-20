@@ -5,11 +5,14 @@ namespace App\Services\Patient;
 use App\Tenancy\TenantContext;
 
 /**
+ * SIN USO desde que el paciente es una ficha identificada solo por DNI (la reserva ya no compara
+ * teléfonos). Se reutiliza en `/consulta` (fase 3 de bitacora/pendiente/paciente-sin-usuario.md).
+ *
  * Bloqueo por DNI de la reserva pública. El teléfono es el segundo factor que acompaña
  * al DNI; sin un límite se podría adivinar probando teléfonos para un DNI conocido.
  *
  * Cuenta los rechazos por teléfono de un DNI existente. Al llegar a MAX_FAILURES el DNI
- * queda bloqueado BLOCK_SECONDS: PatientGuestResolverService responde el mismo 409 neutral
+ * queda bloqueado BLOCK_SECONDS: quien lo use responde el mismo 409 neutral
  * sin consultar la base, de modo que quien ataca no distingue "bloqueado" de "teléfono
  * incorrecto". Mientras está bloqueado no se suman fallos, así que el bloqueo vence
  * BLOCK_SECONDS después del último fallo.

@@ -1,6 +1,7 @@
 <?php
 namespace App\Dto\Request\User;
 
+use App\Constants\Role;
 use App\Validation\IdentityRules;
 
 final readonly class UserRequest{
@@ -73,7 +74,7 @@ final readonly class UserRequest{
                 ? IdentityRules::required(IdentityRules::PASSWORD)
                 : IdentityRules::optional(IdentityRules::PASSWORD),
             'dni'       => IdentityRules::required(IdentityRules::DNI),
-            'roleId'    => 'required|in_list[1,2,3,4]',
+            'roleId'    => 'required|' . Role::inListRule(),
         ];
     }
 

@@ -64,7 +64,7 @@ final class MedicalCreatorServiceTest extends CIUnitTestCase
 
     public function testMismatchedRoleIdThrows403AndCreatesNoUser(): void
     {
-        $request = new MedicalRequest($this->userRequest(Role::PATIENT), $this->medicalDataRequest());
+        $request = new MedicalRequest($this->userRequest(Role::RECEPTION), $this->medicalDataRequest());
 
         try {
             $this->service->create($request);

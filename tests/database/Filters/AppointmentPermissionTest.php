@@ -55,7 +55,7 @@ final class AppointmentPermissionTest extends CIUnitTestCase
     private function seedPatient(int $userId): int
     {
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 
@@ -105,66 +105,8 @@ final class AppointmentPermissionTest extends CIUnitTestCase
         $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
     }
 
-    public function testPatientCanCancelOwnConfirmedAppointment(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $appointmentId = $this->seedAppointment($medicalId, $patientId, 'confirmed');
 
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
 
-        $result = $this->filter->before(
-            $this->requestFor("appointments/{$appointmentId}", 'put', ['status' => 'cancelled'])
-        );
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testPatientCannotCancelNonConfirmedAppointment(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
-
-        foreach (['pending', 'completed', 'cancelled'] as $status) {
-            $appointmentId = $this->seedAppointment($medicalId, $patientId, $status);
-
-            $result = $this->filter->before(
-                $this->requestFor("appointments/{$appointmentId}", 'put', ['status' => 'cancelled'])
-            );
-
-            $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-            $this->assertSame(403, $result->getStatusCode(), $status);
-        }
-    }
-
-    public function testPatientOnOwnConfirmedAppointmentPassesFilterRegardlessOfRequestedStatus(): void
-    {
-        // El Filter solo autoriza por ownership + estado "confirmed" del turno.
-        // Que el status pedido sea inválido para un paciente (ej. "confirmed")
-        // lo rechaza AppointmentUpdateValidatorService, no este Filter.
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $appointmentId = $this->seedAppointment($medicalId, $patientId, 'confirmed');
-
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
-
-        $result = $this->filter->before(
-            $this->requestFor("appointments/{$appointmentId}", 'put', ['status' => 'confirmed'])
-        );
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
 
     public function testMedicalCanUpdateOwnAppointment(): void
     {

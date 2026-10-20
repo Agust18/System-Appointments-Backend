@@ -12,8 +12,6 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class PatientViewPermission implements FilterInterface
 {
-    use ResolvesEntityByRouteSegment;
-
     public function before(RequestInterface $request, $arguments = null)
     {
         $roleId = session()->get('roleId');
@@ -25,11 +23,7 @@ class PatientViewPermission implements FilterInterface
             return $request;
         }
 
-        [$patient] = $this->resolveEntityByRouteSegment(
-            $request,
-            fn (int $targetUserId) => $patientModel->findByUserId($targetUserId),
-            fn (int $patientId) => $patientModel->find($patientId)
-        );
+        $patient = $patientModel->find((int) ($request->getUri()->getSegments()[1] ?? 0));
 
         if (!$patient) {
             return $response->setStatusCode(404)->setJSON([

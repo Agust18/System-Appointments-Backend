@@ -132,12 +132,11 @@ final class MetricsModel
         [$whereQuery, $parameters] = $this->buildDateMedicalWhere($dateFrom, $dateTo, $medicalId);
 
         $query = "SELECT A.id AS appointment_id, A.fecha, A.hora, A.status, A.created_at, A.updated_at,
-                TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS patient_name,
+                TRIM(CONCAT(P.first_name, ' ', P.last_name)) AS patient_name,
                 TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medical_name,
                 SRV.name AS service_name
               FROM appointments A
               INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
-              INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
               INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
               INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
               LEFT JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id

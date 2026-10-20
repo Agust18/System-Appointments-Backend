@@ -42,14 +42,13 @@ final class UserUpdateValidatorService
             throw new RoleNotFoundException($request->getRoleId());
         }
 
-        // Paciente y médico tienen su propia fila (patients/medicals): cambiar el rol por acá
-        // dejaría un usuario sin perfil o un perfil huérfano.
+        // El médico tiene su propia fila (medicals): cambiar el rol por acá dejaría un usuario
+        // sin perfil o un perfil huérfano.
         $newRoleId = $request->getRoleId();
         if ($newRoleId !== null && $newRoleId !== $user->getRoleId()) {
-            $profileRoles = [Role::PATIENT, Role::MEDICAL];
-            if (in_array($newRoleId, $profileRoles, true) || in_array($user->getRoleId(), $profileRoles, true)) {
+            if ($newRoleId === Role::MEDICAL || $user->getRoleId() === Role::MEDICAL) {
                 throw new ValidationException([
-                    'roleId' => 'El rol de paciente o médico no se puede asignar ni quitar desde usuarios: usá pacientes o médicos.',
+                    'roleId' => 'El rol de médico no se puede asignar ni quitar desde usuarios: usá médicos.',
                 ]);
             }
         }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Dto\Request\User;
 
+use App\Constants\Role;
 use App\Validation\IdentityRules;
 
 final readonly class UserUpdaterRequest {
@@ -64,7 +65,7 @@ final readonly class UserUpdaterRequest {
             'password'  => IdentityRules::optional(IdentityRules::PASSWORD),
             'dni'       => IdentityRules::optional(IdentityRules::DNI),
             'isActive'  => 'permit_empty|in_list[0,1]',
-            'roleId'    => 'permit_empty|in_list[1,2,3,4]',
+            'roleId'    => 'permit_empty|' . Role::inListRule(),
         ];
     }
 

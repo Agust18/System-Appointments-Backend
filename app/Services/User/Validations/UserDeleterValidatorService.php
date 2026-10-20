@@ -4,21 +4,18 @@ namespace App\Services\User\Validations;
 
 use App\Entity\User\User;
 use App\Models\User\UserModel;
-use App\Models\Patient\PatientModel;
 use App\Models\Medical\MedicalModel;
 use App\Models\Appointment\AppointmentModel;
 
 final class UserDeleterValidatorService
 {
     private UserModel $userModel;
-    private PatientModel $patientModel;
     private MedicalModel $medicalModel;
     private AppointmentModel $appointmentModel;
 
     public function __construct()
     {
         $this->userModel        = new UserModel();
-        $this->patientModel     = new PatientModel();
         $this->medicalModel     = new MedicalModel();
         $this->appointmentModel = new AppointmentModel();
     }
@@ -32,19 +29,11 @@ final class UserDeleterValidatorService
             }
         }
 
-        if ($this->patientModel->findByUserId($id)) {
-            throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de paciente asociado', 409);
-        }
 
         if ($this->medicalModel->findByUserId($id)) {
             throw new \Exception('No se puede eliminar el usuario porque tiene un perfil de médico asociado', 409);
         }
 
-        $appointmentsAsPatient = $this->appointmentModel->findByPatientUserId($id);
-        if (!empty($appointmentsAsPatient)) {
-            $count = count($appointmentsAsPatient);
-            throw new \Exception("No se puede eliminar el usuario porque tiene {$count} turnos como paciente", 409);
-        }
 
         $appointmentsAsMedical = $this->appointmentModel->findByMedicalUserId($id);
         if (!empty($appointmentsAsMedical)) {

@@ -5,7 +5,6 @@ use App\Converter\Patient\Projection\PatientProjectionToPatientProjectionRespons
 use App\Dto\Response\Patient\Projection\PatientProjectionResponse;
 use App\Entity\Patient\Projection\PatientProjection;
 use App\Exception\Patient\PatientNotFoundException;
-use App\Exception\Patient\PatientNotFoundExceptionByUserException;
 use App\Models\Patient\PatientModel;
 
 final class PatientProjectionFinderService
@@ -39,14 +38,4 @@ final class PatientProjectionFinderService
     }
 
    
-    public function findByUserIdResponse(int $userId): PatientProjectionResponse
-    {
-        $patient = $this->patientModel->findByUserIdProjection($userId);
-        
-        if (!$patient) {
-            throw new PatientNotFoundExceptionByUserException($userId);
-        }
-        
-        return $this->converter->convert($patient);
-    }
 }

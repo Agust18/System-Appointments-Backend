@@ -6,7 +6,6 @@ final readonly class PatientProjectionResponse
 {
     public function __construct(
         public int $id,
-        public int $userId,
         public string $pacienteNombre,
         public ?string $dni,
         public ?string $email,

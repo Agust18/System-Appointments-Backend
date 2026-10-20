@@ -11,7 +11,6 @@ final class PatientProjectionToPatientProjectionResponseConverter
     {
         return new PatientProjectionResponse(
             $patient->getId(),
-            $patient->getUserId(),
             $patient->getPacienteNombre(),
             $patient->getDni(),
             $patient->getEmail(),

@@ -1,10 +1,8 @@
 <?php
 
 use App\Dto\Request\Auth\ForgotPasswordRequest;
-use App\Dto\Request\Auth\ResendVerificationEmailRequest;
 use App\Dto\Request\Auth\ResetPasswordRequest;
 use App\Dto\Request\Auth\UserLoginRequest;
-use App\Dto\Request\Auth\VerifyEmailRequest;
 use App\Exception\Validation\ValidationException;
 use App\Validation\RequestValidator;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -86,15 +84,5 @@ final class AuthRequestValidationTest extends CIUnitTestCase
         }
     }
 
-    public function testVerifyEmailMissingTokenThrows422(): void
-    {
-        $this->expectException(ValidationException::class);
-        RequestValidator::validate(['token' => null], VerifyEmailRequest::rules(), VerifyEmailRequest::messages());
-    }
 
-    public function testResendVerificationInvalidEmailThrows422(): void
-    {
-        $this->expectException(ValidationException::class);
-        RequestValidator::validate(['email' => 'no-es-un-email'], ResendVerificationEmailRequest::rules(), ResendVerificationEmailRequest::messages());
-    }
 }

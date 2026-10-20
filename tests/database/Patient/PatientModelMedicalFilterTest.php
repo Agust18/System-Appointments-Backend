@@ -58,7 +58,7 @@ final class PatientModelMedicalFilterTest extends CIUnitTestCase
     private function seedPatient(int $userId): int
     {
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 

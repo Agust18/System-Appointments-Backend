@@ -172,19 +172,6 @@ final class AppointmentModel
     }
 
 
-    public function findByPatientUserId(int $userId): array
-    {
-        $query = "SELECT a.* FROM appointments a
-              INNER JOIN patients p ON p.id = a.patient_id AND p.tenant_id = a.tenant_id
-              WHERE p.user_id = ? AND a.tenant_id = ?";
-        $result = $this->db->query($query, [$userId, TenantContext::id()]);
-        $primitives = $result->getResult();
-        $appointments = [];
-        foreach ($primitives as $primitive) {
-            $appointments[] = $this->converter->convert($primitive);
-        }
-        return $appointments;
-    }
 
     public function findByMedicalUserId(int $userId): array
     {
@@ -227,20 +214,19 @@ final class AppointmentModel
     {
         $query = "SELECT
             A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
-            U_pac.email    AS paciente_email,
+            P.email    AS paciente_email,
             TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre,
-            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS paciente_nombre,
+            TRIM(CONCAT(P.first_name, ' ', P.last_name)) AS paciente_nombre,
             SRV.name       AS servicio_nombre
         FROM appointments A
         INNER JOIN medicals M   ON M.id  = A.medical_id AND M.tenant_id = A.tenant_id
         INNER JOIN users U_med  ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
         INNER JOIN patients P   ON P.id  = A.patient_id AND P.tenant_id = A.tenant_id
-        INNER JOIN users U_pac  ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
         INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
         WHERE A.tenant_id = ?
           AND A.fecha = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
           AND A.status IN ('pending', 'confirmed')
-          AND U_pac.email IS NOT NULL
+          AND P.email IS NOT NULL
         ORDER BY A.hora ASC";
 
         $result   = $this->db->query($query, [TenantContext::id()]);
@@ -255,16 +241,15 @@ final class AppointmentModel
     {
         $query = "SELECT
             A.id, A.medical_id, A.patient_id, A.service_id, A.fecha, A.hora, A.nota, A.status,
-            U_pac.email  AS paciente_email,
-            U_pac.phone  AS paciente_telefono,
+            P.email  AS paciente_email,
+            P.phone  AS paciente_telefono,
             TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre,
-            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) AS paciente_nombre,
+            TRIM(CONCAT(P.first_name, ' ', P.last_name)) AS paciente_nombre,
             SRV.name       AS servicio_nombre
         FROM appointments A
         INNER JOIN medicals M   ON M.id  = A.medical_id AND M.tenant_id = A.tenant_id
         INNER JOIN users U_med  ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
         INNER JOIN patients P   ON P.id  = A.patient_id AND P.tenant_id = A.tenant_id
-        INNER JOIN users U_pac  ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
         INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
         WHERE A.id = ? AND A.tenant_id = ?";
 
@@ -343,10 +328,10 @@ final class AppointmentModel
         $selectQuery = "SELECT
             A.id, A.medical_id, A.patient_id, A.fecha, A.hora, A.nota, A.status,
             A.service_id,
-            U_pac.email as paciente_email,
+            P.email as paciente_email,
             SRV.name as servicio_nombre,
             TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) as medico_nombre,
-            TRIM(CONCAT(U_pac.first_name, ' ', U_pac.last_name)) as paciente_nombre
+            TRIM(CONCAT(P.first_name, ' ', P.last_name)) as paciente_nombre
         ";
 
 
@@ -354,7 +339,6 @@ final class AppointmentModel
             INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
             INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
             INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
-            INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
             INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
             ";
         $orderQuery = "ORDER BY (A.fecha < CURDATE()) ASC, A.fecha ASC, A.hora ASC ";
@@ -386,7 +370,6 @@ final class AppointmentModel
               INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
               INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
               INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
-              INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
               {$whereQuery}";
 
         $result = $this->db->query($query, $parameters);
@@ -420,7 +403,7 @@ final class AppointmentModel
         }
 
         if ($request->hasSearch()) {
-            $whereQuery .= " AND (CONCAT(U_pac.first_name, ' ', U_pac.last_name) LIKE ? OR CONCAT(U_med.first_name, ' ', U_med.last_name) LIKE ?) ";
+            $whereQuery .= " AND (CONCAT(P.first_name, ' ', P.last_name) LIKE ? OR CONCAT(U_med.first_name, ' ', U_med.last_name) LIKE ?) ";
             $like = "%{$request->getSearch()}%";
             $parameters[] = $like;
             $parameters[] = $like;
@@ -439,7 +422,6 @@ final class AppointmentModel
               INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
               INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
               INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
-              INNER JOIN users U_pac ON U_pac.id = P.user_id AND U_pac.tenant_id = P.tenant_id
               {$whereQuery}
               GROUP BY A.status";
 

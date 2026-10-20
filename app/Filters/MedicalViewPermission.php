@@ -36,11 +36,6 @@ class MedicalViewPermission implements FilterInterface
             ]);
         }
 
-        // /medicals/user/{userId} es solo para que el propio médico consulte su perfil.
-        if ($roleId === Role::PATIENT && !$byUserId) {
-            return $request;
-        }
-
         if ($roleId === Role::MEDICAL && $medical->getUserId() === $userId) {
             return $request;
         }

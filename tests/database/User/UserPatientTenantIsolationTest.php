@@ -68,7 +68,7 @@ final class UserPatientTenantIsolationTest extends CIUnitTestCase
 
         $this->db->table('patients')->insert([
             'tenant_id'  => $tenantId,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => $email, 'phone' => '1155550000', 'dni' => $dni,
             'birth_date' => '1990-01-01',
         ]);
 
@@ -166,7 +166,7 @@ final class UserPatientTenantIsolationTest extends CIUnitTestCase
             new User(null, 'X', 'Y', 'x@test.com', null, 'hash', 30000010, true, false, null, null, null, null, null)
         );
         $patient = (new PatientModel())->insert(
-            new Patient(null, $user->getId(), null, new DateTime(), new DateTime())
+            new Patient(null, 'Paciente', 'Test', null, 30000011, null, null, new DateTime(), new DateTime())
         );
 
         $this->assertSame(
@@ -192,9 +192,27 @@ final class UserPatientTenantIsolationTest extends CIUnitTestCase
 
         $this->assertNotNull($model->find($patientA));
         $this->assertNull($model->find($patientB));
-        $this->assertNull($model->findByUserId($userB));
+        $this->assertNull($model->findByDni(30000002));
         $this->assertNull($model->findProjection($patientB));
-        $this->assertNull($model->findByUserIdProjection($userB));
+    }
+
+    public function testTheSamePatientDniCanExistInTwoTenantsButNotTwiceInOne(): void
+    {
+        $this->seedUserWithPatient($this->tenantA, 'a@test.com', 30000001);
+        $this->seedUserWithPatient($this->tenantB, 'b@test.com', 30000001);
+
+        $this->assertSame(2, (int) $this->db->table('patients')->where('dni', 30000001)->countAllResults());
+
+        $this->actAs($this->tenantA);
+        $this->assertNotNull((new PatientModel())->findByDni(30000001));
+        $this->assertSame($this->tenantA, (int) $this->db->table('patients')
+            ->where('id', (new PatientModel())->findByDni(30000001)->getId())->get()->getRow()->tenant_id);
+
+        $this->expectException(\CodeIgniter\Database\Exceptions\DatabaseException::class);
+        $this->db->table('patients')->insert([
+            'tenant_id'  => $this->tenantA,
+            'first_name' => 'Otro', 'last_name' => 'Duplicado', 'dni' => 30000001,
+        ]);
     }
 
     public function testPatientSearchAndCountAreScopedToTheTenant(): void

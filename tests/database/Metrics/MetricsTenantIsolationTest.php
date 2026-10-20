@@ -108,7 +108,7 @@ final class MetricsTenantIsolationTest extends CIUnitTestCase
         ]);
         $medicalId = $this->db->insertID();
 
-        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'user_id' => $patientUser, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'first_name' => 'paciente', 'last_name' => $tag, 'email' => "paciente-{$tag}@test.com", 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
         $patientId = $this->db->insertID();
 
         if ($customPrice !== null) {

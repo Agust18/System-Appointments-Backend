@@ -15,6 +15,16 @@ use Config\Database;
 
 final class PatientModel
 {
+    private const PROJECTION_SELECT = "SELECT
+                P.id,
+                P.birth_date,
+                P.created_at,
+                P.updated_at,
+                TRIM(CONCAT(P.first_name, ' ', P.last_name)) AS paciente_nombre,
+                P.dni,
+                P.email,
+                P.phone ";
+
     private BaseConnection $db;
 
     private PrimitiveToPatientConverter $converter;
@@ -29,11 +39,15 @@ final class PatientModel
 
     public function insert(Patient $patient): Patient
     {
-        $query = "INSERT INTO patients (tenant_id, user_id, birth_date,created_at,updated_at) values (?,?,?,?,?)";
+        $query = "INSERT INTO patients (tenant_id, first_name, last_name, email, dni, phone, birth_date, created_at, updated_at) values (?,?,?,?,?,?,?,?,?)";
 
         $this->db->query($query, [
             TenantContext::id(),
-            $patient->getUserId(),
+            $patient->getFirstName(),
+            $patient->getLastName(),
+            $patient->getEmail(),
+            $patient->getDni(),
+            $patient->getPhone(),
             $patient->getBirthDate()?->format('Y-m-d'),
             $patient->getCreatedAt()->format('Y-m-d H:i:s'),
             $patient->getUpdatedAt()->format('Y-m-d H:i:s')
@@ -41,26 +55,24 @@ final class PatientModel
 
         $id = $this->db->insertID();
 
-        // Dentro de una transacción CI4 no lanza si el INSERT falla (p. ej. UNIQUE de user_id):
+        // Dentro de una transacción CI4 no lanza si el INSERT falla (p. ej. UNIQUE de dni):
         // insertID() queda en 0 y devolver un Patient con id 0 ocultaría el error.
         if (!$id) {
             throw new PatientCannotBeCreatedException();
         }
 
-        return new Patient(
-            $id,
-            $patient->getUserId(),
-            $patient->getBirthDate(),
-            $patient->getCreatedAt(),
-            $patient->getUpdatedAt()
-        );
+        return $this->find($id);
     }
 
     public function update(Patient $patient): Patient
     {
-        $query = "UPDATE patients SET birth_date = ?, updated_at = ? ";
+        $query = "UPDATE patients SET first_name = ?, last_name = ?, email = ?, phone = ?, birth_date = ?, updated_at = ? ";
         $query .= "WHERE id = ? AND tenant_id = ?";
         $this->db->query($query, [
+            $patient->getFirstName(),
+            $patient->getLastName(),
+            $patient->getEmail(),
+            $patient->getPhone(),
             $patient->getBirthDate()?->format('Y-m-d'),
             $patient->getUpdatedAt()->format('Y-m-d H:i:s'),
             $patient->getId(),
@@ -83,10 +95,10 @@ final class PatientModel
         return $this->converter->convert($data);
     }
 
-    public function findByUserId(int $userId): ?Patient
+    public function findByDni(int $dni): ?Patient
     {
-        $query = "SELECT * FROM patients WHERE user_id = ? AND tenant_id = ?";
-        $result = $this->db->query($query, [$userId, TenantContext::id()]);
+        $query = "SELECT * FROM patients WHERE dni = ? AND tenant_id = ?";
+        $result = $this->db->query($query, [$dni, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -98,40 +110,9 @@ final class PatientModel
 
     public function findProjection(int $id): ?PatientProjection
     {
-        $query = "SELECT
-                P.*,
-                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
-                U.dni,
-                U.email,
-                U.phone
-              FROM patients P
-              INNER JOIN users U ON U.id = P.user_id AND U.tenant_id = P.tenant_id
-              WHERE P.id = ? AND P.tenant_id = ?";
+        $query = self::PROJECTION_SELECT . "FROM patients P WHERE P.id = ? AND P.tenant_id = ?";
 
         $result = $this->db->query($query, [$id, TenantContext::id()]);
-        $data = $result->getRow();
-
-        if (!$data) {
-            return null;
-        }
-
-        return $this->converterProjection->convert($data);
-    }
-
-
-    public function findByUserIdProjection(int $userId): ?PatientProjection
-    {
-        $query = "SELECT
-                P.*,
-                TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
-                U.dni,
-                U.email,
-                U.phone
-              FROM patients P
-              INNER JOIN users U ON U.id = P.user_id AND U.tenant_id = P.tenant_id
-              WHERE P.user_id = ? AND P.tenant_id = ?";
-
-        $result = $this->db->query($query, [$userId, TenantContext::id()]);
         $data = $result->getRow();
 
         if (!$data) {
@@ -145,7 +126,7 @@ final class PatientModel
     {
         $parameters = [TenantContext::id()];
 
-        $selectQuery = "SELECT P.id, P.user_id, P.birth_date, P.created_at, P.updated_at ";
+        $selectQuery = "SELECT P.* ";
         $fromQuery = "FROM patients P ";
         $whereQuery = "WHERE P.tenant_id = ? ";
 
@@ -173,48 +154,18 @@ final class PatientModel
     {
         $parameters = [TenantContext::id()];
 
-        $selectQuery = "SELECT
-                        P.id,
-                        P.user_id,
-                        P.birth_date,
-                        P.created_at,
-                        P.updated_at,
-                        TRIM(CONCAT(U.first_name, ' ', U.last_name)) as paciente_nombre,
-                        U.dni,
-                        U.email,
-                        U.phone
-                    ";
-
-        $fromQuery = "FROM patients P
-                  INNER JOIN users U ON U.id = P.user_id AND U.tenant_id = P.tenant_id
-                  ";
-
+        $fromQuery = "FROM patients P ";
         $whereQuery = "WHERE P.tenant_id = ? ";
 
+        $this->appendFilters($request, $whereQuery, $parameters);
 
-        if ($request->hasSearch()) {
-            $whereQuery .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
-            $like = "%{$request->getSearch()}%";
-            $parameters[] = $like;
-            $parameters[] = $like;
-        }
-
-        if ($request->hasMedicalUserId()) {
-            $whereQuery .= " AND EXISTS (
-                SELECT 1 FROM appointments A
-                INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = P.tenant_id
-                WHERE A.patient_id = P.id AND A.tenant_id = P.tenant_id AND M.user_id = ?
-            ) ";
-            $parameters[] = $request->getMedicalUserId();
-        }
-
-        $orderQuery = "ORDER BY U.first_name ASC, U.last_name ASC ";
+        $orderQuery = "ORDER BY P.first_name ASC, P.last_name ASC ";
 
         $paginationQuery = "LIMIT ?, ? ";
         $parameters[] = $request->getPagination()->getOffset();
         $parameters[] = $request->getPagination()->getLimit();
 
-        $fullQuery = $selectQuery . $fromQuery . $whereQuery . $orderQuery . $paginationQuery;
+        $fullQuery = self::PROJECTION_SELECT . $fromQuery . $whereQuery . $orderQuery . $paginationQuery;
 
         $result = $this->db->query($fullQuery, $parameters);
         $primitives = $result->getResult();
@@ -232,27 +183,9 @@ final class PatientModel
     {
         $parameters = [TenantContext::id()];
 
-        $query = "SELECT COUNT(*) as total
-              FROM patients P
-              INNER JOIN users U ON U.id = P.user_id AND U.tenant_id = P.tenant_id
-              WHERE P.tenant_id = ? ";
+        $query = "SELECT COUNT(*) as total FROM patients P WHERE P.tenant_id = ? ";
 
-
-        if ($request->hasSearch()) {
-            $query .= " AND (CONCAT(U.first_name, ' ', U.last_name) LIKE ? OR U.dni LIKE ?) ";
-            $like = "%{$request->getSearch()}%";
-            $parameters[] = $like;
-            $parameters[] = $like;
-        }
-
-        if ($request->hasMedicalUserId()) {
-            $query .= " AND EXISTS (
-                SELECT 1 FROM appointments A
-                INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = P.tenant_id
-                WHERE A.patient_id = P.id AND A.tenant_id = P.tenant_id AND M.user_id = ?
-            ) ";
-            $parameters[] = $request->getMedicalUserId();
-        }
+        $this->appendFilters($request, $query, $parameters);
 
         $result = $this->db->query($query, $parameters);
         return $result->getRow()->total ?? 0;
@@ -262,5 +195,24 @@ final class PatientModel
     {
         $query = "DELETE FROM patients WHERE id = ? AND tenant_id = ?";
         $this->db->query($query, [$id, TenantContext::id()]);
+    }
+
+    private function appendFilters(PatientFilterRequest $request, string &$whereQuery, array &$parameters): void
+    {
+        if ($request->hasSearch()) {
+            $whereQuery .= " AND (CONCAT(P.first_name, ' ', P.last_name) LIKE ? OR P.dni LIKE ?) ";
+            $like = "%{$request->getSearch()}%";
+            $parameters[] = $like;
+            $parameters[] = $like;
+        }
+
+        if ($request->hasMedicalUserId()) {
+            $whereQuery .= " AND EXISTS (
+                SELECT 1 FROM appointments A
+                INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = P.tenant_id
+                WHERE A.patient_id = P.id AND A.tenant_id = P.tenant_id AND M.user_id = ?
+            ) ";
+            $parameters[] = $request->getMedicalUserId();
+        }
     }
 }

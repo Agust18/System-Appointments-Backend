@@ -42,14 +42,6 @@ final class AppointmentCreatePermissionTest extends CIUnitTestCase
         $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
     }
 
-    public function testPatientPasses(): void
-    {
-        session()->set('roleId', Role::PATIENT);
-
-        $result = $this->filter->before($this->request());
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
 
     public function testMedicalForbidden(): void
     {

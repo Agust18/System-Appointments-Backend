@@ -105,7 +105,7 @@ final class AppointmentTenantIsolationTest extends CIUnitTestCase
         ]);
         $medicalId = $this->db->insertID();
 
-        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'user_id' => $patientUser, 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => $tenantId, 'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
         $patientId = $this->db->insertID();
 
         $ids = [];
@@ -176,7 +176,6 @@ final class AppointmentTenantIsolationTest extends CIUnitTestCase
 
         $this->assertCount(0, $model->findByMedicalId($this->b['medical']));
         $this->assertCount(0, $model->findByPatientId($this->b['patient']));
-        $this->assertCount(0, $model->findByPatientUserId($this->b['patientUser']));
         $this->assertCount(0, $model->findByMedicalUserId($this->b['medicalUser']));
         $this->assertCount(1, $model->findByMedicalId($this->a['medical']), 'control: lo propio sí se ve');
 
@@ -335,7 +334,7 @@ final class AppointmentTenantIsolationTest extends CIUnitTestCase
             'tenant_id' => $this->tenantA, 'first_name' => 'Sin', 'last_name' => 'Turnos',
             'email' => 'sin-turnos@test.com', 'password' => 'hash', 'dni' => 39999999,
         ]);
-        $this->db->table('patients')->insert(['tenant_id' => $this->tenantA, 'user_id' => $this->db->insertID(), 'birth_date' => '1990-01-01']);
+        $this->db->table('patients')->insert(['tenant_id' => $this->tenantA, 'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
         $orphanPatient = $this->db->insertID();
 
         $this->seedAppointment($this->tenantB, $this->a['medical'], $orphanPatient, $this->b['service'], '16:00:00', '16:30:00', 'confirmed');

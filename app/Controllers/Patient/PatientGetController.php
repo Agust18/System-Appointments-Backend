@@ -20,9 +20,4 @@ final class PatientGetController extends ResourceController
         return $this->response->setJSON($patientResponse);
     }
 
-    public function findByUser(int $userId): ResponseInterface
-    {
-        $patientResponse = $this->patientProjectionFinderService->findByUserIdResponse($userId);
-        return $this->response->setJSON($patientResponse);
-    }
 }

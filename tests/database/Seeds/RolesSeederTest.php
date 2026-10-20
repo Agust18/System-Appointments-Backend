@@ -40,14 +40,13 @@ final class RolesSeederTest extends CIUnitTestCase
         }
     }
 
-    public function testSeedsTheFourRolesWithConstantIds(): void
+    public function testSeedsTheThreeRolesWithConstantIds(): void
     {
         $this->runSeeder();
 
         $this->assertSame([
             Role::ADMIN => 'admin',
             Role::MEDICAL => 'medical',
-            Role::PATIENT => 'patient',
             Role::RECEPTION => 'reception',
         ], $this->roles());
     }
@@ -57,15 +56,15 @@ final class RolesSeederTest extends CIUnitTestCase
         $this->runSeeder();
         $this->runSeeder();
 
-        $this->assertCount(4, $this->roles());
+        $this->assertCount(3, $this->roles());
     }
 
     public function testFixesSwappedNamesWithoutMovingUserRoleIds(): void
     {
         $this->db->table('roles')->insertBatch([
             ['id' => Role::ADMIN, 'name' => 'admin'],
-            ['id' => 2, 'name' => 'patient'],
-            ['id' => 3, 'name' => 'medical'],
+            ['id' => 2, 'name' => 'reception'],
+            ['id' => 4, 'name' => 'medical'],
         ]);
         $this->db->table('users')->insert([
             'tenant_id' => 1,
@@ -81,7 +80,7 @@ final class RolesSeederTest extends CIUnitTestCase
         $this->runSeeder();
 
         $this->assertSame('medical', $this->roles()[2]);
-        $this->assertSame('patient', $this->roles()[3]);
+        $this->assertSame('reception', $this->roles()[4]);
         $this->assertSame(2, (int) $this->db->query('SELECT role_id FROM users WHERE id = ?', [$userId])->getRow()->role_id);
     }
 }

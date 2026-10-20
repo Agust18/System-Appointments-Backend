@@ -38,7 +38,7 @@ No hay `DELETE` ni `PATCH`: los datos de un Tenant se conservan. El `slug` **no 
 
 El filtro global `tenant` se exceptúa en `app/Config/Filters.php` (`'tenant' => ['except' => ['platform', 'platform/*']]`; `platform/*` no cubre `platform` a secas). Sin esa excepción `/platform/*` respondería 400 en producción y cargaría `demo` en desarrollo. `TenantContext` queda vacío: si un Model de Tenant se llama por error ahí, lanza `TenantNotResolvedException`.
 
-`PlatformRoutesTest` verifica los filtros efectivos de cada ruta y que **toda ruta de Tenant siga teniendo `tenant` + `auth`** (salvo `/public/*` y los flujos de acceso: login, registro, verify-email, resend-verification, forgot-password, reset-password).
+`PlatformRoutesTest` verifica los filtros efectivos de cada ruta y que **toda ruta de Tenant siga teniendo `tenant` + `auth`** (salvo `/public/*` y los flujos de acceso: login, forgot-password, reset-password).
 
 ## CORS
 
@@ -52,7 +52,7 @@ Body: `slug`, `name`, `adminFirstName`, `adminLastName`, `adminEmail`, `adminDni
 2. Una sola transacción (`UserCreatorService` no abre otra: no se anidan): inserta el Tenant, verifica el resultado (no null y `transStatus()`), `TenantContext::set($nuevo)` y crea el ADMIN con `isVerified = true`.
    Entre el Tenant y el ADMIN se inserta su fila de `tenant_settings` (`TenantSettings::defaultsFor`: `name` = nombre del Tenant, `frontend_url` = el del body normalizado, el resto NULL).
 3. Ante cualquier error: `transRollback()`. En el `finally` restaura el `TenantContext` previo (`clear()` si estaba vacío).
-4. **Email de bienvenida** (`SendTenantAdminWelcomeEmailService`): después del commit, con el Tenant nuevo en el `TenantContext` (se restaura después), sale **siempre** (con o sin `adminPassword`) al email del ADMIN, con un link `{frontend_url}/reset-password?token=...` y **sin contraseña**. El token es del tipo `password_reset` (lo acepta `/reset-password`) pero dura **72 h** (`TenantAdminWelcomeTokenService`; el reset normal dura 1 h). El Service nunca lanza: si el SMTP falla, el alta **no se deshace** y la respuesta trae `welcomeEmailSent: false` (`TenantCreatedResponse`); el ADMIN puede pedir otro link con `forgot-password` (un usuario sin contraseña recibe "Activá tu cuenta"). Requiere que exista el rol `admin` en `roles`: si falta, el alta falla con `UserCannotBeCreatedException` (500) y se deshace todo; en el deploy, después de `php spark migrate`, correr `php spark db:seed RolesSeeder` (idempotente; ver `bitacora/hecho/roles-seeder.md`).
+4. **Email de bienvenida** (`SendTenantAdminWelcomeEmailService`): después del commit, con el Tenant nuevo en el `TenantContext` (se restaura después), sale **siempre** (con o sin `adminPassword`) al email del ADMIN, con un link `{frontend_url}/reset-password?token=...` y **sin contraseña**. El token es del tipo `password_reset` (lo acepta `/reset-password`) pero dura **72 h** (`TenantAdminWelcomeTokenService`; el reset normal dura 1 h). El Service nunca lanza: si el SMTP falla, el alta **no se deshace** y la respuesta trae `welcomeEmailSent: false` (`TenantCreatedResponse`); el ADMIN puede pedir otro link con `forgot-password`. Requiere que exista el rol `admin` en `roles`: si falta, el alta falla con `UserCannotBeCreatedException` (500) y se deshace todo; en el deploy, después de `php spark migrate`, correr `php spark db:seed RolesSeeder` (idempotente; ver `bitacora/hecho/roles-seeder.md`).
 
 Un Tenant suspendido responde `403` en todas sus rutas (filtro `tenant`), conserva sus datos y se puede seguir gestionando desde el panel.
 

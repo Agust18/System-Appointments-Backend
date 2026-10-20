@@ -61,7 +61,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Auth/RBAC y roles → `.claude/rules/auth-rbac.md`
 - Sistema de Email → `.claude/rules/email.md`
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
-- Reserva pública (`/public/*`), identidad sin cuenta, throttle → `.claude/rules/public-booking.md`
+- Reserva pública (`/public/*`), paciente como ficha identificada por DNI (sin cuenta), throttle → `.claude/rules/public-booking.md`
 - Panel de plataforma (`/platform/*`), `platform_admins`, suspender Tenants → `.claude/rules/platform-admin.md`
 - Multitenant: glosario en `bitacora/glosario.md`, decisiones en `bitacora/adr/`, plan en `bitacora/pendiente/multitenant-plan.md`.
 

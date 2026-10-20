@@ -55,7 +55,7 @@ final class AppointmentViewPermissionTest extends CIUnitTestCase
     private function seedPatient(int $userId): int
     {
         $this->db->table('patients')->insert(['tenant_id' => 1,
-            'user_id'    => $userId,
+            'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999),
             'birth_date' => '1990-01-01',
         ]);
 
@@ -100,41 +100,7 @@ final class AppointmentViewPermissionTest extends CIUnitTestCase
         $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
     }
 
-    public function testPatientCanViewOwnAppointment(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $appointmentId = $this->seedAppointment($medicalId, $patientId);
 
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $patientUserId);
-
-        $result = $this->filter->before($this->requestFor("appointments/{$appointmentId}"));
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testPatientCannotViewOthersAppointment(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-        $appointmentId = $this->seedAppointment($medicalId, $patientId);
-
-        $otherUserId = $this->seedUser();
-        $this->seedPatient($otherUserId);
-
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', $otherUserId);
-
-        $result = $this->filter->before($this->requestFor("appointments/{$appointmentId}"));
-
-        $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-        $this->assertSame(403, $result->getStatusCode());
-    }
 
     public function testMedicalCanViewOwnAppointment(): void
     {

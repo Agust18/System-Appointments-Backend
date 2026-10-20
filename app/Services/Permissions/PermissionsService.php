@@ -10,13 +10,11 @@ use App\Models\Patient\PatientModel;
 
 final class PermissionsService
 {
-    private PatientModel $patientModel;
     private MedicalModel $medicalModel;
     private AppointmentModel $appointmentModel;
 
     public function __construct()
     {
-        $this->patientModel = new PatientModel();
         $this->medicalModel = new MedicalModel();
         $this->appointmentModel = new AppointmentModel();
     }
@@ -27,10 +25,6 @@ final class PermissionsService
             return true;
         }
 
-        if ($roleId === Role::PATIENT) {
-            $patient = $this->patientModel->find($patientId);
-            return $patient !== null && $patient->getUserId() === $userId;
-        }
 
         if ($roleId === Role::MEDICAL) {
             return $this->appointmentModel->hasRelationWithPatient($userId, $patientId);
@@ -44,12 +38,7 @@ final class PermissionsService
         if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
             return true;
         }
-
-        if ($roleId === Role::PATIENT) {
-            $patient = $this->patientModel->findByUserId($userId);
-            return $patient !== null && $appointment->getPatientId() === $patient->getId();
-        }
-
+        
         if ($roleId === Role::MEDICAL) {
             $medical = $this->medicalModel->findByUserId($userId);
             return $medical !== null && $appointment->getMedicalId() === $medical->getId();
@@ -67,23 +56,6 @@ final class PermissionsService
         if ($roleId === Role::MEDICAL) {
             $medical = $this->medicalModel->findByUserId($userId);
             return $medical !== null && $appointment->getMedicalId() === $medical->getId();
-        }
-
-        return false;
-    }
-
-    
-    public function canCancelAppointment(int $roleId, int $userId, Appointment $appointment): bool
-    {
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
-            return true;
-        }
-
-        if ($roleId === Role::PATIENT) {
-            $patient = $this->patientModel->findByUserId($userId);
-            return $patient !== null
-                && $appointment->getPatientId() === $patient->getId()
-                && $appointment->getStatus() === 'confirmed';
         }
 
         return false;

@@ -61,60 +61,11 @@ final class AppointmentUpdateValidatorServiceTest extends CIUnitTestCase
         );
     }
 
-    public function testPatientRequestingCancelledPassesValidation(): void
-    {
-        session()->set('roleId', Role::PATIENT);
 
-        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('pending'), 1);
-        $this->addToAssertionCount(1);
-    }
 
-    public function testPatientRequestingNonCancelledStatusThrows403(): void
-    {
-        session()->set('roleId', Role::PATIENT);
 
-        $this->expectException(AppointmentActionForbiddenException::class);
-        $this->expectExceptionCode(403);
-        $this->expectExceptionMessage('Los pacientes solo pueden cancelar turnos');
 
-        $this->validator->validate($this->request(status: 'confirmed'), $this->appointment('pending'), 1);
-    }
 
-    public function testPatientCancellingConfirmedAppointmentPasses(): void
-    {
-        session()->set('roleId', Role::PATIENT);
-
-        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('confirmed'), 1);
-        $this->addToAssertionCount(1);
-    }
-
-    public function testPatientCannotChangeOtherFieldsWhileCancelling(): void
-    {
-        session()->set('roleId', Role::PATIENT);
-
-        $this->expectException(AppointmentActionForbiddenException::class);
-
-        $this->validator->validate($this->request(status: 'cancelled', fecha: '2026-12-02', nota: 'x'), $this->appointment('pending'), 1);
-    }
-
-    public function testPatientCannotCancelAPastAppointment(): void
-    {
-        session()->set('roleId', Role::PATIENT);
-
-        $this->expectException(PastAppointmentCannotBeModifiedException::class);
-
-        $this->validator->validate($this->request(status: 'cancelled'), $this->appointment('confirmed', '2020-01-01'), 1);
-    }
-
-    public function testPatientRequestingNoStatusThrows403(): void
-    {
-        session()->set('roleId', Role::PATIENT);
-
-        $this->expectException(AppointmentActionForbiddenException::class);
-        $this->expectExceptionCode(403);
-
-        $this->validator->validate($this->request(nota: 'algo'), $this->appointment('pending'), 1);
-    }
 
     public function testMedicalCanOnlyCompleteOrCancel(): void
     {

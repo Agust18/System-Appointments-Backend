@@ -5,7 +5,7 @@ use Exception;
 
 /**
  * El rol del usuario no puede hacer esta modificación sobre el turno
- * (un médico cambiando campos que no son estado/nota, un paciente que no cancela, etc.).
+ * (p. ej. un médico cambiando campos que no son estado/nota).
  */
 class AppointmentActionForbiddenException extends Exception
 {
@@ -22,10 +22,5 @@ class AppointmentActionForbiddenException extends Exception
     public static function medicalCanOnlyComplete(): self
     {
         return new self('Los médicos solo pueden completar o cancelar el turno');
-    }
-
-    public static function patientCanOnlyCancel(): self
-    {
-        return new self('Los pacientes solo pueden cancelar turnos');
     }
 }
