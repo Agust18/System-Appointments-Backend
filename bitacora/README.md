@@ -12,8 +12,9 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (29)
+## ✅ Hecho (30)
 
+- [Conteo y estadísticas de turnos ahora hacen JOIN a `services` (total = lista)](hecho/count-y-stats-de-turnos-sin-join-a-services.md)
 - [Deploy: reception.email (reemplazado por `tenant_settings.reception_email` por Tenant)](hecho/deploy-reception-email.md)
 - [Unificar los filtros de RBAC: filtro `role:...` y `PermissionsService` como única fuente de propiedad](hecho/unificar-filtros-rbac.md)
 - [Paciente sin usuario: ficha propia por DNI y `/consulta` para consultar y cancelar (fases 1-3)](hecho/paciente-sin-usuario.md)
@@ -47,13 +48,12 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 
-## ⏳ Pendiente (32)
+## ⏳ Pendiente (31)
 
 - [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
 - [Auditar el modelo de borrado: lógico (`deleted_at`) vs físico (post-multitenant)](pendiente/borrado-logico-vs-fisico.md)
-- [Conteo y estadísticas de turnos no hacen JOIN a `services` (total ≠ lista)](pendiente/count-y-stats-de-turnos-sin-join-a-services.md)
 - [📌 Multitenant: lo que falta (módulos, tope de turnos, timezone/logo, fallback `demo`)](pendiente/multitenant-plan.md) — decisiones en [glosario](glosario.md) y [ADR](adr/)
 - [Fallback `demo` del filtro tenant con más de un Tenant](pendiente/fallback-demo-con-mas-de-un-tenant.md)
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)

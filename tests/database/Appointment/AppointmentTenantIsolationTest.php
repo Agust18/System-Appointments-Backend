@@ -307,22 +307,29 @@ final class AppointmentTenantIsolationTest extends CIUnitTestCase
     }
 
     /**
-     * Solo se verifica que no se filtre nada del otro Tenant en las proyecciones y listas. NO se
-     * afirma nada sobre countProjection/statsByStatus: no hacen JOIN a `services` (searchProjection
-     * sí), así que cuentan este turno aunque no figure en la lista. Esa fila es del propio Tenant A
-     * (no es una fuga) y es una inconsistencia previa al multitenant: ver
-     * bitacora/pendiente/count-y-stats-de-turnos-sin-join-a-services.md.
+     * Lista, total y estadísticas tienen que coincidir: un turno con el servicio de otro Tenant o
+     * sin servicio no figura en la lista y tampoco se cuenta.
      */
-    public function testAppointmentWithAForeignServiceDoesNotLeakInProjections(): void
+    public function testAppointmentWithAForeignOrMissingServiceDoesNotLeakNorSkewCounts(): void
     {
         $toForeignService = $this->seedAppointment($this->tenantA, $this->a['medical'], $this->a['patient'], $this->b['service'], '14:00:00', '14:30:00', 'confirmed');
+        $withoutService = $this->seedAppointment($this->tenantA, $this->a['medical'], $this->a['patient'], $this->a['service'], '15:00:00', '15:30:00', 'confirmed');
+        $this->db->query('UPDATE appointments SET service_id = NULL WHERE id = ?', [$withoutService]);
 
         $model = new AppointmentModel();
 
         $this->assertNotNull($model->find($toForeignService), 'la fila existe en el Tenant A');
         $this->assertNull($model->findProjection($toForeignService), 'su proyección no debe mostrar el servicio del otro Tenant');
-        $this->assertSame([$this->a['appointment']], array_map(static fn ($p) => $p->getId(), $model->searchProjection($this->filter())));
+
+        $listed = $model->searchProjection($this->filter());
+        $this->assertSame([$this->a['appointment']], array_map(static fn ($p) => $p->getId(), $listed));
         $this->assertSame([$this->a['appointment']], array_map(static fn ($p) => $p->getId(), $model->findUpcomingIn24Hours()));
+
+        $this->assertSame(count($listed), $model->countProjection($this->filter()));
+        $this->assertSame(
+            ['pending' => 1, 'confirmed' => 0, 'cancelled' => 0, 'completed' => 0],
+            $model->statsByStatus($this->filter())
+        );
     }
 
     public function testPatientSearchByMedicalIgnoresAppointmentsOfAnotherTenant(): void

@@ -1,6 +1,6 @@
 # `countProjection` y `statsByStatus` de turnos no hacen JOIN a `services`
 
-- **Estado:** pendiente (no es una fuga entre Tenants; inconsistencia previa al multitenant)
+- **Estado:** hecho (20/10/2026). Se agregó `INNER JOIN services SRV` a `countProjection` y `statsByStatus`; total y estadísticas coinciden con la lista. Test: `AppointmentTenantIsolationTest::testAppointmentWithAForeignOrMissingServiceDoesNotLeakNorSkewCounts`. No era una fuga entre Tenants; era una inconsistencia previa al multitenant.
 - **Repo:** backend
 - **Esfuerzo:** bajo
 - **Fecha:** 06/10/2026
