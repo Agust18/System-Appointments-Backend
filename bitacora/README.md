@@ -48,7 +48,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ## ⏳ Pendiente (32)
 
-- [Generalizar el sistema a otros rubros: vocabulario por Tenant, campos obligatorios de salud, rubro y módulos](pendiente/generalizacion-por-rubro.md)
 - [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
 - [DashboardDemoSeeder: no siembra `medical_schedules` y oculta fallos de INSERT](pendiente/seeder-dashboard-bugs.md)
