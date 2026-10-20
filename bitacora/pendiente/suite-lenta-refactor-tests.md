@@ -21,4 +21,4 @@ Cada test de DB con `$refresh = true` re-migra todo `turnero_test` (unos 12 s po
 
 ⚠️ Tests que rompen el `refresh` si no se cuidan (se descubrió en las fases 1-3):
 - El `down()` de `ReplaceUsernameWithFirstLastName` reconstruye `users.username` (UNIQUE) desde nombre + apellido: los tests deben sembrar usuarios con **nombres únicos** (`uniqid()`).
-- Los tests que dejan un índice borrado o filas que impidan revertir una migración (`uq_users_dni`, `uq_patients_user_id`) tienen que restaurarlo en `tearDown`.
+- Los tests que dejan un índice borrado o filas que impidan revertir una migración (`uq_users_dni`; `uq_patients_user_id` ya no existe: `patients.user_id` se soltó en la fase 1 de paciente-sin-usuario) tienen que restaurarlo en `tearDown`.

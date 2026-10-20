@@ -2,9 +2,9 @@
 
 namespace App\Filters;
 
-use App\Constants\Role;
 use App\Filters\Support\ResolvesEntityByRouteSegment;
 use App\Models\Medical\MedicalModel;
+use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,7 +20,9 @@ class MedicalViewPermission implements FilterInterface
         $response = \Config\Services::response();
         $medicalModel = new MedicalModel();
 
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
+        $permissionsService = new PermissionsService();
+
+        if ($permissionsService->hasFullAccess($roleId)) {
             return $request;
         }
 
@@ -36,7 +38,7 @@ class MedicalViewPermission implements FilterInterface
             ]);
         }
 
-        if ($roleId === Role::MEDICAL && $medical->getUserId() === $userId) {
+        if ($permissionsService->canViewMedical($roleId, $userId, $medical)) {
             return $request;
         }
 

@@ -3,6 +3,7 @@
 use App\Constants\Role;
 use App\Entity\Appointment\Appointment;
 use App\Models\Appointment\AppointmentModel;
+use App\Models\Medical\MedicalModel;
 use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
@@ -118,6 +119,27 @@ final class PermissionsServiceTest extends CIUnitTestCase
         $patientId = $this->seedPatient($patientUserId);
 
         $this->assertFalse($this->service->canViewPatient(Role::MEDICAL, $medicalUserId, $patientId));
+    }
+
+    // canViewMedical
+
+    public function testCanViewMedicalFullAccessRolesTrue(): void
+    {
+        $medical = (new MedicalModel())->find($this->seedMedical($this->seedUser()));
+
+        $this->assertTrue($this->service->canViewMedical(Role::ADMIN, $this->seedUser(), $medical));
+        $this->assertTrue($this->service->canViewMedical(Role::RECEPTION, $this->seedUser(), $medical));
+    }
+
+    public function testCanViewMedicalOwnProfileTrueAndOtherMedicalFalse(): void
+    {
+        $ownerUserId = $this->seedUser();
+        $medical = (new MedicalModel())->find($this->seedMedical($ownerUserId));
+        $otherMedicalUserId = $this->seedUser();
+        $this->seedMedical($otherMedicalUserId);
+
+        $this->assertTrue($this->service->canViewMedical(Role::MEDICAL, $ownerUserId, $medical));
+        $this->assertFalse($this->service->canViewMedical(Role::MEDICAL, $otherMedicalUserId, $medical));
     }
 
     // canViewAppointment

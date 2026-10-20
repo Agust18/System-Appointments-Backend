@@ -2,7 +2,6 @@
 
 namespace App\Filters;
 
-use App\Constants\Role;
 use App\Models\Appointment\AppointmentModel;
 use App\Services\Permissions\PermissionsService;
 use CodeIgniter\Filters\FilterInterface;
@@ -17,7 +16,9 @@ class AppointmentViewPermission implements FilterInterface
         $userId = session()->get('userId');
         $response = \Config\Services::response();
 
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
+        $permissionsService = new PermissionsService();
+
+        if ($permissionsService->hasFullAccess($roleId)) {
             return $request;
         }
 
@@ -30,7 +31,7 @@ class AppointmentViewPermission implements FilterInterface
             ]);
         }
 
-        if ((new PermissionsService())->canViewAppointment($roleId, $userId, $appointment)) {
+        if ($permissionsService->canViewAppointment($roleId, $userId, $appointment)) {
             return $request;
         }
 

@@ -2,7 +2,6 @@
 
 namespace App\Filters;
 
-use App\Constants\Role;
 use App\Filters\Support\ResolvesEntityByRouteSegment;
 use App\Models\Patient\PatientModel;
 use App\Services\Permissions\PermissionsService;
@@ -19,7 +18,9 @@ class PatientViewPermission implements FilterInterface
         $response = \Config\Services::response();
         $patientModel = new PatientModel();
 
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
+        $permissionsService = new PermissionsService();
+
+        if ($permissionsService->hasFullAccess($roleId)) {
             return $request;
         }
 
@@ -31,7 +32,7 @@ class PatientViewPermission implements FilterInterface
             ]);
         }
 
-        if ((new PermissionsService())->canViewPatient($roleId, $userId, $patient->getId())) {
+        if ($permissionsService->canViewPatient($roleId, $userId, $patient->getId())) {
             return $request;
         }
 
