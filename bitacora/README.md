@@ -12,8 +12,9 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (30)
+## ✅ Hecho (31)
 
+- [Campo `code` en los 409 de POST /public/appointments (`HasErrorCode`)](hecho/campo-code-en-409-publicos.md)
 - [Conteo y estadísticas de turnos ahora hacen JOIN a `services` (total = lista)](hecho/count-y-stats-de-turnos-sin-join-a-services.md)
 - [Deploy: reception.email (reemplazado por `tenant_settings.reception_email` por Tenant)](hecho/deploy-reception-email.md)
 - [Unificar los filtros de RBAC: filtro `role:...` y `PermissionsService` como única fuente de propiedad](hecho/unificar-filtros-rbac.md)
@@ -70,7 +71,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [CORS en rutas privadas (no incluido)](pendiente/cors-en-rutas-privadas.md)
 - [Flujo autenticado: fecha/hora sin largo exacto](pendiente/fecha-hora-exact-length-flujo-autenticado.md)
 - [CORS: exponer Retry-After](pendiente/cors-exponer-retry-after.md)
-- [Agregar campo code a los 409 de POST /public/appointments](pendiente/campo-code-en-409-publicos.md)
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)
 - [Suite lenta: regla de trabajo y refactor de tests (resuelto en gran parte con `FastDatabaseTestTrait`, ver suite-rapida-pendientes)](pendiente/suite-lenta-refactor-tests.md)
 - [Gap funcional: el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
