@@ -14,6 +14,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ## ✅ Hecho (29)
 
+- [Deploy: reception.email (reemplazado por `tenant_settings.reception_email` por Tenant)](hecho/deploy-reception-email.md)
 - [Unificar los filtros de RBAC: filtro `role:...` y `PermissionsService` como única fuente de propiedad](hecho/unificar-filtros-rbac.md)
 - [Paciente sin usuario: ficha propia por DNI y `/consulta` para consultar y cancelar (fases 1-3)](hecho/paciente-sin-usuario.md)
 - [Contrato: PUT de turnos con fecha/hora vacías (422) y `excludeAppointmentId` en disponibilidad](hecho/contrato-put-appointments-vacios-y-exclude-availability.md)
@@ -66,7 +67,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Deploy: cors.allowedOrigins / allowedOriginsPatterns](pendiente/deploy-cors-origenes.md)
 - [Deploy: migraciones probadas en una copia de la base](pendiente/deploy-migraciones-en-copia-de-base.md)
 - [Deploy: EMAIL_* configurado](pendiente/deploy-email-config.md)
-- [Deploy: reception.email configurado](pendiente/deploy-reception-email.md)
 - [CORS en rutas privadas (no incluido)](pendiente/cors-en-rutas-privadas.md)
 - [Flujo autenticado: fecha/hora sin largo exacto](pendiente/fecha-hora-exact-length-flujo-autenticado.md)
 - [CORS: exponer Retry-After](pendiente/cors-exponer-retry-after.md)

@@ -38,7 +38,7 @@ final class PublicAppointmentCancelledNotificationService
 
         $receptionEmail = $this->settingsResolver->receptionEmail();
         if ($receptionEmail === null) {
-            log_message('warning', 'reception.email no está configurado: no se avisó a recepción de la cancelación del turno ' . $appointmentId . '.');
+            log_message('warning', 'reception_email del Tenant no está configurado: no se avisó a recepción de la cancelación del turno ' . $appointmentId . '.');
             return;
         }
 

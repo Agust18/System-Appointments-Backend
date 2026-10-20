@@ -56,7 +56,7 @@ final class PublicAppointmentCreatedNotificationService
 
         $receptionEmail = $this->settingsResolver->receptionEmail();
         if ($receptionEmail === null) {
-            log_message('warning', 'reception.email no está configurado: no se avisó a recepción del turno ' . $projection->getId() . '.');
+            log_message('warning', 'reception_email del Tenant no está configurado: no se avisó a recepción del turno ' . $projection->getId() . '.');
             return;
         }
 
