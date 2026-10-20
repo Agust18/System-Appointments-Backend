@@ -49,6 +49,8 @@ Un Service por aviso. Todos terminan en `AppointmentEmailDispatcherService::send
 | `PublicAppointmentCreatedNotificationService` | `PublicAppointmentCreatorService` (`POST /public/appointments`) | Paciente: "Tu turno fue creado y confirmado". Recepción: "Nuevo turno agendado" (fecha, hora, paciente, teléfono, médico, servicio) |
 | `AppointmentUpdateNotificationService` | `AppointmentUpdaterService` (`PUT /appointments/{id}`) | Decide según el estado previo: cancelado, confirmado o reprogramado (fecha, hora o médico distintos). Recibe el turno **sin modificar** |
 | `AppointmentCancelledNotificationService` / `AppointmentRescheduledNotificationService` | `AppointmentUpdateNotificationService` | Paciente: "Tu turno fue cancelado" / "Tu turno fue reprogramado" |
+| `PublicAppointmentCancelledNotificationService` | `PublicAppointmentCancellerService` (`POST /public/appointments/cancel`) | Paciente: "Tu turno fue cancelado". Recepción: "Turno cancelado por el paciente" |
+| `AppointmentAccessCodeNotificationService` | `AppointmentAccessCodeRegeneratorService` (`POST /appointments/{id}/access-code`) | Paciente: "Nuevo código para tu turno" (link + código) |
 | `AppointmentReminderService` | `SendAppointmentRemindersCommand` | Recordatorio 24 h antes (`ReminderEmailTemplate`). Tiene su propio envío porque cuenta los fallos por turno |
 
 Un turno público se identifica por el servicio que lo crea, no por un campo ni por el status

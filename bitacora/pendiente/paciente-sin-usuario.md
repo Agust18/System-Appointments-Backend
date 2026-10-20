@@ -1,6 +1,6 @@
 # Paciente sin usuario (ficha propia + /consulta)
 
-- **Estado:** Fase 1 ✅ (2026-10-20) · Fase 2 ✅ (2026-10-21, backend + frontend) · Fase 3 pendiente
+- **Estado:** Fase 1 ✅ (2026-10-20) · Fase 2 ✅ (2026-10-21, backend + frontend) · Fase 3 ✅ (2026-10-20, backend + frontend)
 - **Repo:** backend + frontend (`System-AppointmentsFrontend`)
 - **Esfuerzo:** ~2,5–3,5 semanas (estimación gruesa)
 - **Fecha:** 2026-10-20
@@ -86,16 +86,23 @@ El paciente deja de ser usuario: no hay cuenta, login ni password. Es una ficha 
 - [x] Migración `RemovePatientRoleAndUsers`: borra los `users` rol 3 y la fila 3 de `roles` (el id 3 no se reutiliza). `Role::inListRule()` arma el `in_list` de `roleId` desde `Role::NAMES`.
 - Pendiente cosmético: CSS `.btn-register-public` y el `openLogin` del Navbar quedaron sin uso en el frontend.
 
-## Fase 3 — `/consulta` v1 (consultar y cancelar)
-- [ ] Migración: `appointments.access_code` (hash), generado al reservar. Código de 8 caracteres sin ambiguos + token largo para el link.
-- [ ] `POST /public/appointments/lookup` (`cors` → `throttle:10,60`): `{dni, code}` o `{token}` → un solo turno.
-- [ ] `POST /public/appointments/cancel` (`cors` → `throttle:5,60`): solo turnos `confirmed` y futuros; dispara `AppointmentCancelledNotificationService`.
-- [ ] Validación con `hash_equals`, error único y neutral, bloqueo por DNI reutilizando `PublicIdentityAttemptLimiter`.
-- [ ] Email de reserva (`PublicAppointmentCreatedNotificationService`) con link `/consulta?t=...` y código.
-- [ ] Panel de recepción muestra el código para pacientes sin email.
-- [ ] Frontend: página `public/consulta/` (form DNI + código, o carga por `?t=`; vista del turno con botón cancelar) reutilizando `publicApi.js`.
-- [ ] Tests: aislamiento por tenant, límite por DNI, error neutral, cancelación.
-- [ ] Documentar en `public-booking.md`.
+## Fase 3 — `/consulta` v1 (consultar y cancelar) ✅ TERMINADA (backend + frontend, falta probar en un entorno real)
+Decisiones tomadas al implementarla (acordadas con el usuario):
+- Hash **SHA-256 simple**, sin clave secreta de la app: lo peor que pasa si se filtra la base es que cancelen un turno ajeno.
+- El código se guarda solo como hash, así que **no se puede mostrar después**. Se entrega en claro una vez (respuesta del alta, pública y de panel, y email); si se pierde, recepción lo **regenera** (`POST /appointments/{id}/access-code`, invalida el anterior).
+- Se pueden cancelar turnos `pending` **y** `confirmed` futuros (el caso de uso de `pending` está sin definir; se permiten ambos). Al cancelar se avisa al paciente **y a recepción**.
+- La comparación del código es por SQL sobre el hash (no `hash_equals`): con bloqueo por DNI y throttle por IP no aporta.
+
+- [x] Migración `AddAccessToAppointments`: `access_code_hash` + `access_token_hash` (UNIQUE). Código de 8 caracteres sin ambiguos + token de 32 bytes para el link.
+- [x] `POST /public/appointments/lookup` (`cors` → `throttle:10,60`): `{dni, code}` o `{token}`.
+- [x] `POST /public/appointments/cancel` (`cors` → `throttle:5,60`); dispara el aviso al paciente y a recepción.
+- [x] Error único y neutral (`PublicBookingIdentityException`, 404), bloqueo por DNI con `PublicIdentityAttemptLimiter`. `PublicIdentityLockTimeoutException` se borró (nadie la usaba).
+- [x] Emails con link `/consulta?t=...` y código (alta pública y alta de panel `confirmed`).
+- [x] Panel: el alta devuelve `accessCode` (modal de una sola vez) y acción "Generar código de consulta" por turno.
+- [x] Frontend: `public/consulta/` (form DNI + código, carga por `?t=`, cancelar con confirmación), código en la confirmación de la reserva.
+- [x] Tests: `PublicAppointmentAccessTest` (16: hash, neutral, bloqueo, aislamiento por tenant, cancelación, regeneración), rutas en `PlatformRoutesTest`; frontend `ConsultaPage`, `consultaErrors`.
+- [x] Documentado en `public-booking.md`, `auth-rbac.md`, `email.md`.
+- Al desplegar: `php spark migrate` y `php spark db:seed RolesSeeder`; cada Tenant necesita `frontend_url` para que el link del email funcione (sin él, el mail sale solo con el código).
 
 ## Riesgos / puntos a vigilar
 - Reservar con un DNI ajeno ya no tiene segundo factor: mitigan tope de 3 turnos, throttle por IP, no pisar datos y que recepción pueda cancelar.

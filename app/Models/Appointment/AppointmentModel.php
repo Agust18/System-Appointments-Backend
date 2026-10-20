@@ -125,6 +125,56 @@ final class AppointmentModel
         return $this->find($appointment->getId());
     }
 
+    /**
+     * Guarda (o reemplaza) los hashes de acceso de `/consulta`. Reemplazar invalida las credenciales anteriores.
+     */
+    public function saveAccessHashes(int $id, string $codeHash, string $tokenHash): void
+    {
+        $this->db->query(
+            "UPDATE appointments SET access_code_hash = ?, access_token_hash = ? WHERE id = ? AND tenant_id = ?",
+            [$codeHash, $tokenHash, $id, TenantContext::id()]
+        );
+    }
+
+    public function findIdByAccessToken(string $tokenHash): ?int
+    {
+        $row = $this->db->query(
+            "SELECT id FROM appointments WHERE access_token_hash = ? AND tenant_id = ?",
+            [$tokenHash, TenantContext::id()]
+        )->getRow();
+
+        return $row ? (int) $row->id : null;
+    }
+
+    public function findIdByDniAndAccessCode(int $dni, string $codeHash): ?int
+    {
+        $row = $this->db->query(
+            "SELECT A.id
+             FROM appointments A
+             INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
+             WHERE P.dni = ? AND A.access_code_hash = ? AND A.tenant_id = ?
+             LIMIT 1",
+            [$dni, $codeHash, TenantContext::id()]
+        )->getRow();
+
+        return $row ? (int) $row->id : null;
+    }
+
+    /**
+     * Pasa a `cancelled` solo si el turno sigue pendiente o confirmado. Devuelve false si otra
+     * cancelación se adelantó (o el estado cambió), para que no se cancele dos veces.
+     */
+    public function cancelIfActive(int $id): bool
+    {
+        $this->db->query(
+            "UPDATE appointments SET status = 'cancelled', updated_at = ?
+             WHERE id = ? AND tenant_id = ? AND status IN ('pending', 'confirmed')",
+            [(new DateTime())->format('Y-m-d H:i:s'), $id, TenantContext::id()]
+        );
+
+        return $this->db->affectedRows() > 0;
+    }
+
     public function find(int $id): ?Appointment
     {
         $query = "SELECT * FROM appointments WHERE id = ? AND tenant_id = ?";

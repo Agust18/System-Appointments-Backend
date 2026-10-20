@@ -60,9 +60,8 @@ Las rutas `/public/*` (reserva pública) no llevan
 arma sobre la respuesta a la que `cors` ya agregó sus headers.
 
 ## Bloqueo por DNI
-`PublicIdentityAttemptLimiter` ya no lo usa nadie: la reserva pública dejó de comparar
-teléfonos (el paciente es una ficha identificada solo por DNI). Se reutilizará en `/consulta`
-(fase 3 de `bitacora/pendiente/paciente-sin-usuario.md`).
+`PublicIdentityAttemptLimiter` lo usa `/consulta` (`PublicAppointmentAccessResolverService`): 5 intentos
+fallidos con DNI + código bloquean ese DNI una hora, con el mismo error neutral. Ver `public-booking.md`.
 
 ## `PermissionsService` (`app/Services/Permissions/PermissionsService.php`)
 Centraliza las reglas de rol + ownership que antes estaban duplicadas entre

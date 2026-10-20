@@ -10,8 +10,9 @@ $routes->post('login', 'Auth\UserLoginController::login');
 
 $publicRead = ['filter' => ['cors', 'throttle:60,60']];
 $publicBooking = ['filter' => ['cors', 'throttle:5,60']];
+$publicLookup = ['filter' => ['cors', 'throttle:10,60']];
 
-$routes->group('public', static function ($routes) use ($publicRead, $publicBooking) {
+$routes->group('public', static function ($routes) use ($publicRead, $publicBooking, $publicLookup) {
     $routes->options('(:any)', static function () {
     }, ['filter' => 'cors']);
 
@@ -21,6 +22,8 @@ $routes->group('public', static function ($routes) use ($publicRead, $publicBook
     $routes->get('medicals/(:num)/services', 'MedicalService\PublicMedicalServicesGetController::findByMedical/$1', $publicRead);
     $routes->get('appointments/availability', 'Appointment\PublicAppointmentAvailabilityGetController::getAvailability', $publicRead);
     $routes->post('appointments', 'Appointment\PublicAppointmentPostController::create', $publicBooking);
+    $routes->post('appointments/lookup', 'Appointment\PublicAppointmentLookupPostController::find', $publicLookup);
+    $routes->post('appointments/cancel', 'Appointment\PublicAppointmentCancelPostController::do', $publicBooking);
 });
 
 
@@ -87,6 +90,7 @@ $routes->get('specialties', 'Specialty\SpecialtiesGetController::search', ['filt
 
 //appointment
 $routes->post('appointments', 'Appointment\AppointmentPostController::create', ['filter' => ['auth', 'appointmentCreatePermission']]);
+$routes->post('appointments/(:num)/access-code', 'Appointment\AppointmentAccessCodePostController::do/$1', ['filter' => ['auth', 'adminOrReception']]);
 $routes->get('appointments/availability', 'Appointment\AppointmentAvailabilityGetController::getAvailability', ['filter' => 'auth']);
 $routes->get('appointments/(:num)', 'Appointment\AppointmentGetController::find/$1', ['filter' => ['auth', 'appointmentViewPermission']]);
 $routes->put('appointments/(:num)', 'Appointment\AppointmentPutController::do/$1', ['filter' => ['auth', 'appointmentPermission']]);
