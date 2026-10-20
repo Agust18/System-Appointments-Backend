@@ -22,7 +22,7 @@ final class UserCreatorServiceTest extends CIUnitTestCase
     {
         parent::setUp();
         $this->service = new UserCreatorService();
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+        $this->db->table('roles')->insert(['id' => Role::RECEPTION, 'name' => 'reception']);
     }
 
     private function userRequest(
@@ -30,7 +30,7 @@ final class UserCreatorServiceTest extends CIUnitTestCase
         string $email,
         int $dni
     ): UserRequest {
-        return new UserRequest($firstName, 'Apellido', $email, null, 'password123', $dni, true, Role::PATIENT);
+        return new UserRequest($firstName, 'Apellido', $email, null, 'password123', $dni, true, Role::RECEPTION);
     }
 
     public function testDuplicateEmailThrows409AndCreatesNoExtraUser(): void

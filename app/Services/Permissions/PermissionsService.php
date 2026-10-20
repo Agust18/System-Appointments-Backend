@@ -61,16 +61,6 @@ final class PermissionsService
         return false;
     }
 
-    
-    public function canCancelAppointment(int $roleId, int $userId, Appointment $appointment): bool
-    {
-        if (in_array($roleId, [Role::ADMIN, Role::RECEPTION], true)) {
-            return true;
-        }
-
-        return false;
-    }
-
     public function canDeleteAppointment(int $roleId): bool
     {
         return in_array($roleId, [Role::ADMIN, Role::RECEPTION], true);

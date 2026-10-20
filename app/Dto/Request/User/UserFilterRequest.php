@@ -1,6 +1,7 @@
 <?php 
 namespace App\Dto\Request\User;
 
+use App\Constants\Role;
 use App\Dto\Request\PaginationRequest;
 
 final readonly class UserFilterRequest {
@@ -65,7 +66,7 @@ final readonly class UserFilterRequest {
         return array_merge(PaginationRequest::rules(), [
             'email'    => 'permit_empty|string|max_length[150]',
             'search'   => 'permit_empty|string|max_length[100]',
-            'roleId'   => 'permit_empty|in_list[1,2,3,4]',
+            'roleId'   => 'permit_empty|' . Role::inListRule(),
             'isActive' => 'permit_empty|in_list[0,1,true,false]',
         ]);
     }

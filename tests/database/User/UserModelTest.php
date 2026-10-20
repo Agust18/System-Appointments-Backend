@@ -24,12 +24,12 @@ final class UserModelTest extends CIUnitTestCase
     {
         parent::setUp();
         $this->model = new UserModel();
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
+        $this->db->table('roles')->insert(['id' => Role::RECEPTION, 'name' => 'reception']);
     }
 
     private function user(string $firstName, string $lastName, string $email, int $dni): User
     {
-        $request = new UserRequest($firstName, $lastName, $email, null, 'password123', $dni, true, Role::PATIENT);
+        $request = new UserRequest($firstName, $lastName, $email, null, 'password123', $dni, true, Role::RECEPTION);
 
         return User::convertFromRequest($request);
     }

@@ -14,11 +14,10 @@ class AppointmentCreatePermission implements FilterInterface
         $roleId = session()->get('roleId');
         $response = \Config\Services::response();
 
-        // Admin, Recepcionista y Paciente pueden crear turnos
+        // Admin y Recepcionista pueden crear turnos
         $allowedRoles = [
             Role::ADMIN,
             Role::RECEPTION,
-            Role::PATIENT,
         ];
 
         if (in_array($roleId, $allowedRoles, true)) {

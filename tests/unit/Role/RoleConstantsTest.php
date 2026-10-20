@@ -13,14 +13,14 @@ final class RoleConstantsTest extends CIUnitTestCase
 {
     public function testEveryRoleConstantIsValid(): void
     {
-        foreach ([Role::ADMIN, Role::MEDICAL, Role::PATIENT, Role::RECEPTION] as $id) {
+        foreach ([Role::ADMIN, Role::MEDICAL, Role::RECEPTION] as $id) {
             $this->assertTrue(Role::isValid($id));
         }
     }
 
     public function testUnknownIdsAreRejected(): void
     {
-        foreach ([0, -1, 5, 99] as $id) {
+        foreach ([0, -1, 3, 5, 99] as $id) {
             $this->assertFalse(Role::isValid($id));
         }
     }
@@ -28,7 +28,7 @@ final class RoleConstantsTest extends CIUnitTestCase
     public function testNamesCoverExactlyTheConstants(): void
     {
         $this->assertSame(
-            [Role::ADMIN, Role::MEDICAL, Role::PATIENT, Role::RECEPTION],
+            [Role::ADMIN, Role::MEDICAL, Role::RECEPTION],
             array_keys(Role::NAMES)
         );
     }

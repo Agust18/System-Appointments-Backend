@@ -39,11 +39,10 @@ final class DashboardSeedersTenantTest extends CIUnitTestCase
         $this->db->table('tenants')->insert(['slug' => 'tenant-b', 'name' => 'Tenant B']);
         $this->tenantB = $this->db->insertID();
 
-        // Los usuarios del seeder llevan role_id MEDICAL (2) y PATIENT (3): la FK exige que existan.
+        // Los usuarios del seeder llevan role_id MEDICAL (2): la FK exige que exista.
         // Sin ellos el INSERT falla en silencio dentro de la transacción (CI4 no lanza ahí).
         $this->db->table('roles')->insertBatch([
             ['id' => Role::MEDICAL, 'name' => 'medical'],
-            ['id' => Role::PATIENT, 'name' => 'patient'],
         ]);
 
         $this->setSeedSlug(null);

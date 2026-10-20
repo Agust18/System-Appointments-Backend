@@ -38,7 +38,7 @@ No hay `DELETE` ni `PATCH`: los datos de un Tenant se conservan. El `slug` **no 
 
 El filtro global `tenant` se exceptúa en `app/Config/Filters.php` (`'tenant' => ['except' => ['platform', 'platform/*']]`; `platform/*` no cubre `platform` a secas). Sin esa excepción `/platform/*` respondería 400 en producción y cargaría `demo` en desarrollo. `TenantContext` queda vacío: si un Model de Tenant se llama por error ahí, lanza `TenantNotResolvedException`.
 
-`PlatformRoutesTest` verifica los filtros efectivos de cada ruta y que **toda ruta de Tenant siga teniendo `tenant` + `auth`** (salvo `/public/*` y los flujos de acceso: login, registro, verify-email, resend-verification, forgot-password, reset-password).
+`PlatformRoutesTest` verifica los filtros efectivos de cada ruta y que **toda ruta de Tenant siga teniendo `tenant` + `auth`** (salvo `/public/*` y los flujos de acceso: login, forgot-password, reset-password).
 
 ## CORS
 

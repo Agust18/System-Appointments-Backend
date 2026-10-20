@@ -51,9 +51,9 @@ final class AdminReceptionOrMedicalTest extends CIUnitTestCase
         $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
     }
 
-    public function testPatientForbidden(): void
+    public function testRetiredPatientRoleIdIsForbidden(): void
     {
-        session()->set('roleId', Role::PATIENT);
+        session()->set('roleId', 3); // id del rol paciente, retirado
 
         $result = $this->filter->before($this->request());
 

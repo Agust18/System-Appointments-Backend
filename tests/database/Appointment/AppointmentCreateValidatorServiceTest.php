@@ -35,7 +35,6 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
         $this->monday = (new DateTime('next monday'))->modify('+7 days')->format('Y-m-d');
         $this->validator = new AppointmentCreateValidatorService();
 
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
         session()->destroy();
         session()->set('roleId', Role::ADMIN);
     }
@@ -47,23 +46,13 @@ final class AppointmentCreateValidatorServiceTest extends BookingServiceTestCase
     }
 
     /**
-     * @return array{0:int,1:int} [patientId, userId]
+     * @return array{0:int} [patientId]
      */
-    private function seedPatientUser(?int $roleId = Role::PATIENT): array
+    private function seedPatientUser(): array
     {
-        $this->db->table('users')->insert(['tenant_id' => 1,
-            'first_name' => 'paciente_' . uniqid(),
-            'last_name'  => 'Apellido',
-            'email'      => uniqid() . '@test.com',
-            'password'   => 'hash',
-            'dni'        => random_int(1000000, 9999999),
-            'role_id'    => $roleId,
-        ]);
-        $userId = (int) $this->db->insertID();
-
         $this->db->table('patients')->insert(['tenant_id' => 1, 'first_name' => 'Paciente', 'last_name' => 'Test', 'email' => uniqid() . '@test.com', 'phone' => '1155550000', 'dni' => random_int(10000000, 99999999), 'birth_date' => '1990-01-01']);
 
-        return [(int) $this->db->insertID(), $userId];
+        return [(int) $this->db->insertID()];
     }
 
     private function seedSchedule(int $medicalId, int $dayOfWeek, string $start, string $end): void

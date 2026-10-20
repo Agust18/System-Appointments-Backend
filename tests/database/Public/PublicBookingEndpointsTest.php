@@ -46,7 +46,6 @@ final class PublicBookingEndpointsTest extends BookingServiceTestCase
         $this->resetServices();
 
         $this->monday = (new DateTime('next monday'))->modify('+7 days')->format('Y-m-d');
-        $this->db->table('roles')->insert(['id' => Role::PATIENT, 'name' => 'patient']);
         session()->destroy();
     }
 

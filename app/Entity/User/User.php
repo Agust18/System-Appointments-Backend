@@ -60,23 +60,6 @@ final class User
         return password_verify($password, $this->password);
     }
 
-    /*Recepción completa los datos de un usuario sin cuenta que ya existía
-     (p. ej. creado por reserva pública). Nunca se usa sobre una cuenta real.
-     */
-    public function completeAsAccountless(UserUpdaterRequest $request): void
-    {
-        $this->modify($request);
-        $this->isVerified = true;
-    }
-
-    /*
-      Registro público sobre un usuario sin cuenta: fija la contraseña pero deja
-      el usuario sin verificar (no puede iniciar sesión hasta verificar su email).
-     */
-    public function setPasswordFromRegistration(string $password): void
-    {
-        $this->password = password_hash($password, PASSWORD_BCRYPT);
-    }
 
     public function generateToken(): void
     {
@@ -106,22 +89,6 @@ final class User
     public function getEmail(): ?string
     {
         return $this->email;
-    }
-
-    public function hasEmail(): bool
-    {
-        return $this->email !== null;
-    }
-
-    /*
-      Un paciente cargado sin email lo completa desde la web (reserva o registro).
-      Nunca reemplaza un email que ya tenía.
-     */
-    public function completeEmail(string $email): void
-    {
-        if ($this->email === null) {
-            $this->email = $email;
-        }
     }
 
     public function getPhone(): ?string
@@ -193,32 +160,4 @@ final class User
         );
     }
 
-   
-    public static function createWithoutAccount(
-        string $firstName,
-        string $lastName,
-        string $email,
-        ?string $phone,
-        int $dni,
-        int $roleId
-    ): User {
-        return new User(
-            null,
-            $firstName,
-            $lastName,
-            $email,
-            $phone,
-            null,
-            $dni,
-            true,
-            false,
-            null,
-            null,
-            $roleId,
-            null,
-            null
-        );
-    }
-
-    
 }

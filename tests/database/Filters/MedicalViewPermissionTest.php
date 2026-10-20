@@ -133,34 +133,7 @@ final class MedicalViewPermissionTest extends CIUnitTestCase
         $this->assertSame(403, $result->getStatusCode());
     }
 
-    public function testPatientCanViewMedicalById(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
 
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', 999);
-
-        $result = $this->filter->before($this->requestFor("medicals/{$medicalId}"));
-
-        $this->assertNotInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-    }
-
-    public function testPatientCannotViewMedicalByUserId(): void
-    {
-        // Asimetría intencional: /medicals/user/{userId} es solo para que
-        // el propio médico consulte su perfil, nunca para pacientes.
-        $medicalUserId = $this->seedUser();
-        $this->seedMedical($medicalUserId);
-
-        session()->set('roleId', Role::PATIENT);
-        session()->set('userId', 999);
-
-        $result = $this->filter->before($this->requestFor("medicals/user/{$medicalUserId}"));
-
-        $this->assertInstanceOf(\CodeIgniter\HTTP\ResponseInterface::class, $result);
-        $this->assertSame(403, $result->getStatusCode());
-    }
 
     public function testUnknownMedicalByIdReturns404(): void
     {

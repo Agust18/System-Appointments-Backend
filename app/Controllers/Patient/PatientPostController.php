@@ -25,14 +25,12 @@ final class PatientPostController extends ResourceController
     }
 
     /**
-     * Mantiene el formato `{user: {...}, patient: {...}}` mientras el frontend no migra: `roleId`,
-     * `password` e `isActive` del bloque `user` se ignoran (el paciente no tiene cuenta).
+     * Body plano: `firstName, lastName, email?, phone, dni, birthDate?`. El paciente no tiene cuenta:
+     * cualquier otro campo (rol, contraseña, etc.) se ignora.
      */
     private function getRequest(): PatientRequest
     {
-        $body = $this->request->getJSON(true) ?? [];
-        $identity = IdentityNormalizer::normalizeInput($body['user'] ?? []);
-        $data = array_merge($identity, ['birthDate' => ($body['patient'] ?? [])['birthDate'] ?? null]);
+        $data = IdentityNormalizer::normalizeInput($this->request->getJSON(true) ?? []);
 
         RequestValidator::validate($data, PatientRequest::rules(), PatientRequest::messages());
 

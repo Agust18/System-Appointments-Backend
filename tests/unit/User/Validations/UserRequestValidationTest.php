@@ -19,7 +19,7 @@ final class UserRequestValidationTest extends CIUnitTestCase
             'email'     => 'juana@example.com',
             'password'  => 'contrasenia123',
             'dni'       => 30123456,
-            'roleId'    => 3,
+            'roleId'    => 4,
         ];
     }
 

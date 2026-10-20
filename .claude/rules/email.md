@@ -7,29 +7,18 @@ llamar a `EmailSenderService::send()`. Si falla, lanza
 `EmailCannotBeSendedException` (500).
 
 Templates HTML: una clase por mail, con un único `render()`.
-- `app/Email/User/`: `EmailVerificationEmailTemplate`, `PasswordResetEmailTemplate`,
-  `AccountActivationEmailTemplate` (reset para usuarios con cuenta, activación para los
-  que no tienen contraseña; `SendPasswordResetEmailService` elige con `hasAccount()`).
+- `app/Email/User/`: `PasswordResetEmailTemplate` y `AccountActivationEmailTemplate` (reset para
+  usuarios con cuenta, activación para los que no tienen contraseña: el ADMIN de un Tenant nuevo;
+  `SendPasswordResetEmailService` elige con `hasAccount()`).
 - `app/Email/Platform/`: `TenantAdminWelcomeEmailTemplate`.
 - `app/Email/Appointment/`: ver "Avisos de turnos".
 
-## Verificación de email
+## No hay verificación de email
 
-El flag `isVerified` (parámetro `$isVerified` en los Creator Services) decide
-si el usuario nace verificado y si se dispara el email de verificación
-(`SendVerificationEmailService`, `app/Services/Auth/`). **Solo aplica a usuarios del staff**:
-el paciente no es un usuario (es una ficha en `patients`, sin cuenta ni login), así que no se le
-verifica el email.
-
-| Endpoint | Controller | `isVerified` | Envía email |
-|---|---|---|---|
-| `POST /public/appointments` | `PublicAppointmentPostController` | n/a: crea solo la ficha del paciente | No (solo el aviso del turno, abajo) |
-| `POST /patients` (admin/recepción) | `PatientPostController` | n/a: crea solo la ficha del paciente | No |
-| `POST /medicals` (admin/recepción) | `MedicalPostController` | `true` | No |
-
-`UserCreatorService::create()` marca al `User` como verificado
-(`$user->markAsVerified()`) cuando `$isVerified` es `true`, antes del insert.
-El auto-registro de pacientes (`POST /patients/register`) se eliminó.
+El staff nace ya verificado (`UserCreatorService::create($request, true)`) y el paciente no es un usuario
+(es una ficha en `patients`, sin cuenta ni login), así que no existen `/verify-email` ni `/resend-verification`.
+La columna `users.is_verified` sigue en la base y el login y el reset la exigen, pero hoy siempre es `1`.
+Quien recupera el acceso lo hace con `forgot-password` / `reset-password`.
 
 ## Pacientes sin email
 
@@ -44,10 +33,10 @@ si el DNI ya existe, la ficha se reutiliza sin tocar sus datos.
 
 `app/Services/Tenant/TenantEmailSettingsResolverService` es el único lugar que lee `tenant_settings` para emails (Tenant del `TenantContext`; una instancia por Tenant). Los Services no leen `env()` para esto.
 
-- **`frontendUrl()`**: `frontend_url` del Tenant + `/verify-email?token=` o `/reset-password?token=`. **Sin respaldo en el `.env`**: si falta, `TenantFrontendUrlNotConfiguredException` (500) y se resuelve **antes** de generar el token (no queda huérfano). Hoy lo usan solo los flujos del staff (reset de contraseña y bienvenida de Tenant).
-- **`replyTo()`**: `reply_to_email` → `reception_email` → ninguno (sin header; el cliente responde al From = `EMAIL_FROM`). Va en **todos** los emails del Tenant (verificación, reset, avisos de turno, recordatorios). `reception_email` cuenta aunque el aviso a recepción esté desactivado. `EmailRequest::$replyTo` / `EmailModel::addReplyTo()`; un valor inválido se ignora.
+- **`frontendUrl()`**: `frontend_url` del Tenant + `/reset-password?token=`. **Sin respaldo en el `.env`**: si falta, `TenantFrontendUrlNotConfiguredException` (500) y se resuelve **antes** de generar el token (no queda huérfano). Hoy lo usan solo los flujos del staff (reset de contraseña y bienvenida de Tenant).
+- **`replyTo()`**: `reply_to_email` → `reception_email` → ninguno (sin header; el cliente responde al From = `EMAIL_FROM`). Va en **todos** los emails del Tenant (reset, bienvenida, avisos de turno, recordatorios). `reception_email` cuenta aunque el aviso a recepción esté desactivado. `EmailRequest::$replyTo` / `EmailModel::addReplyTo()`; un valor inválido se ignora.
 - El SMTP y el From siguen siendo únicos de la plataforma (`EMAIL_*`).
-- Un Tenant nuevo nace con `frontend_url` NULL: hay que cargarlo con `PUT /platform/tenants/{id}/settings` antes de que sus usuarios se registren o pidan reset.
+- Un Tenant nuevo nace con `frontend_url` NULL: hay que cargarlo con `PUT /platform/tenants/{id}/settings` antes de que su staff pida un reset o active su cuenta.
 - Tests: los que llegan a esos envíos siembran la config con `Tests\Support\Database\SeedsTenantEmailSettings`.
 
 ## Avisos de turnos (`app/Services/Appointment/Notification/`)

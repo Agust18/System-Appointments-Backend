@@ -128,7 +128,7 @@ final class PlatformRoutesTest extends CIUnitTestCase
     {
         // Todo lo que no es /public, /platform ni un flujo de acceso (login, registro, verificación y reset) debe pasar por 'auth'.
         // 'tenant/config' es pública a propósito (la lee el login); su exención se revisa en testTenantConfigIsPublicButCorsAndThrottled.
-        $open = ['/', 'login', 'patients/register', 'verify-email', 'resend-verification', 'forgot-password', 'reset-password', 'tenant/config'];
+        $open = ['/', 'login', 'forgot-password', 'reset-password', 'tenant/config'];
         $checked = 0;
 
         foreach (['GET', 'POST', 'PUT', 'DELETE'] as $verb) {

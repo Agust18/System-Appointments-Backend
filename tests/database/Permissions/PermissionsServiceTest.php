@@ -182,36 +182,6 @@ final class PermissionsServiceTest extends CIUnitTestCase
         $this->assertFalse($this->service->canEditAppointment(Role::MEDICAL, $otherMedicalUserId, $appointment));
     }
 
-    public function testCanEditAppointmentPatientAlwaysFalse(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        $appointment = $this->seedAppointment($medicalId, $patientId);
-
-        $this->assertFalse($this->service->canEditAppointment(Role::PATIENT, $patientUserId, $appointment));
-    }
-
-    // canCancelAppointment
-
-
-
-
-    public function testCanCancelAppointmentMedicalAlwaysFalse(): void
-    {
-        $medicalUserId = $this->seedUser();
-        $medicalId = $this->seedMedical($medicalUserId);
-
-        $patientUserId = $this->seedUser();
-        $patientId = $this->seedPatient($patientUserId);
-
-        $appointment = $this->seedAppointment($medicalId, $patientId, 'pending');
-
-        $this->assertFalse($this->service->canCancelAppointment(Role::MEDICAL, $medicalUserId, $appointment));
-    }
 
     // canDeleteAppointment
 
@@ -230,8 +200,4 @@ final class PermissionsServiceTest extends CIUnitTestCase
         $this->assertFalse($this->service->canDeleteAppointment(Role::MEDICAL));
     }
 
-    public function testCanDeleteAppointmentPatientFalse(): void
-    {
-        $this->assertFalse($this->service->canDeleteAppointment(Role::PATIENT));
-    }
 }

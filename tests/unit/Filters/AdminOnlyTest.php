@@ -43,9 +43,9 @@ final class AdminOnlyTest extends CIUnitTestCase
         $this->assertSame(403, $result->getStatusCode());
     }
 
-    public function testPatientForbidden(): void
+    public function testRetiredPatientRoleIdIsForbidden(): void
     {
-        session()->set('roleId', Role::PATIENT);
+        session()->set('roleId', 3); // id del rol paciente, retirado
 
         $result = $this->filter->before($this->request());
 
