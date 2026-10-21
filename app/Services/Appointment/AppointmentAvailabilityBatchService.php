@@ -8,6 +8,7 @@ use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Services\Appointment\Validations\AppointmentAvailabilityValidatorService;
 use App\Services\Appointment\Validations\AppointmentMedicalActiveValidatorService;
+use App\Services\DayOff\MedicalDaysOffService;
 use DateTime;
 use Throwable;
 
@@ -20,9 +21,11 @@ final class AppointmentAvailabilityBatchService
     private ServiceBlockResolverService $blockResolver;
     private SlotGeneratorService $slotGenerator;
     private SlotsByDateToAvailabilityBatchResponseConverter $converter;
+    private MedicalDaysOffService $daysOffService;
 
     public function __construct()
     {
+        $this->daysOffService = new MedicalDaysOffService();
         $this->medicalScheduleModel = new MedicalScheduleModel();
         $this->appointmentModel = new AppointmentModel();
         $this->validator = new AppointmentAvailabilityValidatorService();
@@ -52,11 +55,13 @@ final class AppointmentAvailabilityBatchService
         $rangesByDay = $this->findRangesByDay($medicalId, $dates);
         $appointmentsByDate = $this->findAppointmentsByDate($medicalId, $from, $to, $request->getExcludeAppointmentId());
 
+        $daysOff = $this->daysOffService->findDayOffDates($medicalId, $from, $to);
+
         $slotsByDate = [];
         foreach ($dates as $fecha) {
             $dayOfWeek = $this->dayOfWeek($fecha);
-            if (empty($rangesByDay[$dayOfWeek])) {
-                continue; // día no atendido: no aparece en el output
+            if (empty($rangesByDay[$dayOfWeek]) || isset($daysOff[$fecha])) {
+                continue; // día no atendido o no laborable: no aparece en el output
             }
 
             $dayAppointments = [];

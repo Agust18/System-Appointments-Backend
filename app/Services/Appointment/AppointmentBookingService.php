@@ -7,6 +7,7 @@ use App\Entity\Appointment\Appointment;
 use App\Exception\Appointment\AppointmentAlreadyExistsException;
 use App\Exception\Appointment\BookingLockTimeoutException;
 use App\Models\Appointment\AppointmentModel;
+use App\Services\DayOff\MedicalDaysOffService;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use DateTime;
@@ -19,12 +20,14 @@ final class AppointmentBookingService
     private BaseConnection $db;
     private AppointmentModel $appointmentModel;
     private ServiceBlockResolverService $blockResolver;
+    private MedicalDaysOffService $daysOffService;
 
     public function __construct()
     {
         $this->db = Database::connect();
         $this->appointmentModel = new AppointmentModel();
         $this->blockResolver = new ServiceBlockResolverService();
+        $this->daysOffService = new MedicalDaysOffService();
     }
 
     public function book(AppointmentRequest $request): Appointment
@@ -100,6 +103,9 @@ final class AppointmentBookingService
 
         try {
             $this->db->transBegin();
+
+            // barrera real: un día no laborable no se reserva aunque el selector no lo muestre
+            $this->daysOffService->assertNotDayOff($medicalId, $fecha);
 
             // recalcula duración y bloque total con servicio/override vigentes
             $totalBlockMinutes = $this->blockResolver->resolve($medicalId, $serviceId)->getTotalBlockMinutes();

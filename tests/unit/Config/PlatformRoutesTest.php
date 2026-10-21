@@ -183,6 +183,8 @@ final class PlatformRoutesTest extends CIUnitTestCase
             'POST medical-schedules' => $staff, 'GET medical-schedules/medical/1' => null,
             'GET medical-schedules/1' => null, 'PUT medical-schedules/1' => $staff,
             'DELETE medical-schedules/1' => $staff, 'GET medical-schedules' => null,
+            'POST days-off' => $staff, 'GET days-off/1' => null,
+            'PUT days-off/1' => $staff, 'DELETE days-off/1' => $staff, 'GET days-off' => null,
 
             'GET services' => null, 'GET services/1' => null, 'POST services' => $admin,
             'PUT services/1' => $admin, 'DELETE services/1' => $admin,
