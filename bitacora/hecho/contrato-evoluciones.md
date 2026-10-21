@@ -49,7 +49,7 @@ Lo que el médico registra de una atención (diagnóstico, observaciones, tratam
 Campo **ausente = sin cambio**. Se envían solo los textos (`diagnosis`, `observations`, `treatment`, `indications`); un `""` limpia el campo.
 
 ## `POST .../{id}/sign`
-Sin body. Cierra la evolución y pasa el turno a `completed` en la misma operación. Es el único camino por el que un turno queda `completed`.
+Sin body. Cierra la evolución y pasa el turno a `completed` en la misma operación. No es el único camino: el médico también puede completar el turno a mano (`PUT /appointments/{id}` con `status: "completed"`, botón "Completar"). Las dos vías conviven: se puede registrar la evolución antes o después de completar, y firmar sobre un turno ya `completed` no falla.
 
 ## Errores
 | Código | Cuándo |

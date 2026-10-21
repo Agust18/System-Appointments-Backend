@@ -14,7 +14,7 @@ use Config\Database;
 
 /**
  * Firma una evolución: la cierra y, en la misma transacción, pasa el turno a `completed`.
- * Es el único lugar donde un turno se completa.
+ * El turno también se puede completar a mano (PUT /appointments); si ya está completado, la firma sigue valiendo.
  */
 final class EvolutionSignerService
 {
