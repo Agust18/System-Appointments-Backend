@@ -6,6 +6,8 @@
 - **Fecha:** 09/10/2026
 - **Origen:** PENDIENTES-BACKEND.md › R5 «Extraer isDayOff() a MedicalDaysOffService». Reformulada el 09/10/2026
 
+> Plan completo de la feature (decisiones, tabla, CRUD, frontend): `bitacora/features/dias-no-laborables.md` en la raíz del monorepo (20/10/2026).
+
 ## Contexto
 
 Hoy no existe la feature de días no laborables (feriados, licencias, día bloqueado ad-hoc): no hay tabla `medical_days_off` ni Service. El hook `isDayOff()` que devolvía `false` siempre se **eliminó** de `AppointmentAvailabilityBatchService` el 09/10/2026 por ser código especulativo (reemplaza la decisión anterior de conservarlo).
