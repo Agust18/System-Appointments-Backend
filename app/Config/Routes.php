@@ -81,6 +81,13 @@ $routes->put('patients/(:num)', 'Patient\PatientPutController::do/$1', ['filter'
 $routes->delete('patients/(:num)', 'Patient\PatientDeleteController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('patients', 'Patient\PatientsGetController::search', ['filter' => ['auth', 'role:admin,reception,medical']]);
 
+//Evolutions (datos clínicos: recepción sin acceso; el médico solo ve las suyas, el admin solo lee)
+$routes->post('patients/(:num)/evolutions', 'Evolution\EvolutionPostController::create/$1', ['filter' => ['auth', 'role:medical']]);
+$routes->get('patients/(:num)/evolutions', 'Evolution\EvolutionsGetController::search/$1', ['filter' => ['auth', 'role:admin,medical']]);
+$routes->get('patients/(:num)/evolutions/(:num)', 'Evolution\EvolutionGetController::find/$1/$2', ['filter' => ['auth', 'role:admin,medical']]);
+$routes->put('patients/(:num)/evolutions/(:num)', 'Evolution\EvolutionPutController::do/$1/$2', ['filter' => ['auth', 'role:medical']]);
+$routes->post('patients/(:num)/evolutions/(:num)/sign', 'Evolution\EvolutionSignPostController::do/$1/$2', ['filter' => ['auth', 'role:medical']]);
+
 //Specialty
 $routes->post('specialties', 'Specialty\SpecialtyPostController::create', ['filter' => ['auth', 'role:admin']]);
 $routes->get('specialties/(:num)', 'Specialty\SpecialtyGetController::find/$1', ['filter' => 'auth']);

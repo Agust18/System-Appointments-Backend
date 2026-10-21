@@ -1,6 +1,6 @@
 # Bitácora — BACKEND
 
-Última actualización: 16/10/2026
+Última actualización: 21/10/2026
 
 Solo tareas del **repo backend**. Los archivos `hecho/contrato-*` documentan el contrato de la API pública que el backend le deja al frontend.
 
@@ -12,7 +12,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (37)
+## ✅ Hecho (38)
 
 - [Campo `code` en los 409 de POST /public/appointments (`HasErrorCode`)](hecho/campo-code-en-409-publicos.md)
 - [Conteo y estadísticas de turnos ahora hacen JOIN a `services` (total = lista)](hecho/count-y-stats-de-turnos-sin-join-a-services.md)
@@ -49,6 +49,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 - [Contrato: días no laborables (`/days-off`, `DAY_OFF`, turnos afectados)](hecho/contrato-dias-no-laborables.md)
+- [Contrato: evoluciones de consulta (`/patients/{id}/evolutions`, borrador, firma, correcciones)](hecho/contrato-evoluciones.md)
 - [CORS: exponer Retry-After](hecho/cors-exponer-retry-after.md)
 - [Días no laborables: chequeo en booking, slot validator y disponibilidad (ex R5)](hecho/dias-no-laborables-chequeo-en-booking.md)
 
