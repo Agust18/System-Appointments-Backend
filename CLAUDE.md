@@ -63,6 +63,7 @@ HTTP → Filter (auth/RBAC) → Controller → Service (verbo) → Model → DB
 - Booking atómico de turnos → `.claude/rules/booking-atomico.md`
 - Reserva pública (`/public/*`), paciente como ficha identificada por DNI (sin cuenta), throttle → `.claude/rules/public-booking.md`
 - Panel de plataforma (`/platform/*`), `platform_admins`, suspender Tenants → `.claude/rules/platform-admin.md`
+- Evoluciones de consulta (datos clínicos del médico, borrador/firma, registro de accesos) → `.claude/rules/evolutions.md`
 - Multitenant: glosario en `bitacora/glosario.md`, decisiones en `bitacora/adr/`, plan en `bitacora/pendiente/multitenant-plan.md`.
 
 ## Multitenant (implementado)
