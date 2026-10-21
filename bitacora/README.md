@@ -12,7 +12,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (33)
+## ✅ Hecho (37)
 
 - [Campo `code` en los 409 de POST /public/appointments (`HasErrorCode`)](hecho/campo-code-en-409-publicos.md)
 - [Conteo y estadísticas de turnos ahora hacen JOIN a `services` (total = lista)](hecho/count-y-stats-de-turnos-sin-join-a-services.md)
@@ -49,9 +49,10 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
 - [Contrato: días no laborables (`/days-off`, `DAY_OFF`, turnos afectados)](hecho/contrato-dias-no-laborables.md)
+- [CORS: exponer Retry-After](hecho/cors-exponer-retry-after.md)
 - [Días no laborables: chequeo en booking, slot validator y disponibilidad (ex R5)](hecho/dias-no-laborables-chequeo-en-booking.md)
 
-## ⏳ Pendiente (30)
+## ⏳ Pendiente (26)
 
 - [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
