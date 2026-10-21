@@ -79,7 +79,9 @@ El paciente entra con **DNI + código** o con el **token del link** del email (`
 | `409` | `/consulta`: el turno ya no se puede cancelar (pasado, cancelado o completado) |
 | `429` | Throttle por IP, con `Retry-After` |
 
+Los `409` de `POST /public/appointments` llevan además `code` en el body (`{error, code}`) para que el front no dependa del texto: `SLOT_TAKEN` (horario ocupado), `PAST_DATE` (fecha pasada), `MEDICAL_NOT_AVAILABLE` y `BOOKING_LIMIT_REACHED` (tope de 3). Lo emite `ApiExceptionHandler` para las excepciones que implementan `App\Exception\HasErrorCode`; los valores son contrato (`ApiExceptionHandlerBodyTest`). Detalle en `bitacora/hecho/campo-code-en-409-publicos.md`.
+
 ## Checklist de deploy
 
 Los endpoints `/public/*` **no deben exponerse a internet** hasta completar el checklist de `bitacora/pendiente/deploy-*.md`. Resumen:
-`app.trustedProxies`, `writable/cache` escribible, cache compartido si hay varias instancias, `cors.*`, migraciones probadas en una copia (UNIQUE de `users.dni` y `UNIQUE(tenant_id, dni)` de `patients`), `EMAIL_*` y `reception.email`.
+`app.trustedProxies`, `writable/cache` escribible, cache compartido si hay varias instancias, `cors.*`, migraciones probadas en una copia (UNIQUE de `users.dni` y `UNIQUE(tenant_id, dni)` de `patients`), `EMAIL_*` y `receptionEmail` cargado en cada Tenant.

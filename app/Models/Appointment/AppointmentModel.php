@@ -420,6 +420,7 @@ final class AppointmentModel
               INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
               INNER JOIN specialties S ON S.id = M.specialty_id AND S.tenant_id = M.tenant_id
               INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
+              INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
               {$whereQuery}";
 
         $result = $this->db->query($query, $parameters);
@@ -472,6 +473,7 @@ final class AppointmentModel
               INNER JOIN medicals M ON M.id = A.medical_id AND M.tenant_id = A.tenant_id
               INNER JOIN users U_med ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
               INNER JOIN patients P ON P.id = A.patient_id AND P.tenant_id = A.tenant_id
+              INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
               {$whereQuery}
               GROUP BY A.status";
 

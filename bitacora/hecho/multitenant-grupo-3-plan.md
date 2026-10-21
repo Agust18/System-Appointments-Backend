@@ -18,7 +18,7 @@
 | 7 | Seeders con `seed.tenantSlug` obligatorio y `tenant_id` explícito | `DashboardSeedersTenantTest` | 7 tests, en verde |
 
 ### Hallazgos durante la implementación
-- **`countProjection` y `statsByStatus` no hacen JOIN a `services`** (la lista sí): total ≠ lista. No es una fuga entre Tenants. Pendiente aparte: [count-y-stats-de-turnos-sin-join-a-services.md](count-y-stats-de-turnos-sin-join-a-services.md).
+- **`countProjection` y `statsByStatus` no hacen JOIN a `services`** (la lista sí): total ≠ lista. No es una fuga entre Tenants. Pendiente aparte: [count-y-stats-de-turnos-sin-join-a-services.md](count-y-stats-de-turnos-sin-join-a-services.md) (resuelto).
 - **`UserTokenModel::deleteExpired()` no tiene llamadores hoy** (no hay job de limpieza). Quedó scopeado igual; un job que recorra los Tenants activos puede agregarse reutilizando el patrón de `AppointmentReminderService`.
 - **Los seeders del dashboard están excluidos de git** (`.git/info/exclude`): los cambios (y la clave `seed.tenantSlug`) viven solo en esta copia de trabajo. `DashboardSeedersTenantTest` se saltea si el seeder no existe. El helper `app/Database/Seeds/Support/ResolvesSeedTenant.php` sí es versionable.
 - **Los ids de especialidad fijos del seeder (1 y 3) cruzaban Tenants:** los ids son únicos en toda la base, así que dos Tenants no podían compartir "especialidades existentes". Ahora el seeder crea sus 4 especialidades (`[SEED] Clínica médica`, `[SEED] Cardiología`, `[SEED] Pediatría`, `[SEED] Traumatología`), cambio de demo deliberado. También se corrigió el INSERT roto de `medicals.phone`.

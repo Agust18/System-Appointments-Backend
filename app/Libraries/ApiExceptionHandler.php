@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Exception\HasErrorCode;
 use App\Exception\Validation\ValidationException;
 use CodeIgniter\Debug\BaseExceptionHandler;
 use CodeIgniter\Debug\ExceptionHandlerInterface;
@@ -34,15 +35,27 @@ final class ApiExceptionHandler extends BaseExceptionHandler implements Exceptio
             $this->addCorsHeaders($request);
         }
 
-        if ($exception instanceof ValidationException) {
-            echo json_encode(['error' => $message, 'errors' => $exception->getErrors()]);
-
-            exit($exitCode);
-        }
-
-        echo json_encode(['error' => $message]);
+        echo json_encode(self::bodyFor($exception, $message));
 
         exit($exitCode);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function bodyFor(Throwable $exception, string $message): array
+    {
+        if ($exception instanceof ValidationException) {
+            return ['error' => $message, 'errors' => $exception->getErrors()];
+        }
+
+        $body = ['error' => $message];
+
+        if ($exception instanceof HasErrorCode) {
+            $body['code'] = $exception->errorCode();
+        }
+
+        return $body;
     }
 
     /**
