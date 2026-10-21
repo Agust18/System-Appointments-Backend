@@ -2,7 +2,9 @@
 namespace App\Models\Evolution;
 
 use App\Converter\Evolution\PrimitiveToEvolutionConverter;
+use App\Converter\Evolution\Projection\PrimitiveToEvolutionProjectionConverter;
 use App\Entity\Evolution\Evolution;
+use App\Entity\Evolution\Projection\EvolutionProjection;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
@@ -11,11 +13,13 @@ final class EvolutionModel
 {
     private BaseConnection $db;
     private PrimitiveToEvolutionConverter $converter;
+    private PrimitiveToEvolutionProjectionConverter $projectionConverter;
 
     public function __construct()
     {
         $this->db = Database::connect();
         $this->converter = new PrimitiveToEvolutionConverter();
+        $this->projectionConverter = new PrimitiveToEvolutionProjectionConverter();
     }
 
     public function insert(Evolution $evolution): Evolution
@@ -81,30 +85,42 @@ final class EvolutionModel
     }
 
     /**
-     * Evoluciones de un paciente, de la más reciente a la más antigua.
-     * Con `$medicalId` solo las de ese médico (el médico ve únicamente las suyas); null = todas (admin).
+     * Evoluciones de un paciente, de la más reciente a la más antigua, con el nombre del médico que firma
+     * y los datos del turno. Con `$medicalId` solo las de ese médico (el médico ve únicamente las suyas);
+     * null = todas (admin).
      *
-     * @return array{data: Evolution[], total: int}
+     * @return array{data: EvolutionProjection[], total: int}
      */
     public function findByPatient(int $patientId, ?int $medicalId, int $page, int $size): array
     {
-        $where = "WHERE tenant_id = ? AND patient_id = ?";
+        $where = "WHERE E.tenant_id = ? AND E.patient_id = ?";
         $params = [TenantContext::id(), $patientId];
 
         if ($medicalId !== null) {
-            $where .= " AND medical_id = ?";
+            $where .= " AND E.medical_id = ?";
             $params[] = $medicalId;
         }
 
-        $total = (int) $this->db->query("SELECT COUNT(*) AS total FROM evolutions $where", $params)->getRow()->total;
+        $total = (int) $this->db->query("SELECT COUNT(*) AS total FROM evolutions E $where", $params)->getRow()->total;
 
         $rows = $this->db->query(
-            "SELECT * FROM evolutions $where ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+            "SELECT E.*,
+                    TRIM(CONCAT(U.first_name, ' ', U.last_name)) AS medical_name,
+                    A.fecha AS appointment_fecha,
+                    A.hora  AS appointment_hora,
+                    SRV.name AS service_name
+             FROM evolutions E
+             INNER JOIN medicals M   ON M.id = E.medical_id AND M.tenant_id = E.tenant_id
+             INNER JOIN users U      ON U.id = M.user_id AND U.tenant_id = M.tenant_id
+             INNER JOIN appointments A ON A.id = E.appointment_id AND A.tenant_id = E.tenant_id
+             INNER JOIN services SRV ON SRV.id = A.service_id AND SRV.tenant_id = A.tenant_id
+             $where
+             ORDER BY E.created_at DESC, E.id DESC LIMIT ? OFFSET ?",
             [...$params, $size, ($page - 1) * $size]
         )->getResult();
 
         return [
-            'data'  => array_map(fn (object $row) => $this->converter->convert($row), $rows),
+            'data'  => array_map(fn (object $row) => $this->projectionConverter->convert($row), $rows),
             'total' => $total,
         ];
     }
