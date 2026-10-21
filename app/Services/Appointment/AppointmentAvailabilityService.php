@@ -6,6 +6,7 @@ use App\Models\Appointment\AppointmentModel;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Services\Appointment\Validations\AppointmentAvailabilityValidatorService;
 use App\Services\Appointment\Validations\AppointmentMedicalActiveValidatorService;
+use App\Services\DayOff\MedicalDaysOffService;
 
 final class AppointmentAvailabilityService
 {
@@ -15,9 +16,11 @@ final class AppointmentAvailabilityService
     private AppointmentMedicalActiveValidatorService $medicalActiveValidator;
     private ServiceBlockResolverService $blockResolver;
     private SlotGeneratorService $slotGenerator;
+    private MedicalDaysOffService $daysOffService;
 
     public function __construct()
     {
+        $this->daysOffService = new MedicalDaysOffService();
         $this->medicalScheduleModel = new MedicalScheduleModel();
         $this->appointmentModel = new AppointmentModel();
         $this->validator = new AppointmentAvailabilityValidatorService();
@@ -46,6 +49,11 @@ final class AppointmentAvailabilityService
 
         //valida que el servicio esté disponible y calcula duración efectiva y bloque total
         $duration = $this->blockResolver->resolve($medicalId, $serviceId);
+
+        //un día no laborable (feriado, vacaciones, licencia) no ofrece slots
+        if ($this->daysOffService->isDayOff($medicalId, $fecha)) {
+            return [];
+        }
 
         //obtiene rangos activos de atención para el día de la semana
         $dayOfWeek = (int) date('N', strtotime($fecha));

@@ -5,6 +5,7 @@ use App\Exception\Appointment\AppointmentInPastException;
 use App\Exception\Appointment\DoctorNotAvailableException;
 use App\Models\MedicalSchedule\MedicalScheduleModel;
 use App\Services\Appointment\ServiceBlockResolverService;
+use App\Services\DayOff\MedicalDaysOffService;
 use DateTime;
 
 
@@ -12,11 +13,13 @@ final class AppointmentSlotValidatorService
 {
     private MedicalScheduleModel $medicalScheduleModel;
     private ServiceBlockResolverService $blockResolver;
+    private MedicalDaysOffService $daysOffService;
 
     public function __construct()
     {
         $this->medicalScheduleModel = new MedicalScheduleModel();
         $this->blockResolver = new ServiceBlockResolverService();
+        $this->daysOffService = new MedicalDaysOffService();
     }
 
     /**
@@ -30,6 +33,9 @@ final class AppointmentSlotValidatorService
         if ($appointmentDateTime < $now) {
             throw new AppointmentInPastException();
         }
+
+        // Validar que la fecha no sea un día no laborable (feriado, vacaciones, licencia)
+        $this->daysOffService->assertNotDayOff($medicalId, $fecha);
 
         // Validar que el servicio sea obligatorio, exista, esté activo y el médico lo ofrezca
         $bloqueTotalMinutes = $this->blockResolver->resolve($medicalId, $serviceId)->getTotalBlockMinutes();

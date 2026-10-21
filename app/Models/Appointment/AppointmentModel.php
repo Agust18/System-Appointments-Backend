@@ -4,8 +4,10 @@ namespace App\Models\Appointment;
 
 use App\Converter\Appointment\PrimitiveToAppointmentConverter;
 use App\Converter\Appointment\Projection\PrimitiveToAppointmentProjectionConverter;
+use App\Converter\DayOff\Projection\PrimitiveToAffectedAppointmentProjectionConverter;
 use App\Dto\Request\Appointment\AppointmentFilterRequest;
 use App\Entity\Appointment\Appointment;
+use App\Entity\DayOff\Projection\AffectedAppointmentProjection;
 use App\Entity\Appointment\Projection\AppointmentProjection;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Database\BaseConnection;
@@ -17,12 +19,46 @@ final class AppointmentModel
     private BaseConnection $db;
     private PrimitiveToAppointmentConverter $converter;
     private PrimitiveToAppointmentProjectionConverter $projectionConverter;
+    private PrimitiveToAffectedAppointmentProjectionConverter $affectedConverter;
 
     public function __construct()
     {
         $this->converter = new PrimitiveToAppointmentConverter();
         $this->db = Database::connect();
         $this->projectionConverter = new PrimitiveToAppointmentProjectionConverter();
+        $this->affectedConverter = new PrimitiveToAffectedAppointmentProjectionConverter();
+    }
+
+    /**
+     * Turnos pending/confirmed dentro de [$from, $to] de un médico, o de todos si $medicalId es null
+     * (bloqueo de la clínica). Los usa el alta/edición de días no laborables para avisar qué turnos
+     * quedaron afectados.
+     *
+     * @return AffectedAppointmentProjection[]
+     */
+    public function findActiveByDateRange(?int $medicalId, string $from, string $to): array
+    {
+        $query = "SELECT
+            A.id, A.medical_id, A.fecha, A.hora,
+            TRIM(CONCAT(P.first_name, ' ', P.last_name)) AS paciente_nombre,
+            TRIM(CONCAT(U_med.first_name, ' ', U_med.last_name)) AS medico_nombre
+        FROM appointments A
+        INNER JOIN medicals M   ON M.id  = A.medical_id AND M.tenant_id = A.tenant_id
+        INNER JOIN users U_med  ON U_med.id = M.user_id AND U_med.tenant_id = M.tenant_id
+        INNER JOIN patients P   ON P.id  = A.patient_id AND P.tenant_id = A.tenant_id
+        WHERE A.tenant_id = ?
+          AND A.fecha BETWEEN ? AND ?
+          AND A.status IN ('pending', 'confirmed')";
+        $params = [TenantContext::id(), $from, $to];
+
+        if ($medicalId !== null) {
+            $query .= " AND A.medical_id = ?";
+            $params[] = $medicalId;
+        }
+
+        $result = $this->db->query($query . " ORDER BY A.fecha ASC, A.hora ASC", $params);
+
+        return array_map(fn (object $row): AffectedAppointmentProjection => $this->affectedConverter->convert($row), $result->getResult());
     }
 
     public function insert(Appointment $appointment): Appointment

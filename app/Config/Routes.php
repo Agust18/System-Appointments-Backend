@@ -117,6 +117,13 @@ $routes->put('medical-schedules/(:num)', 'MedicalSchedule\MedicalSchedulePutCont
 $routes->delete('medical-schedules/(:num)', 'MedicalSchedule\MedicalScheduleDeleteController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
 $routes->get('medical-schedules', 'MedicalSchedule\MedicalSchedulesGetController::search', ['filter' => 'auth']);
 
+// Días no laborables
+$routes->post('days-off', 'DayOff\DayOffPostController::create', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('days-off/(:num)', 'DayOff\DayOffGetController::find/$1', ['filter' => 'auth']);
+$routes->put('days-off/(:num)', 'DayOff\DayOffPutController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->delete('days-off/(:num)', 'DayOff\DayOffDeleteController::do/$1', ['filter' => ['auth', 'role:admin,reception']]);
+$routes->get('days-off', 'DayOff\DaysOffGetController::search', ['filter' => 'auth']);
+
 // Services
 $routes->get('services', 'Service\ServicesGetController::search', ['filter' => 'auth']);
 $routes->get('services/(:num)', 'Service\ServiceGetController::find/$1', ['filter' => 'auth']);
