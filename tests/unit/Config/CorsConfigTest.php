@@ -80,4 +80,9 @@ final class CorsConfigTest extends CIUnitTestCase
         $this->assertSame(['Content-Type', 'Accept', 'X-Tenant'], $config['allowedHeaders']);
         $this->assertFalse($config['supportsCredentials']);
     }
+
+    public function testRetryAfterIsExposedSoTheBrowserCanReadThe429Wait(): void
+    {
+        $this->assertSame(['Retry-After'], (new Cors())->default['exposedHeaders']);
+    }
 }

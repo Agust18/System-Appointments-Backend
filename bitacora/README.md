@@ -70,7 +70,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Deploy: EMAIL_* configurado](pendiente/deploy-email-config.md)
 - [CORS en rutas privadas (no incluido)](pendiente/cors-en-rutas-privadas.md)
 - [Flujo autenticado: fecha/hora sin largo exacto](pendiente/fecha-hora-exact-length-flujo-autenticado.md)
-- [CORS: exponer Retry-After](pendiente/cors-exponer-retry-after.md)
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)
 - [Suite lenta: regla de trabajo y refactor de tests (resuelto en gran parte con `FastDatabaseTestTrait`, ver suite-rapida-pendientes)](pendiente/suite-lenta-refactor-tests.md)
 - [Gap funcional: el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
