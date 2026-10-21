@@ -1,6 +1,6 @@
 # Contrato: evoluciones de consulta
 
-Lo que el médico registra de una atención (diagnóstico, observaciones, tratamiento, indicaciones). Plan y decisiones: `bitacora/features/evoluciones-de-consulta.md` (raíz del monorepo).
+Lo que el médico registra de una atención (diagnóstico, observaciones, tratamiento, indicaciones). Plan y decisiones: `bitacora/hecho/evoluciones-de-consulta.md` (raíz del monorepo).
 
 - Cada evolución nace de **un turno** y la escribe **el médico dueño de ese turno**.
 - Nace como **borrador** (`status: "draft"`), editable por su autor. Al **firmarla** (`status: "signed"`) se cierra y el **turno pasa a `completed`**.

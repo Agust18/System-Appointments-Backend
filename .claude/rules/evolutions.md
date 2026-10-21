@@ -1,6 +1,6 @@
 # Evoluciones de consulta
 
-Lo que el médico registra de una atención. Son **datos de salud**: se tratan con más restricciones que el resto. Contrato para el frontend: `bitacora/hecho/contrato-evoluciones.md`. Plan y decisiones: `bitacora/features/evoluciones-de-consulta.md` (raíz del monorepo).
+Lo que el médico registra de una atención. Son **datos de salud**: se tratan con más restricciones que el resto. Contrato para el frontend: `bitacora/hecho/contrato-evoluciones.md`. Plan y decisiones: `bitacora/hecho/evoluciones-de-consulta.md` (raíz del monorepo).
 
 Código: `app/Controllers/Evolution/`, `app/Services/Evolution/` (+ `Validations/`), `app/Models/Evolution/`, `app/Entity/Evolution/`. Tablas `evolutions` y `evolution_access_log` (ambas con `tenant_id`).
 

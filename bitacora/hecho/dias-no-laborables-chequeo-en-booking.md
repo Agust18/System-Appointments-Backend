@@ -6,7 +6,7 @@
 - **Fecha:** 09/10/2026
 - **Origen:** PENDIENTES-BACKEND.md › R5 «Extraer isDayOff() a MedicalDaysOffService». Reformulada el 09/10/2026
 
-> Plan completo de la feature (decisiones, tabla, CRUD, frontend): `bitacora/features/dias-no-laborables.md` en la raíz del monorepo (20/10/2026).
+> Plan completo de la feature (decisiones, tabla, CRUD, frontend): `bitacora/hecho/dias-no-laborables.md` en la raíz del monorepo (20/10/2026).
 
 ## Cómo quedó
 
@@ -19,7 +19,7 @@
 | `AppointmentAvailabilityService` | Un día bloqueado devuelve `[]` |
 | `AppointmentAvailabilityBatchService` | Un día bloqueado no aparece en el rango |
 
-Verificado con `DayOffTest` (`tests/database/Appointment/`). Contrato: [contrato-dias-no-laborables.md](contrato-dias-no-laborables.md); plan: `bitacora/features/dias-no-laborables.md` en la raíz del monorepo.
+Verificado con `DayOffTest` (`tests/database/Appointment/`). Contrato: [contrato-dias-no-laborables.md](contrato-dias-no-laborables.md); plan: `bitacora/hecho/dias-no-laborables.md` en la raíz del monorepo.
 
 ## Contexto original
 
