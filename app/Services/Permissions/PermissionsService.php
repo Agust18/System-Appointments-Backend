@@ -67,6 +67,21 @@ final class PermissionsService
         return $this->hasFullAccess($roleId);
     }
 
+    /**
+     * Las evoluciones son datos clínicos: ADMIN las lee (solo lectura) y MEDICAL las suyas.
+     * RECEPTION no tiene acceso. Qué evoluciones ve cada uno lo resuelve el Service (filtra por médico).
+     */
+    public function canViewEvolutions(int $roleId): bool
+    {
+        return in_array($roleId, [Role::ADMIN, Role::MEDICAL], true);
+    }
+
+    /** Solo el médico dueño del turno escribe su evolución; ni ADMIN ni RECEPTION escriben. */
+    public function canWriteEvolution(int $roleId, int $userId, Appointment $appointment): bool
+    {
+        return $this->medicalOwnsAppointment($roleId, $userId, $appointment);
+    }
+
     private function medicalOwnsAppointment(int $roleId, int $userId, Appointment $appointment): bool
     {
         if ($roleId !== Role::MEDICAL) {

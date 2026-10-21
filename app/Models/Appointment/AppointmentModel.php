@@ -211,6 +211,21 @@ final class AppointmentModel
         return $this->db->affectedRows() > 0;
     }
 
+    /**
+     * Pasa a `completed` un turno confirmado o ya completado (lo usa la firma de una evolución).
+     * Un turno pendiente o cancelado no cambia: devuelve false.
+     */
+    public function markCompleted(int $id): bool
+    {
+        $this->db->query(
+            "UPDATE appointments SET status = 'completed', updated_at = ?
+             WHERE id = ? AND tenant_id = ? AND status IN ('confirmed', 'completed')",
+            [(new DateTime())->format('Y-m-d H:i:s'), $id, TenantContext::id()]
+        );
+
+        return $this->db->affectedRows() > 0;
+    }
+
     public function find(int $id): ?Appointment
     {
         $query = "SELECT * FROM appointments WHERE id = ? AND tenant_id = ?";
