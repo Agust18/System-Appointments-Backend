@@ -1,6 +1,7 @@
 <?php
 
 use App\Constants\Role;
+use App\Dto\Request\Evolution\EvolutionAccessLogFilterRequest;
 use App\Dto\Request\Evolution\EvolutionRequest;
 use App\Dto\Request\Evolution\EvolutionUpdateRequest;
 use App\Dto\Request\PaginationRequest;
@@ -19,6 +20,7 @@ use App\Services\Evolution\EvolutionFinderService;
 use App\Services\Evolution\EvolutionSignerService;
 use App\Services\Evolution\EvolutionsSearcherService;
 use App\Services\Evolution\EvolutionUpdaterService;
+use App\Services\Evolution\Projection\EvolutionAccessLogsProjectionSearcherService;
 use App\Tenancy\TenantContext;
 use CodeIgniter\Test\CIUnitTestCase;
 use Tests\Support\Database\FastDatabaseTestTrait;
@@ -373,6 +375,49 @@ final class EvolutionTest extends CIUnitTestCase
         }
 
         $this->assertSame(0, (int) $this->db->query('SELECT COUNT(*) AS n FROM evolution_access_log')->getRow()->n);
+    }
+
+    public function testAdminSeesWhoReadWithNamesAndCanSearchByUser(): void
+    {
+        $draft = $this->createDraft($this->a['appointmentConfirmed']);
+        (new EvolutionsSearcherService())->search($this->a['patient'], new PaginationRequest(1, 10), Role::ADMIN, $this->a['admin']);
+        (new EvolutionFinderService())->findResponse($this->a['patient'], $draft->id, Role::MEDICAL, $this->a['m1User']);
+
+        $searcher = new EvolutionAccessLogsProjectionSearcherService();
+        $all = $searcher->search(new EvolutionAccessLogFilterRequest(new PaginationRequest(1, 10)), Role::ADMIN);
+
+        $this->assertSame(2, $all['total']);
+        $this->assertSame('view', $all['data'][0]->action);
+        $this->assertStringStartsWith('medico1', $all['data'][0]->userName);
+
+        $onlyM1 = $searcher->search(new EvolutionAccessLogFilterRequest(new PaginationRequest(1, 10), 'medico1'), Role::ADMIN);
+        $this->assertSame(1, $onlyM1['total']);
+    }
+
+    public function testAccessLogIsOnlyForAdmin(): void
+    {
+        foreach ([Role::MEDICAL, Role::RECEPTION] as $roleId) {
+            try {
+                (new EvolutionAccessLogsProjectionSearcherService())
+                    ->search(new EvolutionAccessLogFilterRequest(new PaginationRequest(1, 10)), $roleId);
+                $this->fail("El rol {$roleId} no debería ver el registro de accesos.");
+            } catch (EvolutionAccessDeniedException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function testAccessLogOfOtherTenantIsNotVisible(): void
+    {
+        $this->createDraft($this->a['appointmentConfirmed']);
+        (new EvolutionsSearcherService())->search($this->a['patient'], new PaginationRequest(1, 10), Role::ADMIN, $this->a['admin']);
+
+        $this->actAs($this->tenantB);
+
+        $result = (new EvolutionAccessLogsProjectionSearcherService())
+            ->search(new EvolutionAccessLogFilterRequest(new PaginationRequest(1, 10)), Role::ADMIN);
+
+        $this->assertSame(0, $result['total']);
     }
 
     // Helpers

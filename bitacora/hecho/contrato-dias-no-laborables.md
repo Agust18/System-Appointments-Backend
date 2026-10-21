@@ -1,6 +1,6 @@
 # Contrato: días no laborables (feriados, vacaciones, licencias)
 
-Bloqueos de **día completo** por rango de fechas. Plan y decisiones: `bitacora/features/dias-no-laborables.md` (raíz del monorepo).
+Bloqueos de **día completo** por rango de fechas. Plan y decisiones: `bitacora/hecho/dias-no-laborables.md` (raíz del monorepo).
 
 - `medicalId = null`: bloqueo **de la clínica** (vale para todos los médicos). Con valor: solo ese médico.
 - `dateFrom` / `dateTo`: `YYYY-MM-DD`, ambos inclusivos. Un solo día = mismo valor.

@@ -1,6 +1,6 @@
 # Evoluciones de consulta
 
-Lo que el médico registra de una atención. Son **datos de salud**: se tratan con más restricciones que el resto. Contrato para el frontend: `bitacora/hecho/contrato-evoluciones.md`. Plan y decisiones: `bitacora/features/evoluciones-de-consulta.md` (raíz del monorepo).
+Lo que el médico registra de una atención. Son **datos de salud**: se tratan con más restricciones que el resto. Contrato para el frontend: `bitacora/hecho/contrato-evoluciones.md`. Plan y decisiones: `bitacora/hecho/evoluciones-de-consulta.md` (raíz del monorepo).
 
 Código: `app/Controllers/Evolution/`, `app/Services/Evolution/` (+ `Validations/`), `app/Models/Evolution/`, `app/Entity/Evolution/`. Tablas `evolutions` y `evolution_access_log` (ambas con `tenant_id`).
 
@@ -15,6 +15,8 @@ Código: `app/Controllers/Evolution/`, `app/Services/Evolution/` (+ `Validations
 - **Correcciones:** lo firmado se corrige con una evolución nueva (`corrects_id`), que reemplaza a la vigente del turno. Una sola vigente por turno (`findActiveByAppointment`).
 - **No hay `DELETE`** ni endpoint público. No agregar uno sin decisión explícita.
 - **Registro de accesos:** `EvolutionAccessLoggerService` registra cada lectura (listado y detalle) **después** de pasar los permisos, y **no atrapa fallos**: si el log no se guarda, la lectura falla (cierra seguro). Una lectura denegada no deja fila. No guarda contenido clínico.
+- **Ver el registro:** `GET /evolution-access-log` (`auth` + `role:admin`; el Service también rechaza a cualquier otro rol con `403`). Filtros `search` (usuario, paciente o DNI), `from`, `to`, `page`, `size`. Devuelve `{data, total}` con `userName`, `patientName`, `evolutionId` (NULL = listado), `action` y `createdAt`. Solo registra **quién**, sin IP. Consultarlo no deja rastro propio. Código: `EvolutionAccessLogsProjectionSearcherService`, `EvolutionAccessLogModel::search()`. Pantalla: `/registro-accesos` (pestaña "Registro de accesos" en la sección Accesos).
+- **Listado de evoluciones:** `GET /patients/{id}/evolutions` devuelve `EvolutionProjectionResponse`: además de la evolución trae `medicalName` (quien firma), `appointmentDate`, `appointmentTime` y `serviceName`. El alta, la edición, la firma y el detalle siguen devolviendo `EvolutionResponse`.
 - Toda query filtra por `tenant_id` (`TenantContext::id()`).
 
 ## Pendiente conocido

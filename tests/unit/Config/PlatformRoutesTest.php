@@ -191,6 +191,12 @@ final class PlatformRoutesTest extends CIUnitTestCase
 
             'GET medicals/1/services' => null, 'POST medicals/1/services' => $staff,
             'DELETE medicals/1/services/1' => $staff,
+
+            // Datos clínicos: recepción sin acceso; el registro de accesos es solo del admin
+            'POST patients/1/evolutions' => 'role:medical', 'GET patients/1/evolutions' => 'role:admin,medical',
+            'GET patients/1/evolutions/1' => 'role:admin,medical', 'PUT patients/1/evolutions/1' => 'role:medical',
+            'POST patients/1/evolutions/1/sign' => 'role:medical',
+            'GET evolution-access-log' => $admin,
         ];
     }
 

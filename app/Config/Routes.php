@@ -87,6 +87,8 @@ $routes->get('patients/(:num)/evolutions', 'Evolution\EvolutionsGetController::s
 $routes->get('patients/(:num)/evolutions/(:num)', 'Evolution\EvolutionGetController::find/$1/$2', ['filter' => ['auth', 'role:admin,medical']]);
 $routes->put('patients/(:num)/evolutions/(:num)', 'Evolution\EvolutionPutController::do/$1/$2', ['filter' => ['auth', 'role:medical']]);
 $routes->post('patients/(:num)/evolutions/(:num)/sign', 'Evolution\EvolutionSignPostController::do/$1/$2', ['filter' => ['auth', 'role:medical']]);
+// Registro de quién leyó evoluciones: solo admin
+$routes->get('evolution-access-log', 'Evolution\EvolutionAccessLogsGetController::search', ['filter' => ['auth', 'role:admin']]);
 
 //Specialty
 $routes->post('specialties', 'Specialty\SpecialtyPostController::create', ['filter' => ['auth', 'role:admin']]);
