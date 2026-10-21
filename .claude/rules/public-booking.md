@@ -54,7 +54,7 @@ Los listados ignoran `page`, `size`, `search` e `isActive`: tope fijo de 100 ít
 - **IP real**: sin `app.trustedProxies` se usa `REMOTE_ADDR`. Detrás de un proxy es obligatorio configurarlo, y el proxy debe **sobrescribir** el header (no agregarle), porque se toma la primera IP.
 - **Bloqueo por DNI** (`PublicIdentityAttemptLimiter`): lo usa `/consulta` (ver abajo). 5 fallos por DNI y Tenant bloquean 1 h; un acierto limpia el contador.
 - **Falla abierto**: si el cache activo es `DummyHandler` (p. ej. `writable/cache` sin permisos) el throttle y el bloqueo por DNI no limitan, sin ningún error. `Throttle` deja un `critical` en el log en cada request.
-- **CORS** solo en `/public/*` y solo para `cors.allowedOrigins` / `cors.allowedOriginsPatterns`. Sin orígenes configurados no se envía ningún header. Limitación conocida: `exposedHeaders` está vacío, así que con el SPA en otro dominio el navegador no puede leer `Retry-After` (ver `bitacora/pendiente/cors-exponer-retry-after.md`).
+- **CORS** solo en `/public/*` y solo para `cors.allowedOrigins` / `cors.allowedOriginsPatterns`. Sin orígenes configurados no se envía ningún header. `exposedHeaders` incluye `Retry-After` para que el SPA en otro dominio pueda leer la espera del `429` (ver `bitacora/hecho/cors-exponer-retry-after.md`).
 
 ## `/consulta`: consultar y cancelar un turno (sin cuenta)
 

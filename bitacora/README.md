@@ -12,7 +12,7 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ⚠️ Los endpoints `/public/*` **NO deben exponerse a internet** hasta cerrar todos los `pendiente/deploy-*` (checklist de la reserva pública).
 
-## ✅ Hecho (31)
+## ✅ Hecho (37)
 
 - [Campo `code` en los 409 de POST /public/appointments (`HasErrorCode`)](hecho/campo-code-en-409-publicos.md)
 - [Conteo y estadísticas de turnos ahora hacen JOIN a `services` (total = lista)](hecho/count-y-stats-de-turnos-sin-join-a-services.md)
@@ -48,8 +48,11 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Contrato: API pública de reserva (Fase 3)](hecho/contrato-api-publica-fase-3.md)
 - [Contrato: se eliminó slotStepMinutes de /services y /medicals/{id}/services](hecho/contrato-eliminar-slot-step-minutes.md)
 - [Contrato: cambios de las Fases 1-2 (normalización de DNI, teléfono y email)](hecho/contrato-cambios-fases-1-2-normalizacion.md)
+- [Contrato: días no laborables (`/days-off`, `DAY_OFF`, turnos afectados)](hecho/contrato-dias-no-laborables.md)
+- [CORS: exponer Retry-After](hecho/cors-exponer-retry-after.md)
+- [Días no laborables: chequeo en booking, slot validator y disponibilidad (ex R5)](hecho/dias-no-laborables-chequeo-en-booking.md)
 
-## ⏳ Pendiente (31)
+## ⏳ Pendiente (26)
 
 - [Contacto público por Tenant (teléfono, WhatsApp, dirección, mapa, redes) en `tenant_settings` y `GET /tenant/config`](pendiente/contacto-publico-por-tenant.md)
 - [Suite rápida: pendientes tras `FastDatabaseTestTrait` (truncar solo tablas con filas; mutación en `MedicalServiceModel`)](pendiente/suite-rapida-pendientes.md)
@@ -59,7 +62,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Fallback `demo` del filtro tenant con más de un Tenant](pendiente/fallback-demo-con-mas-de-un-tenant.md)
 - [B1 — Chequeo del INSERT en todos los Models](pendiente/b1-chequeo-insert-models.md)
 - [B3 — Mover transacciones a Operation/ (Service delegado)](pendiente/b3-transacciones-a-operation.md)
-- [Días no laborables: dónde chequearlos en disponibilidad y booking (ex R5)](pendiente/dias-no-laborables-chequeo-en-booking.md)
 - [Migración al RequestValidator](pendiente/migracion-al-request-validator.md)
 - [Alertas del sistema (post-MVP)](pendiente/alertas-del-sistema.md)
 - [Deploy: app.trustedProxies](pendiente/deploy-trusted-proxies.md)
@@ -70,7 +72,6 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 - [Deploy: EMAIL_* configurado](pendiente/deploy-email-config.md)
 - [CORS en rutas privadas (no incluido)](pendiente/cors-en-rutas-privadas.md)
 - [Flujo autenticado: fecha/hora sin largo exacto](pendiente/fecha-hora-exact-length-flujo-autenticado.md)
-- [CORS: exponer Retry-After](pendiente/cors-exponer-retry-after.md)
 - [Caso familiar (padre/hijo)](pendiente/caso-familiar-padre-hijo.md)
 - [Suite lenta: regla de trabajo y refactor de tests (resuelto en gran parte con `FastDatabaseTestTrait`, ver suite-rapida-pendientes)](pendiente/suite-lenta-refactor-tests.md)
 - [Gap funcional: el PUT de turnos no reusa AppointmentSlotValidatorService](pendiente/put-appointment-no-reusa-slot-validator.md)
@@ -86,9 +87,8 @@ Cambios de contrato del backend que el frontend tiene que tolerar o aprovechar.
 
 ## Prioridad sugerida
 
-1. **Días no laborables** — chequeo en disponibilidad y booking (30 min, cuando exista la feature).
-2. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentBookingService::runLocked()`.
-3. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
+1. **B3** — Mover transacciones a `Operation/` (2-3 h). Con R6 hecho, parte ya vive en `AppointmentBookingService::runLocked()`.
+2. **B1** — Chequeo del INSERT (4-6 h, cuando escales).
 
 ## Cómo usar
 

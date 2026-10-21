@@ -77,9 +77,12 @@ class Cors extends BaseConfig
          * indicate which response headers should be made available to scripts running
          * in the browser, in response to a cross-origin request.
          *
+         * Retry-After: el filtro Throttle lo manda en el 429, y sin exponerlo el navegador no
+         * puede leerlo con el SPA en otro dominio (el wizard cae a su espera por defecto).
+         *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
          */
-        'exposedHeaders' => [],
+        'exposedHeaders' => ['Retry-After'],
 
         /**
          * Set methods to allow.
