@@ -21,6 +21,8 @@ final readonly class TenantSettingsResponse
         public ?string $address,
         public ?string $openingHours,
         public bool $landingEnabled,
+        public ?string $heroTitle,
+        public ?string $heroSubtitle,
         public ?string $createdAt,
         public ?string $updatedAt,
     ) {}

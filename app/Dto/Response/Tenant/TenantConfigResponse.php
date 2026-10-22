@@ -10,5 +10,7 @@ final readonly class TenantConfigResponse
         public string $name,
         public bool $landingEnabled,
         public TenantContactResponse $contact,
+        public ?string $heroTitle,
+        public ?string $heroSubtitle,
     ) {}
 }

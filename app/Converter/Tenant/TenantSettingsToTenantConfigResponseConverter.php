@@ -20,7 +20,9 @@ final class TenantSettingsToTenantConfigResponseConverter
                 $settings->getContactEmail(),
                 $settings->getAddress(),
                 $settings->getOpeningHours()
-            )
+            ),
+            $settings->getHeroTitle(),
+            $settings->getHeroSubtitle()
         );
     }
 }

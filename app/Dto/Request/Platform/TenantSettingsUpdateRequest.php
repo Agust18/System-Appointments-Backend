@@ -7,9 +7,11 @@ use App\Support\IdentityNormalizer;
 final readonly class TenantSettingsUpdateRequest
 {
     private const FIELDS = ['name', 'replyToEmail', 'frontendUrl', 'receptionEmail', 'receptionEmailEnabled',
-        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours', 'landingEnabled'];
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours', 'landingEnabled',
+        'heroTitle', 'heroSubtitle'];
     private const CLEARABLE = ['replyToEmail', 'frontendUrl', 'receptionEmail',
-        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours'];
+        'contactPhone', 'contactWhatsapp', 'contactEmail', 'address', 'openingHours',
+        'heroTitle', 'heroSubtitle'];
 
     public function __construct(
         private ?string $name,
@@ -23,6 +25,8 @@ final readonly class TenantSettingsUpdateRequest
         private ?string $address,
         private ?string $openingHours,
         private ?bool $landingEnabled,
+        private ?string $heroTitle,
+        private ?string $heroSubtitle,
         private array $presentFields = [],
     ) {}
 
@@ -60,6 +64,8 @@ final readonly class TenantSettingsUpdateRequest
             $data['address'] ?? null,
             $data['openingHours'] ?? null,
             isset($data['landingEnabled']) ? (bool) $data['landingEnabled'] : null,
+            $data['heroTitle'] ?? null,
+            $data['heroSubtitle'] ?? null,
             array_keys($data),
         );
     }
@@ -129,6 +135,16 @@ final readonly class TenantSettingsUpdateRequest
         return $this->landingEnabled;
     }
 
+    public function getHeroTitle(): ?string
+    {
+        return $this->heroTitle;
+    }
+
+    public function getHeroSubtitle(): ?string
+    {
+        return $this->heroSubtitle;
+    }
+
     public static function rules(): array
     {
         return [
@@ -143,6 +159,8 @@ final readonly class TenantSettingsUpdateRequest
             'address'               => 'permit_empty|string|max_length[255]',
             'openingHours'          => 'permit_empty|string|max_length[500]',
             'landingEnabled'        => 'permit_empty|in_list[0,1]',
+            'heroTitle'             => 'permit_empty|string|max_length[255]',
+            'heroSubtitle'          => 'permit_empty|string|max_length[255]',
         ];
     }
 
@@ -194,6 +212,14 @@ final readonly class TenantSettingsUpdateRequest
             ],
             'landingEnabled' => [
                 'in_list' => 'landingEnabled debe ser true o false.',
+            ],
+            'heroTitle' => [
+                'string'     => 'El título de portada no es válido.',
+                'max_length' => 'El título de portada es muy largo (máx. 255 caracteres).',
+            ],
+            'heroSubtitle' => [
+                'string'     => 'El subtítulo de portada no es válido.',
+                'max_length' => 'El subtítulo de portada es muy largo (máx. 255 caracteres).',
             ],
         ];
     }
