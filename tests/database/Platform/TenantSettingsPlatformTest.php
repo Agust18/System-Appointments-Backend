@@ -131,6 +131,8 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
             'address'               => null,
             'openingHours'          => null,
             'landingEnabled'        => true,
+            'heroTitle'             => null,
+            'heroSubtitle'          => null,
         ], array_diff_key($this->decode($sur), ['createdAt' => 1, 'updatedAt' => 1]));
         $this->assertSame($this->norteId, $this->decode($norte)['tenantId']);
         $this->assertSame('recepcion@norte.test', $this->decode($norte)['receptionEmail']);
@@ -248,6 +250,29 @@ final class TenantSettingsPlatformTest extends PlatformEndpointTestCase
         $row = $this->row($this->surId);
         $this->assertNull($row['contact_phone']);
         $this->assertNull($row['address']);
+    }
+
+    public function testHeroTextsArePublishedKeepWhenAbsentAndClearWithNull(): void
+    {
+        $this->editSettings($this->surId, ['heroTitle' => '  Tu kinesiólogo de confianza ', 'heroSubtitle' => 'Turnos online'])->assertStatus(200);
+
+        $public = $this->withToken(null)->fresh()->withHeaders(['X-Tenant' => 'clinica-sur'])->get('tenant/config');
+        $this->assertSame('Tu kinesiólogo de confianza', $this->decode($public)['heroTitle']);
+        $this->assertSame('Turnos online', $this->decode($public)['heroSubtitle']);
+
+        $this->editSettings($this->surId, ['name' => 'Otro'])->assertStatus(200);
+        $this->assertSame('Turnos online', $this->row($this->surId)['hero_subtitle']);
+
+        $this->editSettings($this->surId, ['heroTitle' => '', 'heroSubtitle' => null])->assertStatus(200);
+        $row = $this->row($this->surId);
+        $this->assertNull($row['hero_title']);
+        $this->assertNull($row['hero_subtitle']);
+    }
+
+    public function testTooLongHeroTitleIsRejected(): void
+    {
+        $this->editSettings($this->surId, ['heroTitle' => str_repeat('a', 256)])->assertStatus(422);
+        $this->assertNull($this->row($this->surId)['hero_title']);
     }
 
     public function testInvalidContactIsRejectedAndLeavesTheRowIntact(): void

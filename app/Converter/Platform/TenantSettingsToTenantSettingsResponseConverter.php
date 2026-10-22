@@ -22,6 +22,8 @@ final class TenantSettingsToTenantSettingsResponseConverter
             $settings->getAddress(),
             $settings->getOpeningHours(),
             $settings->isLandingEnabled(),
+            $settings->getHeroTitle(),
+            $settings->getHeroSubtitle(),
             $settings->getCreatedAt()?->format('Y-m-d H:i:s'),
             $settings->getUpdatedAt()?->format('Y-m-d H:i:s')
         );

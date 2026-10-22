@@ -20,6 +20,8 @@ final class TenantSettings
         private ?string $address,
         private ?string $openingHours,
         private bool $landingEnabled,
+        private ?string $heroTitle,
+        private ?string $heroSubtitle,
         private ?DateTime $createdAt,
         private ?DateTime $updatedAt
     ) {}
@@ -39,6 +41,8 @@ final class TenantSettings
             null,
             null,
             true,
+            null,
+            null,
             new DateTime(),
             new DateTime()
         );
@@ -80,6 +84,12 @@ final class TenantSettings
         }
         if ($request->has('landingEnabled')) {
             $this->landingEnabled = $request->getLandingEnabled();
+        }
+        if ($request->has('heroTitle')) {
+            $this->heroTitle = $request->getHeroTitle();
+        }
+        if ($request->has('heroSubtitle')) {
+            $this->heroSubtitle = $request->getHeroSubtitle();
         }
 
         $this->updatedAt = new DateTime();
@@ -143,6 +153,16 @@ final class TenantSettings
     public function isLandingEnabled(): bool
     {
         return $this->landingEnabled;
+    }
+
+    public function getHeroTitle(): ?string
+    {
+        return $this->heroTitle;
+    }
+
+    public function getHeroSubtitle(): ?string
+    {
+        return $this->heroSubtitle;
     }
 
     public function getCreatedAt(): ?DateTime

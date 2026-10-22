@@ -49,8 +49,8 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
         $sur->assertStatus(200);
         // assertSame sobre el array completo: también garantiza que no vuelvan claves de color.
         $emptyContact = ['phone' => null, 'whatsapp' => null, 'email' => null, 'address' => null, 'openingHours' => null];
-        $this->assertSame(['slug' => 'demo', 'name' => 'Demo', 'landingEnabled' => true, 'contact' => $emptyContact], $this->decode($demo));
-        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible', 'landingEnabled' => true, 'contact' => $emptyContact], $this->decode($sur));
+        $this->assertSame(['slug' => 'demo', 'name' => 'Demo', 'landingEnabled' => true, 'contact' => $emptyContact, 'heroTitle' => null, 'heroSubtitle' => null], $this->decode($demo));
+        $this->assertSame(['slug' => 'clinica-sur', 'name' => 'Sur Visible', 'landingEnabled' => true, 'contact' => $emptyContact, 'heroTitle' => null, 'heroSubtitle' => null], $this->decode($sur));
     }
 
     public function testTheModelNeverReturnsTheRowOfAnotherTenant(): void
@@ -76,7 +76,7 @@ final class TenantSettingsTest extends PlatformEndpointTestCase
     {
         $result = $this->asTenant('clinica-sur')->get('tenant/config');
 
-        $this->assertSame(['slug', 'name', 'landingEnabled', 'contact'], array_keys($this->decode($result)));
+        $this->assertSame(['slug', 'name', 'landingEnabled', 'contact', 'heroTitle', 'heroSubtitle'], array_keys($this->decode($result)));
         $this->assertSame(['phone', 'whatsapp', 'email', 'address', 'openingHours'], array_keys($this->decode($result)['contact']));
         foreach (['recepcion@sur.test', 'respuestas@sur.test', 'sur.tusturnos.test'] as $secret) {
             $this->assertStringNotContainsString($secret, $result->getJSON());

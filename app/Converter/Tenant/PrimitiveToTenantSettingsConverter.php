@@ -21,6 +21,8 @@ final class PrimitiveToTenantSettingsConverter
             $primitive->address,
             $primitive->opening_hours,
             (bool) $primitive->landing_enabled,
+            $primitive->hero_title,
+            $primitive->hero_subtitle,
             new DateTime($primitive->created_at),
             new DateTime($primitive->updated_at)
         );
